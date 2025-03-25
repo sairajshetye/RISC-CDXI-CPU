@@ -334,4 +334,4 @@ module cache (
         endcase
     end
 
-endmodule
+endmodule : cache
