@@ -9,6 +9,7 @@ module fifo #(
     input   logic                   deq,
     input   logic   [WIDTH-1:0]     inst_in,
     output  logic   [WIDTH-1:0]     inst_out,
+    output  logic                   valid_rdata,
     output  logic                   fifo_fetch_stall
 
 );
@@ -28,12 +29,13 @@ module fifo #(
 
     always_comb begin
 
-        full = (head[3] != tail[3] && head[2:0] == tail[2:0]); // point to same set and tail is a cycle ahead of head (extra overflow bit)
+        full = (head[3] != tail[3] && head[2:0] == tail[2:0]); 
         empty = (head == tail);
         valid_op = (enq || deq) && !(enq && deq);
         valid_enq = enq && valid_op && !full;
         valid_deq = deq && valid_op && !empty;
         fifo_fetch_stall = full;
+        valid_rdata = ~empty;
 
     end
 
@@ -56,16 +58,20 @@ module fifo #(
         end else begin
             if (valid_enq) begin
                 internal_array[tail] <= inst_in; // specific set, way x
-                tail <= (tail + 1);
+                tail <= (tail + 4'b0001);
             end else if (valid_deq) begin
-                head <= (head + 1);
+                head <= (head + 4'b0001);
             end
         end
     
     end
 
     always_comb begin
-        inst_out = internal_array[head[2:0]];
+        if (empty) begin
+            inst_out = 'x;
+        end else begin
+            inst_out = internal_array[head[2:0]];
+        end
     end
 
 endmodule : fifo
