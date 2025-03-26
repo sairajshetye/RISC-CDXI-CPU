@@ -8,27 +8,41 @@ module fifo #(
     input   logic                   enq,
     input   logic                   deq,
     input   logic   [WIDTH-1:0]     inst_in,
-    output  logic   [WIDTH-1:0]     inst_out
+    output  logic   [WIDTH-1:0]     inst_out,
+    output  logic                   fifo_fetch_stall
 
 );
 
     logic valid_op;
     logic valid_enq;
     logic valid_deq;
-    logic [PTR_SIZE-1:0] head_ptr;
-    logic [PTR_SIZE-1:0] tail_ptr;
+    logic [PTR_SIZE:0] head;
+    logic [PTR_SIZE:0] tail;
 
     logic [WIDTH-1:0] internal_array [DEPTH];
 
     logic full;
+    logic empty;
+
+    logic [31:0] inst_in_reg;
 
     always_comb begin
 
-        assign full = (head[3] != tail[3] && head[2:0] == 
-        assign valid_op = (enq || deq) && !(enq && deq);
-        assign valid_enq = enq && valid_op;
-        assign valid_deq = deq && valid_op;
+        full = (head[3] != tail[3] && head[2:0] == tail[2:0]); // point to same set and tail is a cycle ahead of head (extra overflow bit)
+        empty = (head == tail);
+        valid_op = (enq || deq) && !(enq && deq);
+        valid_enq = enq && valid_op && !full;
+        valid_deq = deq && valid_op && !empty;
+        fifo_fetch_stall = full;
 
+    end
+
+    always_ff @(posedge clk) begin
+        if (rst) begin
+            inst_in_reg  <= 'x;
+        end else begin
+            inst_in_reg  <= inst_in;
+        end
     end
 
 
@@ -37,17 +51,21 @@ module fifo #(
             for (integer i = 0; i < DEPTH; i++) begin
                 internal_array[i] <= '0;
             end
+            tail <= '0;
+            head <= '0;
         end else begin
-            if (enq) begin
-                internal_array[tail_ptr] <= inst_in; // specific set, way x
-                tail_ptr <= (tail_ptr + 1) % DEPTH;
-            end else if (deq) begin
-                head_ptr <= (head_ptr + 1) % DEPTH;
+            if (valid_enq) begin
+                internal_array[tail] <= inst_in; // specific set, way x
+                tail <= (tail + 1);
+            end else if (valid_deq) begin
+                head <= (head + 1);
             end
         end
     
     end
 
-
+    always_comb begin
+        inst_out = internal_array[head[2:0]];
+    end
 
 endmodule : fifo
