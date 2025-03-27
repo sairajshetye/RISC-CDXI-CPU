@@ -24,16 +24,37 @@ module fifo #(
 
     logic full;
     logic empty;
+    logic [PTR_SIZE:0] count;
 
     logic [31:0] inst_in_reg;
 
     always_comb begin
 
+        // edge cases
+
+        // 1:
+        // the fifo is almost empty (has only 1 element)
+        // enq and deq in same clock should maintain the fifo not being empty
+        // the fifo is empty 
+        // enq and deq in same clock should maintain the fifo being empty 
+
+        // 2:
+        // the fifo is almost full (all but 1 element)
+        // enq and deq in same clock should maintain the fifo not being full
+        // the fifo is full 
+        // enq and deq in same clock should maintain the fifo being full
+
+        // 3:
+        // the fifo is full
+        // enq by itself should not be allowed since full
+
+        // 4:
+        // the fifo is empty
+        // deq by itself should not be allowed since empty
+
         full = (head[3] != tail[3] && head[2:0] == tail[2:0]); 
         empty = (head == tail);
-        valid_op = (enq || deq) && !(enq && deq);
-        valid_enq = enq && valid_op && !full;
-        valid_deq = deq && valid_op && !empty;
+
         fifo_fetch_stall = full;
         valid_rdata = ~empty;
 
@@ -56,10 +77,14 @@ module fifo #(
             tail <= '0;
             head <= '0;
         end else begin
-            if (valid_enq) begin
-                internal_array[tail] <= inst_in; // specific set, way x
+            if (enq && deq) begin
+                internal_array[tail] <= inst_in_reg;
                 tail <= (tail + 4'b0001);
-            end else if (valid_deq) begin
+                head <= (head + 4'b0001);
+            end else if (enq && !full) begin
+                internal_array[tail] <= inst_in_reg; 
+                tail <= (tail + 4'b0001);
+            end else if (deq && !empty) begin
                 head <= (head + 4'b0001);
             end
         end
