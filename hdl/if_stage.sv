@@ -37,8 +37,6 @@ import rv32i_types::*;
             if_id.valid = '0;
             if_id.fetch_stall = '1;
 
-            imem_rmask  = '0;
-
             imem_addr = pc_next;
 
             imem_rmask = '1;

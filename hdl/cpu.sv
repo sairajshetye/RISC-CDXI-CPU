@@ -44,7 +44,7 @@ import rv32i_types::*;
     logic   [31:0]  ufp_addr;
     logic   [3:0]   ufp_rmask;
     logic   [3:0]   ufp_wmask;
-    logic   [31:0]  ufp_rdata;
+    logic   [255:0]  ufp_rdata;
     logic   [31:0]  ufp_wdata;
     logic           ufp_resp;
 
@@ -70,6 +70,9 @@ import rv32i_types::*;
         end else if (dfp_read && dfp_resp) begin // its not in the line buffer
             cache_rdata = dfp_rdata;
             cache_rdata_valid = '1;
+        end else if (|ufp_rmask && ufp_resp) begin
+            cache_rdata = ufp_rdata;
+            cache_rdata_valid = '1;
         end else begin
             cache_rdata = 'x;
             cache_rdata_valid = '0;
@@ -84,13 +87,12 @@ import rv32i_types::*;
     always_comb begin
         if (rst) begin
             pc_next = 32'hAAAAA000;
-        end else if (!iq_stall) begin // && !if_id_reg_next.fetch_stall
+        end else if (!iq_stall && !if_id_reg_next.fetch_stall) begin // && !if_id_reg_next.fetch_stall
             pc_next = pc + 4;
         end else begin
             pc_next = pc;
         end
     end
-
 
     linebuffer #(
         .WIDTH      (256)
@@ -150,7 +152,27 @@ import rv32i_types::*;
         .pc_next(pc_next)
     );
 
-    cache icache(
+    // cache icache(
+    //     .clk(clk), // input
+    //     .rst(rst), // input
+
+    //     .ufp_addr(ufp_addr), // input
+    //     .ufp_rmask(ufp_rmask), // input
+    //     .ufp_wmask(ufp_wmask), // input
+    //     .ufp_rdata(ufp_rdata),
+    //     .ufp_wdata(ufp_wdata), // input
+    //     .ufp_resp(ufp_resp),
+
+    //     // memory side signals, dfp -> downward facing port
+    //     .dfp_addr(dfp_addr),
+    //     .dfp_read(dfp_read),
+    //     .dfp_write(dfp_write),
+    //     .dfp_rdata(dfp_rdata), // input
+    //     .dfp_wdata(dfp_wdata),
+    //     .dfp_resp(dfp_resp) // input
+    // );
+
+    cache_mod icache(
         .clk(clk), // input
         .rst(rst), // input
 
