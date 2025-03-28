@@ -25,7 +25,7 @@ module fifo #(
     logic full;
     logic empty;
 
-    logic [31:0] inst_in_reg;
+    logic [WIDTH-1:0] inst_in_reg;
 
     always_comb begin
 
