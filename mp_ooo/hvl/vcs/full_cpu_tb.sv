@@ -49,7 +49,7 @@ module top_tb;//full_cpu_tb;
         bmem_rvalid <= '0;
         bmem_ready <= '1;
 
-        repeat (20) @(posedge clk);
+        repeat (2) @(posedge clk);
         bmem_rvalid <= '1;
         bmem_raddr <= 32'hAAAAA000;
         bmem_rdata <= 64'hFFFFFFFFFFFFFFFF;
