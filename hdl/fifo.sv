@@ -10,7 +10,7 @@ module fifo #(
     input   logic   [WIDTH-1:0]     inst_in,
     output  logic   [WIDTH-1:0]     inst_out,
     output  logic                   valid_rdata,
-    output  logic                   fifo_stall
+    output  logic                   iq_stall
 
 );
 
@@ -54,7 +54,7 @@ module fifo #(
         full = (head[3] != tail[3] && head[2:0] == tail[2:0]); 
         empty = (head == tail);
 
-        fifo_stall = full;
+        iq_stall = full;
         valid_rdata = ~empty;
 
     end
