@@ -8,6 +8,7 @@ module fifo #(
     input   logic                   enq,
     input   logic                   deq,
     input   logic   [WIDTH-1:0]     inst_in,
+    input   logic                   inst_valid,
     output  logic   [WIDTH-1:0]     inst_out,
     output  logic                   valid_rdata,
     output  logic                   iq_stall
@@ -59,7 +60,7 @@ module fifo #(
 
     end
 
-    always_ff @(posedge clk) begin
+    always_ff @(posedge clk) begin // NOT BEING USED, CAN DELETE LATER?
         if (rst) begin
             inst_in_reg  <= 'x;
         end else begin
@@ -77,11 +78,11 @@ module fifo #(
             head <= '0;
         end else begin
             if (enq && deq) begin
-                internal_array[tail] <= inst_in_reg;
+                internal_array[tail] <= inst_in;
                 tail <= (tail + 4'b0001);
                 head <= (head + 4'b0001);
             end else if (enq && !full) begin
-                internal_array[tail] <= inst_in_reg; 
+                internal_array[tail] <= inst_in; 
                 tail <= (tail + 4'b0001);
             end else if (deq && !empty) begin
                 head <= (head + 4'b0001);
