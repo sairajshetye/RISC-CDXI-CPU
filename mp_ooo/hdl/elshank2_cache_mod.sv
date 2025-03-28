@@ -345,6 +345,9 @@ module cache_mod (
                     state_next = allocate;
                 end
             end
+            default: begin
+                
+            end
 
         endcase
 
