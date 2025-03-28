@@ -49,6 +49,9 @@ import rv32i_types::*;
     logic   [255:0]     cache_rdata_reg;
     logic   [255:0]     cache_rdata_reg_next;
 
+    logic   [63:0]      bram_wdata_reg;
+    logic   [63:0]      bram_wdata_reg_next;
+
     logic               ready;
 
     assign ready = bmem_ready;
@@ -57,10 +60,12 @@ import rv32i_types::*;
         if (rst) begin
             state <= rw_0;
             cache_rdata_reg <= '0;
+            bram_wdata_reg <= '0;
         end
         else begin
             state <= state_next;
             cache_rdata_reg <= cache_rdata_reg_next;
+            bram_wdata_reg <= bram_wdata_reg_next;
         end
     end
 
@@ -75,6 +80,7 @@ import rv32i_types::*;
         bmem_wdata = 'x; // cache_wdata[63:0];
 
         cache_rdata_reg_next = cache_rdata_reg;
+        bram_wdata_reg_next = bram_wdata_reg;
         a_rdata = '0;
         a_raddr = bmem_raddr; // not needed?
         a_resp = '0;
@@ -88,8 +94,14 @@ import rv32i_types::*;
                 end
                 else if (cache_write && ready) begin
                     a_resp = '0;
+                    bram_wdata_reg_next = cache_wdata[63:0];
                     bmem_wdata = cache_wdata[63:0];
                     state_next = rw_1;
+                end
+                else if (cache_write && !ready) begin
+                    a_resp = '0;
+                    bram_wdata_reg_next = cache_wdata[63:0];
+                    bmem_wdata = bram_wdata_reg;
                 end
             end
             rw_1: begin
@@ -101,8 +113,14 @@ import rv32i_types::*;
                 end
                 else if (cache_write && ready) begin
                     a_resp = '0;
+                    bram_wdata_reg_next = cache_wdata[127:64];
                     bmem_wdata = cache_wdata[127:64];
                     state_next = rw_2;
+                end
+                else if (cache_write && !ready) begin
+                    a_resp = '0;
+                    bram_wdata_reg_next = cache_wdata[127:64];
+                    bmem_wdata = bram_wdata_reg;
                 end
             end
             rw_2: begin
@@ -114,8 +132,14 @@ import rv32i_types::*;
                 end
                 else if (cache_write && ready) begin
                     a_resp = '0;
+                    bram_wdata_reg_next = cache_wdata[191:128];
                     bmem_wdata = cache_wdata[191:128];
                     state_next = rw_3;
+                end
+                else if (cache_write && !ready) begin
+                    a_resp = '0;
+                    bram_wdata_reg_next = cache_wdata[191:128];
+                    bmem_wdata = bram_wdata_reg;
                 end
             end
             rw_3: begin
@@ -127,8 +151,14 @@ import rv32i_types::*;
                 end
                 else if (cache_write && ready) begin
                     a_resp = '1;
+                    bram_wdata_reg_next = cache_wdata[255:192];
                     bmem_wdata = cache_wdata[255:192];
                     state_next = rw_0;
+                end
+                else if (cache_write && !ready) begin
+                    a_resp = '0;
+                    bram_wdata_reg_next = cache_wdata[255:192];
+                    bmem_wdata = bram_wdata_reg;
                 end
             end
             default: begin

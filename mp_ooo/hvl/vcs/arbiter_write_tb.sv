@@ -68,6 +68,9 @@ module top_tb;//arbiter_write_tb;
         // repeat (1) @(posedge clk);
         // bmem_ready <= '0;
         repeat (1) @(posedge clk); // can also check if it took longer than 1 clock cycle to change
+        bmem_ready <= '0;
+
+        repeat (1) @(posedge clk); // can also check if it took longer than 1 clock cycle to change
         bmem_ready <= '1;
         //bmem_rdata <= 64'hFFFFFFFFFFFFFFF0;
 
