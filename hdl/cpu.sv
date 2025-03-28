@@ -74,13 +74,13 @@ import rv32i_types::*;
         end
     end
 
-    always_ff @(posedge clk) begin
+    always_comb begin
         if (rst) begin
-            pc_next <= 32'hAAAAA000;
+            pc_next = 32'hAAAAA000;
         end else if (!iq_stall && !if_id_reg_next.fetch_stall) begin // && !if_id_reg_next.fetch_stall
-            pc_next <= pc + 4;
+            pc_next = pc + 4;
         end else begin
-            pc_next <= pc;
+            pc_next = pc;
         end
     end
 
