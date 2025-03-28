@@ -63,14 +63,28 @@ package rv32i_types;
             logic           is_store;
     } ctrl_word_t;
 
+    // typedef struct packed {
+    //     logic   [31:0]      inst;
+    //     logic   [31:0]      pc;
+    //     logic   [31:0]      pc_next;
+    //     logic   [63:0]      order;
+    //     logic               valid;
+    //     logic               rst;
+    //     ctrl_word_t         ctrl_word;
+    // } if_id_stage_reg_t;
+
     typedef struct packed {
         logic   [31:0]      inst;
         logic   [31:0]      pc;
         logic   [31:0]      pc_next;
         logic   [63:0]      order;
         logic               valid;
-        logic               rst;
-        ctrl_word_t         ctrl_word;
+        logic               fetch_stall;
+
+        // alu_m1_sel_t        alu_m1_sel;
+
+        // what else?
+
     } if_id_stage_reg_t;
 
 
