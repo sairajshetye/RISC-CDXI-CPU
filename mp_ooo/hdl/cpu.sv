@@ -15,7 +15,7 @@ import rv32i_types::*;
     input   logic               bmem_rvalid
 );
 
-    logic stall;
+    logic iq_stall;
     logic [31:0] pc;
     logic [31:0] pc_next;
 
@@ -30,31 +30,76 @@ import rv32i_types::*;
     logic lb_wen;
 
     logic [255:0] cache_rdata;
+
+    logic [31:0] cache_rdata_32;
+
     logic [255:0] lb_rdata;
 
     logic iq_valid_rdata;
 
+    logic cache_rdata_valid;
+
+    // cache port variables
+
+    logic   [31:0]  ufp_addr;
+    logic   [3:0]   ufp_rmask;
+    logic   [3:0]   ufp_wmask;
+    logic   [31:0]  ufp_rdata;
+    logic   [31:0]  ufp_wdata;
+    logic           ufp_resp;
+
+    logic   [31:0]  dfp_addr;
+    logic           dfp_read;
+    logic           dfp_write;
+    logic   [255:0] dfp_rdata;
+    logic   [255:0] dfp_wdata;
+    logic           dfp_resp;
+
+    // other arbiter variables
+
+    logic [31:0] a_raddr;
+
+    assign ufp_wdata = '0;
+    assign ufp_wmask = '0;
 
 
     always_comb begin
-        if (lb_rvalid) begin
+        if (lb_rvalid) begin // is it in the line buffer?
             cache_rdata = lb_rdata;
-            lb_wen = '0;
+            cache_rdata_valid = '1;
+        end else if (dfp_read && dfp_resp) begin // its not in the line buffer
+            cache_rdata = dfp_rdata;
+            cache_rdata_valid = '1;
+        end else begin
+            cache_rdata = 'x;
+            cache_rdata_valid = '0;
         end
-        // end else begin
-        //     // cache_rdata = output of arbiter
-        //     // lb_wen = '1;
-        // end
+
+        for (integer unsigned i = 0; i < 4; i++) begin
+            // ufp_addr[4:0] = offset
+            cache_rdata_32[unsigned'(i)*8+:8] = cache_rdata[((ufp_addr[4:0]*8)+(unsigned'(i)*8))+:8]; 
+        end
     end
+
+    always_comb begin
+        if (rst) begin
+            pc_next = 32'hAAAAA000;
+        end else if (!iq_stall) begin // && !if_id_reg_next.fetch_stall
+            pc_next = pc + 4;
+        end else begin
+            pc_next = pc;
+        end
+    end
+
 
     linebuffer #(
         .WIDTH      (256)
     ) lb(
             .clk(clk),
             .rst(rst),
-            .new_bmem_addr(bmem_addr), 
-            .wen(),
-            .wdata(),
+            .new_bmem_addr(ufp_addr), 
+            .wen(dfp_read && dfp_resp),
+            .wdata(dfp_rdata),
             .rdata(lb_rdata),
             .rvalid(lb_rvalid)    
     );
@@ -70,13 +115,37 @@ import rv32i_types::*;
         .inst_in(if_id_reg_next),
         .inst_out(inst_out),
         .valid_rdata(iq_valid_rdata),
-        .fifo_stall(stall)
+        .iq_stall(iq_stall)
+    );
+
+    arbiter arbiter(
+        .clk(clk), // input
+        .rst(rst), // input
+
+        .bmem_raddr(bmem_raddr), // input
+        .bmem_rdata(bmem_rdata), // input
+        .bmem_rvalid(bmem_rvalid), // input
+        .cache_read(dfp_read), // input
+
+        .a_raddr(a_raddr), // does cache need?
+        .a_rdata(dfp_rdata), // to cache
+        .a_resp(dfp_resp), // to cache (resp)
+        .bmem_read(bmem_read),
+
+        .cache_addr(dfp_addr), // input
+        .cache_wdata(dfp_wdata), // input
+        .cache_write(dfp_write), // input
+
+        .bmem_addr(bmem_addr),
+        .bmem_wdata(bmem_wdata),
+        .bmem_write(bmem_write),
+
+        .bmem_ready(bmem_ready) // input
     );
 
     pcreg pcreg(
+        .clk(clk),
         .rst(rst),
-        .stall(stall),
-        .fetch_stall(fetch_stall),
         .pc(pc),
         .pc_next(pc_next)
     );
@@ -85,33 +154,33 @@ import rv32i_types::*;
         .clk(clk), // input
         .rst(rst), // input
 
-        .ufp_addr(bmem_raddr), // input
-        .ufp_rmask(), // input
-        .ufp_wmask(), // input
-        .ufp_rdata(),
-        .ufp_wdata(), // input
-        .ufp_resp(),
+        .ufp_addr(ufp_addr), // input
+        .ufp_rmask(ufp_rmask), // input
+        .ufp_wmask(ufp_wmask), // input
+        .ufp_rdata(ufp_rdata),
+        .ufp_wdata(ufp_wdata), // input
+        .ufp_resp(ufp_resp),
 
         // memory side signals, dfp -> downward facing port
-        .dfp_addr(),
-        .dfp_read(),
-        .dfp_write(),
-        .dfp_rdata(), // input
-        .dfp_wdata(),
-        .dfp_resp() // input
+        .dfp_addr(dfp_addr),
+        .dfp_read(dfp_read),
+        .dfp_write(dfp_write),
+        .dfp_rdata(dfp_rdata), // input
+        .dfp_wdata(dfp_wdata),
+        .dfp_resp(dfp_resp) // input
     );
 
     if_stage if_stage_1 (
         .clk(clk),
         .rst(rst),
-        .stall(stall),
+        .iq_stall(iq_stall),
         .enq(iq_enq),
         .deq(iq_deq),
 
-        .imem_addr(),
-        .imem_rmask(),
-        .imem_rdata(),
-        .imem_resp(),
+        .imem_addr(ufp_addr),
+        .imem_rmask(ufp_rmask),
+        .imem_rdata(cache_rdata_32),
+        .imem_resp(cache_rdata_valid),
 
         .pc(pc),
         .pc_next(pc_next),

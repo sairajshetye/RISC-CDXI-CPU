@@ -14,6 +14,10 @@ module linebuffer #(
 
     logic [3:0] old_bmem_addr_set_reg;
     logic [3:0] new_bmem_addr_set;
+
+    logic [22:0] old_bmem_addr_tag_reg;
+    logic [22:0] new_bmem_addr_tag;
+
     logic write;
     logic read;
     logic old_valid;
@@ -29,7 +33,11 @@ module linebuffer #(
 
     always_comb begin
         new_bmem_addr_set = new_bmem_addr[8:5];
-        if (old_bmem_addr_set_reg != '0 && new_bmem_addr_set == old_bmem_addr_set_reg) begin
+        new_bmem_addr_tag = new_bmem_addr[31:9];
+        if (old_bmem_addr_tag_reg != '0 && 
+        old_bmem_addr_set_reg != '0 && 
+        new_bmem_addr_set == old_bmem_addr_set_reg
+        && new_bmem_addr_tag == old_bmem_addr_tag_reg) begin
             rvalid = '1;
         end else begin
             rvalid = '0;
@@ -42,10 +50,12 @@ module linebuffer #(
     always_ff @(posedge clk) begin
         if(rst) begin
             old_bmem_addr_set_reg <= '0;
+            old_bmem_addr_tag_reg <= '0;
             internal_array <= 'x;
             old_valid <= '0;
         end else if(write) begin
             old_bmem_addr_set_reg <= new_bmem_addr_set;
+            old_bmem_addr_tag_reg <= new_bmem_addr_tag;
             old_valid <= '1;
             internal_array <= wdata_reg;
         end else if(read) begin

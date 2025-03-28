@@ -3,9 +3,9 @@ import rv32i_types::*;
 (
     input   logic           clk,
     input   logic           rst,
-    input   logic           stall,
-    input   logic           enq,
-    input   logic           deq,
+    input   logic           iq_stall,
+    output  logic           enq,
+    output  logic           deq,
 
     output  logic   [31:0]  imem_addr,
     output  logic   [3:0]   imem_rmask,
@@ -23,7 +23,7 @@ import rv32i_types::*;
     always_ff @(posedge clk) begin
         if (rst) begin
             order_reg <= '0;
-        end else if (imem_resp && !stall) begin
+        end else if (imem_resp && !iq_stall) begin
             order_reg <= order_reg + 1;
         end 
     end
@@ -48,6 +48,7 @@ import rv32i_types::*;
 
             if (imem_resp) begin
                 if_id.inst = imem_rdata;
+                if_id.fetch_stall = '0;
                 if_id.valid = '1;
                 enq = '1;
             end
