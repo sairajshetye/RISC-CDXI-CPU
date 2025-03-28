@@ -24,7 +24,6 @@ module fifo #(
 
     logic full;
     logic empty;
-    logic [PTR_SIZE:0] count;
 
     logic [31:0] inst_in_reg;
 
