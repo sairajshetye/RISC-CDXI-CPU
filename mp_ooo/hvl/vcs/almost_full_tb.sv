@@ -29,7 +29,7 @@ module almost_full_tb;
         .deq(deq), // input
         .inst_in(inst_in), // input
         .inst_out(inst_out),
-        .fifo_fetch_stall(fifo_fetch_stall)
+        .fifo_stall(fifo_fetch_stall)
     );
 
     initial begin

@@ -4,6 +4,8 @@ import rv32i_types::*;
     input   logic           clk,
     input   logic           rst,
     input   logic           stall,
+    input   logic           enq,
+    input   logic           deq,
 
     output  logic   [31:0]  imem_addr,
     output  logic   [3:0]   imem_rmask,
@@ -31,26 +33,23 @@ import rv32i_types::*;
             if_id.inst = '0;
             if_id.pc = pc;
             if_id.pc_next = pc_next;
-
             if_id.order = order_reg;
+            if_id.valid = '0;
+            if_id.fetch_stall = '1;
 
-            if_id.valid = '1;
-            if_id.rst = rst;
-            
             imem_rmask  = '0;
-
-            if_id.ctrl_word = '0;
-
-            if_id.ctrl_word.dmem_rdata = '0;
-
-            if_id.ctrl_word.commit = '0;
 
             imem_addr = pc_next;
 
             imem_rmask = '1;
+
+            enq = '0;
+            deq = '0;
+
             if (imem_resp) begin
                 if_id.inst = imem_rdata;
-                if_id.ctrl_word.commit = '1;
+                if_id.valid = '1;
+                enq = '1;
             end
     end
 
