@@ -37,8 +37,6 @@ import rv32i_types::*;
 
     logic iq_valid_rdata;
 
-    logic cache_rdata_valid;
-
     // cache port variables
 
     logic   [31:0]  ufp_addr;
@@ -64,18 +62,10 @@ import rv32i_types::*;
 
 
     always_comb begin
-        if (lb_rvalid) begin // is it in the line buffer?
-            cache_rdata = lb_rdata;
-            cache_rdata_valid = '1;
-        end else if (dfp_read && dfp_resp) begin // its not in the line buffer
-            cache_rdata = dfp_rdata;
-            cache_rdata_valid = '1;
-        end else if (|ufp_rmask && ufp_resp) begin
+        if (|ufp_rmask && ufp_resp) begin
             cache_rdata = ufp_rdata;
-            cache_rdata_valid = '1;
         end else begin
             cache_rdata = 'x;
-            cache_rdata_valid = '0;
         end
 
         for (integer unsigned i = 0; i < 4; i++) begin
@@ -93,18 +83,6 @@ import rv32i_types::*;
             pc_next = pc;
         end
     end
-
-    linebuffer #(
-        .WIDTH      (256)
-    ) lb(
-            .clk(clk),
-            .rst(rst),
-            .new_bmem_addr(ufp_addr), 
-            .wen(dfp_read && dfp_resp),
-            .wdata(dfp_rdata),
-            .rdata(lb_rdata),
-            .rvalid(lb_rvalid)    
-    );
 
     fifo #(
         .DEPTH      (8),
@@ -202,7 +180,7 @@ import rv32i_types::*;
         .imem_addr(ufp_addr),
         .imem_rmask(ufp_rmask),
         .imem_rdata(cache_rdata_32),
-        .imem_resp(cache_rdata_valid),
+        .imem_resp(ufp_resp),
 
         .pc(pc),
         .pc_next(pc_next),

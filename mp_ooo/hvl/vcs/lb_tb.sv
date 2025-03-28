@@ -1,4 +1,4 @@
-module top_tb;
+module lb_tb;
 
     timeunit 1ps;
     timeprecision 1ps;
