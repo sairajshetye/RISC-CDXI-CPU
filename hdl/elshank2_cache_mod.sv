@@ -76,6 +76,17 @@ module cache_mod (
     logic   [2:0]   lru_raw; 
     logic   [1:0]   lru_decode;
 
+    // Line Buffer
+    logic [255:0] lb_data_reg;
+    logic [255:0] lb_data;
+    logic [31:0] lb_addr_reg;
+    logic [31:0] lb_addr;
+    logic [22:0] lb_tag;
+    logic [3:0] lb_set;
+
+    assign lb_tag = lb_addr_reg[31:9];
+    assign lb_set = lb_addr_reg[8:5];
+
 
     assign tag = ufp_addr_reg[31:9];
     assign set = ufp_addr_reg[8:5];
@@ -149,6 +160,16 @@ module cache_mod (
 
     always_ff @(posedge clk) begin
         if (rst) begin
+            lb_data_reg <= '0;
+            lb_addr_reg <= '0;
+        end else if (hit) begin
+            lb_data_reg <= lb_data;
+            lb_addr_reg <= lb_addr;
+        end
+    end
+
+    always_ff @(posedge clk) begin
+        if (rst) begin
             state <= idle;
             ufp_addr_reg <= '0;
             ufp_rmask_reg <= '0;
@@ -199,9 +220,13 @@ module cache_mod (
         dfp_write = '0;
         dfp_addr = '0;
         dfp_wdata = 'x;
+
+        lb_data = '0;
+        lb_addr = '0;
         unique case (state)
             idle: begin
                 //csb_s = '1;
+                ufp_resp = '0;
                 if (|ufp_wmask && (ufp_rmask == 4'b0000)) begin // valid CPU request
                     csb_s = '0;
                     data_addr = ufp_addr[8:5];
@@ -209,8 +234,17 @@ module cache_mod (
                 end
                 else if (|ufp_rmask && (ufp_wmask == 4'b0000)) begin // valid CPU request
                     csb_s = '0;
-                    data_addr = ufp_addr[8:5];
-                    state_next = compare;
+
+                    // CHECK TO SEE IF LINE BUFFER AND UFP ADDR MATCH (TAG TOO?) IF SO, SEND RESP AND BACK TO IDLE
+                    // i use ufp_addr directly for tag and set since tag/set are a clock cycle late in register
+                    if (lb_data_reg != '0 && lb_addr_reg != '0 && lb_tag == ufp_addr[31:9] && lb_set == ufp_addr[8:5]) begin
+                        ufp_rdata = lb_data_reg;
+                        ufp_resp = '1;
+                        state_next = idle;
+                    end else begin
+                        data_addr = ufp_addr[8:5];
+                        state_next = compare;
+                    end
                 end
             end
             compare: begin
@@ -234,6 +268,11 @@ module cache_mod (
                         //         ufp_rdata[unsigned'(i)*8+:8] = data_d_out[way_hit][((offset*8)+(unsigned'(i)*8))+:8]; 
                         //     end
                         // end
+
+                        // STORE THIS DATA IN A LINE BUFFER HERE
+                        lb_data = data_d_out[way_hit];
+                        lb_addr = ufp_addr;
+
                         ufp_rdata = data_d_out[way_hit];
                     end
                     else if (|ufp_wmask_reg && (ufp_rmask_reg == 4'b0000)) begin
