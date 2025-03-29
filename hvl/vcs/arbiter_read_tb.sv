@@ -66,15 +66,15 @@ module arbiter_read_tb;//; top_tb
         bmem_rvalid <= '1;
         bmem_ready <= '1; // not really being used right now
         
-        // repeat (1) @(posedge clk);
+        // repeat (5) @(posedge clk);
         // bmem_ready <= '0;
         repeat (1) @(posedge clk); // can also check if it took longer than 1 clock cycle to change
         bmem_ready <= '1;
         bmem_rdata <= 64'hFFFFFFFFFFFFFFF0;
 
-        // repeat (1) @(posedge clk);
-        // bmem_ready <= '0;
-        repeat (1) @(posedge clk); // can also check if it took longer than 1 clock cycle to change
+        repeat (1) @(posedge clk);
+        bmem_ready <= '0;
+        repeat (5) @(posedge clk); // can also check if it took longer than 1 clock cycle to change
         bmem_ready <= '1;
         bmem_rdata <= 64'hFFFFFFFFFFFFFF00;
 
@@ -85,6 +85,20 @@ module arbiter_read_tb;//; top_tb
         bmem_rdata <= 64'hFFFFFFFFFFFFF000;
         
         repeat (1) @(posedge clk);
+        bmem_raddr <= 32'h12345670; // sent another read to different address
+        bmem_rdata <= 64'h0F0F0F0F0F0F0F0F;
+
+        repeat (1) @(posedge clk);
+        bmem_rdata <= 64'h0E0E0E0E0E0E0D0E;
+
+        repeat (1) @(posedge clk);
+        bmem_rdata <= 64'h0D0D0D0D0D0D0D0D;
+
+        repeat (1) @(posedge clk);
+        bmem_rdata <= 64'h0C0C0C0C0C0C0C0C;
+
+        repeat (1) @(posedge clk);
+
         bmem_rdata <= 'x;
         bmem_rvalid <= '0;
         cache_read <= '0;
