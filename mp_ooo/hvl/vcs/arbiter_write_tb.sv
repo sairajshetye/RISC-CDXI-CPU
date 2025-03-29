@@ -1,4 +1,4 @@
-module arbiter_write_tb;//arbiter_write_tb;
+module top_tb;//arbiter_write_tb;
 
     timeunit 1ps;
     timeprecision 1ps;
@@ -61,6 +61,7 @@ module arbiter_write_tb;//arbiter_write_tb;
         bmem_raddr <= 'x;
         bmem_rdata <= 'x;
         bmem_rvalid <= '0;
+        bmem_ready <= '0;
         // DRAM sends a read response
         repeat (10) @(posedge clk);
         bmem_ready <= '1; // not really being used right now - it is
