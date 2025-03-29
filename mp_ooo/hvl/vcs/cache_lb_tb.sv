@@ -1,4 +1,4 @@
-module cache_lb_tb;//top_tb;
+module cache_lb_tb;//; top_tb
 
     timeunit 1ps;
     timeprecision 1ps;
