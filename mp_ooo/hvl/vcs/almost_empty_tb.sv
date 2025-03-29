@@ -19,7 +19,7 @@ module almost_empty_tb;
     logic                   deq;
     logic   [31:0]          inst_in;
     logic   [31:0]          inst_out;
-    logic                   fifo_fetch_stall;
+    logic                   iq_stall;
 
     // instantiate the dut
     fifo test_fifo (
@@ -29,7 +29,7 @@ module almost_empty_tb;
         .deq(deq), // input
         .inst_in(inst_in), // input
         .inst_out(inst_out),
-        .fifo_stall(fifo_fetch_stall)
+        .iq_stall(iq_stall)
     );
 
     initial begin
