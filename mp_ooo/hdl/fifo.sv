@@ -25,7 +25,7 @@ module fifo #(
     logic full;
     logic empty;
 
-    logic [WIDTH-1:0] inst_in_reg;
+    // logic [WIDTH-1:0] inst_in_reg;
 
     always_comb begin
 
@@ -59,13 +59,13 @@ module fifo #(
 
     end
 
-    always_ff @(posedge clk) begin
-        if (rst) begin
-            inst_in_reg  <= 'x;
-        end else begin
-            inst_in_reg  <= inst_in;
-        end
-    end
+    // always_ff @(posedge clk) begin
+    //     if (rst) begin
+    //         inst_in_reg  <= 'x;
+    //     end else begin
+    //         inst_in_reg  <= inst_in;
+    //     end
+    // end
 
 
     always_ff @(posedge clk) begin
@@ -77,11 +77,11 @@ module fifo #(
             head <= '0;
         end else begin
             if (enq && deq) begin
-                internal_array[tail] <= inst_in_reg;
+                internal_array[tail] <= inst_in;
                 tail <= (tail + 4'b0001);
                 head <= (head + 4'b0001);
             end else if (enq && !full) begin
-                internal_array[tail] <= inst_in_reg; 
+                internal_array[tail] <= inst_in; 
                 tail <= (tail + 4'b0001);
             end else if (deq && !empty) begin
                 head <= (head + 4'b0001);

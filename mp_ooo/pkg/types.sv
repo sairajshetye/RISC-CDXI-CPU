@@ -80,6 +80,7 @@ package rv32i_types;
         logic   [63:0]      order;
         logic               valid;
         logic               fetch_stall;
+        logic   [1:0]       useless_align;
 
         // alu_m1_sel_t        alu_m1_sel;
 
