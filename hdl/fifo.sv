@@ -8,7 +8,6 @@ module fifo #(
     input   logic                   enq,
     input   logic                   deq,
     input   logic   [WIDTH-1:0]     inst_in,
-    input   logic                   inst_valid,
     output  logic   [WIDTH-1:0]     inst_out,
     output  logic                   valid_rdata,
     output  logic                   iq_stall
