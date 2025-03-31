@@ -172,23 +172,24 @@ RISC-V M extension.
 You will need to handle the DIV-0 edge case - check the RV32 ISA spec to
 understand the expected behavior.
 
-**Requirements (Tentative)**
+**Requirements**
 - Implement your OoO architecture such that it can execute all immediate and
-  register instructions in RV32I
+  register instructions in RV32I [8]
   - `AUIPC` is *optional* for this checkpoint
-- Integrate the multiplier IP with your processor to perform all `MUL`
-  instructions in RV32M
-- Integrate the divider IP with your processor to perform all `DIV`/`REM`
-  instructions in RV32M
+- Integrate a Synopsys multiplier IP with your processor to perform all `MUL`
+  instructions in RV32M [3]
+- Integrate a Synopsys divider IP with your processor to perform all `DIV`/`REM`
+  instructions in RV32M [3]
 - Modify your `mp_verif` random testbench to test coverage on all the
-  instructions required for this CP
+  instructions required for this CP [3]
 - Demonstrate that your processor is able to execute instructions out-of-order
-  (via `testcode/ooo_test.s`)
-- Show that your processor is compliant with the Spyglass linter
+  (via `testcode/ooo_test.s`) [5]
+- Show that your processor is compliant with the Spyglass linter [3]
 
 *There will be no provided tests outside of `ooo_test.s`* - if you are unable to
-correctly modify the random testbench, you must demonstrate
-correctness by writing your own comprehensive tests.
+correctly modify the random testbench, you must demonstrate correctness by
+writing your own comprehensive tests to receive credit for the instructions you
+implemented.
 
 ## Checkpoint 3 (20 points)
 
