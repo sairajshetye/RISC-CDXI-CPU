@@ -188,5 +188,40 @@ import rv32i_types::*;
         .if_id(if_id_reg_next)
     );
 
+            logic           monitor_valid;
+            logic   [63:0]  monitor_order;
+            logic   [31:0]  monitor_inst;
+            logic   [4:0]   monitor_rs1_addr;
+            logic   [4:0]   monitor_rs2_addr;
+            logic   [31:0]  monitor_rs1_rdata;
+            logic   [31:0]  monitor_rs2_rdata;
+            logic           monitor_regf_we;
+            logic   [4:0]   monitor_rd_addr;
+            logic   [31:0]  monitor_rd_wdata;
+            logic   [31:0]  monitor_pc_rdata;
+            logic   [31:0]  monitor_pc_wdata;
+            logic   [31:0]  monitor_mem_addr;
+            logic   [3:0]   monitor_mem_rmask;
+            logic   [3:0]   monitor_mem_wmask;
+            logic   [31:0]  monitor_mem_rdata;
+            logic   [31:0]  monitor_mem_wdata;
+    
+    assign monitor_valid     = mem_wb_reg.valid&~global_stall;
+    assign monitor_order     = mem_wb_reg.order;
+    assign monitor_inst      = mem_wb_reg.inst;
+    assign monitor_rs1_addr  = mem_wb_reg.rs1_s;
+    assign monitor_rs2_addr  = mem_wb_reg.rs2_s;
+    assign monitor_rs1_rdata = mem_wb_reg.rs1_v; // need
+    assign monitor_rs2_rdata = mem_wb_reg.rs2_v; // need
+    assign monitor_rd_addr   = mem_wb_reg.regf_we ? mem_wb_reg.rd_s : 5'd0; // need
+    assign monitor_rd_wdata  = mem_wb_reg.rd_v; // need
+    assign monitor_pc_rdata  = mem_wb_reg.pc;
+    assign monitor_pc_wdata  = mem_wb_reg.pc_next;
+    assign monitor_mem_addr  = mem_wb_reg.dmem_addr; // should be i or d?
+    assign monitor_mem_rmask = mem_wb_reg.dmem_rmask;
+    assign monitor_mem_wmask = mem_wb_reg.dmem_wmask;
+    assign monitor_mem_rdata = mem_wb_reg.dmem_rdata;
+    assign monitor_mem_wdata = mem_wb_reg.dmem_wdata;
+
 
 endmodule : cpu
