@@ -1,5 +1,7 @@
+module inst_q_tb // full_empty_tb
+
 import rv32i_types::*;
-module top_tb; // full_empty_tb
+();
 
     timeunit 1ps;
     timeprecision 1ps;
