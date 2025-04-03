@@ -26,6 +26,8 @@ import rv32i_types::*;
 
     if_id_stage_reg_t inst_out;
 
+    id_ex_stage_reg_t id_ex_stage_next;
+
     logic lb_rvalid;
     logic lb_wen;
 
@@ -36,6 +38,10 @@ import rv32i_types::*;
     logic [255:0] lb_rdata;
 
     logic iq_valid_rdata;
+
+    logic [31:0] rs1_v, rs2_v;
+    logic [4:0] rs1_s, rs2_s;
+
 
     // cache port variables
 
@@ -52,14 +58,15 @@ import rv32i_types::*;
     logic   [255:0] dfp_rdata;
     logic   [255:0] dfp_wdata;
     logic           dfp_resp;
-
+    
     // other arbiter variables
 
     logic [31:0] a_raddr;
 
     assign ufp_wdata = '0;
     assign ufp_wmask = '0;
-
+    assign rs1_v = '0;
+    assign rs2_v = '0;
 
     always_comb begin
         if (|ufp_rmask && ufp_resp) begin
@@ -188,6 +195,16 @@ import rv32i_types::*;
         .if_id(if_id_reg_next)
     );
 
+    id_stage id_stage_1 (
+        .if_id(inst_out),
+        .rs1_v(rs1_v),
+        .rs2_v(rs2_v),
+        .rs1_s(rs1_s),
+        .rs2_s(rs2_s),
+        .id_ex(id_ex_stage_next)
+    );
+
+    /*
             logic           monitor_valid;
             logic   [63:0]  monitor_order;
             logic   [31:0]  monitor_inst;
@@ -222,6 +239,6 @@ import rv32i_types::*;
     assign monitor_mem_wmask = mem_wb_reg.dmem_wmask;
     assign monitor_mem_rdata = mem_wb_reg.dmem_rdata;
     assign monitor_mem_wdata = mem_wb_reg.dmem_wdata;
-
+    */
 
 endmodule : cpu
