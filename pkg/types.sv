@@ -33,8 +33,8 @@ package rv32i_types;
             logic   [4:0]       rd_s;
             
             logic               regf_we;
-            logic   [31:0]      rs1_v;
-            logic   [31:0]      rs2_v;
+            //logic   [31:0]      rs1_v;
+            //logic   [31:0]      rs2_v;
             logic   [31:0]      rd_v;
 
             logic   [31:0]      a;
