@@ -1,4 +1,4 @@
-module top_tb; // full_empty_tb
+module full_empty_tb; // full_empty_tb
 
     timeunit 1ps;
     timeprecision 1ps;

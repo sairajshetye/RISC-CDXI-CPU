@@ -90,9 +90,8 @@ import rv32i_types::*;
         end
     end
 
-    fifo #(
-        .DEPTH      (8),
-        .WIDTH      (164) // size of the if_id struct
+    inst_q #(
+        .DEPTH      (8)
     ) inst_q(
         .clk(clk),
         .rst(rst),
