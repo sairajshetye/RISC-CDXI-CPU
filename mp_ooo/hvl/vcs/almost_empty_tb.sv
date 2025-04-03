@@ -22,7 +22,7 @@ module almost_empty_tb;
     logic                   fifo_fetch_stall;
 
     // instantiate the dut
-    fifo test_fifo (
+    fifo dut (
         .clk(clk),
         .rst(rst),
         .enq(enq), // input
@@ -35,10 +35,10 @@ module almost_empty_tb;
     initial begin
         $fsdbDumpfile("dump.fsdb");
         if ($test$plusargs("NO_DUMP_ALL_ECE411")) begin
-            $fsdbDumpvars(0, test_fifo, "+all");
+            $fsdbDumpvars(0, dut, "+all");
             $fsdbDumpoff();
         end else begin
-            $fsdbDumpvars(0, test_fifo, "+all");
+            $fsdbDumpvars(0, dut, "+all");
         end
 
         rst = 1'b1;

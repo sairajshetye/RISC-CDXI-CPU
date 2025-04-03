@@ -22,7 +22,7 @@ module lb_tb;
     logic                   rvalid  ;  
 
     // instantiate the dut
-    linebuffer test_lb (
+    linebuffer dut (
         .clk(clk), // input
         .rst(rst), // input
         .new_bmem_addr(new_bmem_addr), // input
@@ -35,10 +35,10 @@ module lb_tb;
     initial begin
         $fsdbDumpfile("dump.fsdb");
         if ($test$plusargs("NO_DUMP_ALL_ECE411")) begin
-            $fsdbDumpvars(0, test_lb, "+all");
+            $fsdbDumpvars(0, dut, "+all");
             $fsdbDumpoff();
         end else begin
-            $fsdbDumpvars(0, test_lb, "+all");
+            $fsdbDumpvars(0, dut, "+all");
         end
 
         rst = 1'b1;

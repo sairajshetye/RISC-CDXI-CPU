@@ -32,7 +32,7 @@ module cache_lb_tb;//; top_tb
     logic           dfp_resp;  // input
 
     // instantiate the dut
-    cache_mod cache_dut (
+    cache_mod dut (
                 .clk(clk),
                 .rst(rst),
 
@@ -55,10 +55,10 @@ module cache_lb_tb;//; top_tb
     initial begin
         $fsdbDumpfile("dump.fsdb");
         if ($test$plusargs("NO_DUMP_ALL_ECE411")) begin
-            $fsdbDumpvars(0, cache_dut, "+all");
+            $fsdbDumpvars(0, dut, "+all");
             $fsdbDumpoff();
         end else begin
-            $fsdbDumpvars(0, cache_dut, "+all");
+            $fsdbDumpvars(0, dut, "+all");
         end
 
         rst = 1'b1; // toggle reset

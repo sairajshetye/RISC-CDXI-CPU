@@ -36,17 +36,17 @@ module arbiter_read_tb;//; top_tb
     logic               bmem_ready; // input
 
     // instantiate the dut
-    arbiter test_arbiter (
+    arbiter dut (
         .*
     );
 
     initial begin
         $fsdbDumpfile("dump.fsdb");
         if ($test$plusargs("NO_DUMP_ALL_ECE411")) begin
-            $fsdbDumpvars(0, test_arbiter, "+all");
+            $fsdbDumpvars(0, dut, "+all");
             $fsdbDumpoff();
         end else begin
-            $fsdbDumpvars(0, test_arbiter, "+all");
+            $fsdbDumpvars(0, dut, "+all");
         end
 
         rst = 1'b1;

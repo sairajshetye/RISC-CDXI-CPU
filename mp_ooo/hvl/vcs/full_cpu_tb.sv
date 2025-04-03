@@ -26,17 +26,17 @@ module full_cpu_tb;//; top_tb
     logic               bmem_rvalid; // input   
 
     // instantiate the dut
-    cpu test_cpu (
+    cpu dut (
         .*
     );
 
     initial begin
         $fsdbDumpfile("dump.fsdb");
         if ($test$plusargs("NO_DUMP_ALL_ECE411")) begin
-            $fsdbDumpvars(0, test_cpu, "+all");
+            $fsdbDumpvars(0, dut, "+all");
             $fsdbDumpoff();
         end else begin
-            $fsdbDumpvars(0, test_cpu, "+all");
+            $fsdbDumpvars(0, dut, "+all");
         end
 
         rst = 1'b1;

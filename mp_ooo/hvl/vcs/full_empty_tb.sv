@@ -1,4 +1,4 @@
-module full_empty_tb;
+module top_tb; // full_empty_tb
 
     timeunit 1ps;
     timeprecision 1ps;
@@ -22,23 +22,23 @@ module full_empty_tb;
     logic                   fifo_fetch_stall;
 
     // instantiate the dut
-    fifo test_fifo (
+    fifo dut (
         .clk(clk),
         .rst(rst),
         .enq(enq), // input
         .deq(deq), // input
         .inst_in(inst_in), // input
         .inst_out(inst_out),
-        .fifo_stall(fifo_fetch_stall)
+        .iq_stall(fifo_fetch_stall)
     );
 
     initial begin
         $fsdbDumpfile("dump.fsdb");
         if ($test$plusargs("NO_DUMP_ALL_ECE411")) begin
-            $fsdbDumpvars(0, test_fifo, "+all");
+            $fsdbDumpvars(0, dut, "+all");
             $fsdbDumpoff();
         end else begin
-            $fsdbDumpvars(0, test_fifo, "+all");
+            $fsdbDumpvars(0, dut, "+all");
         end
 
         rst = 1'b1;
