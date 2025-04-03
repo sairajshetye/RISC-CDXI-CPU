@@ -2,8 +2,8 @@ module id_stage
 import rv32i_types::*;
 (
     input if_id_stage_reg_t if_id,
-    input   logic [31:0]  rs1_v,
-    input   logic [31:0]  rs2_v,
+   //input   logic [31:0]  rs1_v,
+    //input   logic [31:0]  rs2_v,
     output  logic [4:0]   rs1_s,
     output  logic [4:0]   rs2_s,
     //input   logic         global_stall,
@@ -102,8 +102,8 @@ import rv32i_types::*;
         id_ex.rs1_s = rs1_s;
         id_ex.rs2_s = rs2_s;
         id_ex.rd_s = rd_s;
-        id_ex.rs1_v = rs1_v;
-        id_ex.rs2_v = rs2_v;
+        //id_ex.rs1_v = rs1_v;
+        //id_ex.rs2_v = rs2_v;
         id_ex.rd_v = i_imm; // needs to be mux ? -> handled in exec
         id_ex.regf_we = regf_we;
         id_ex.use_rs1 = use_rs1;

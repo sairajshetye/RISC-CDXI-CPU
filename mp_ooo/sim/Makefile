@@ -21,8 +21,8 @@ COMMON_FLAGS = +incdir+$(PWD)/../hvl/common  $(ECE411_NO_FLOAT) +define+DW_SUPPR
 VCS_FLAGS    = $(COMMON_FLAGS) +incdir+$(PWD)/../hvl/vcs -licqueue -full64 -lca -sverilog -timescale=1ps/1ps -debug_acc+all -kdb -suppress=LCA_FEATURES_ENABLED -msg_config=../vcs_warn.config -xprop=../xprop.config -xprop=flowctrl -assert svaext
 VER_FLAGS    = $(COMMON_FLAGS) +incdir+$(PWD)/../hvl/verilator -Wall --timescale 1ps/1ps -Mdir build -O3 -CFLAGS "-Ofast -march=native" --x-assign fast --x-initial fast --noassert --cc --exe ../verilator_warn.vlt --trace-fst --trace-structs --trace-max-array 1048576 --trace-max-width 1048576 +define+ECE411_VERILATOR
 
-# python3 check_sus.py
-# python3 ../bin/rvfi_reference.py 8 $(ECE411_NO_FLOAT)
+python3 check_sus.py
+python3 ../bin/rvfi_reference.py 8 $(ECE411_NO_FLOAT)
 
 vcs/top_tb: $(VCS_SRCS) $(HDRS)
 	mkdir -p vcs

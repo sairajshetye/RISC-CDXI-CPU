@@ -39,7 +39,7 @@ import rv32i_types::*;
 
     logic iq_valid_rdata;
 
-    logic [31:0] rs1_v, rs2_v;
+    //logic [31:0] rs1_v, rs2_v;
     logic [4:0] rs1_s, rs2_s;
 
 
@@ -65,8 +65,7 @@ import rv32i_types::*;
 
     assign ufp_wdata = '0;
     assign ufp_wmask = '0;
-    assign rs1_v = '0;
-    assign rs2_v = '0;
+    
 
     always_comb begin
         if (|ufp_rmask && ufp_resp) begin
@@ -197,8 +196,8 @@ import rv32i_types::*;
 
     id_stage id_stage_1 (
         .if_id(inst_out),
-        .rs1_v(rs1_v),
-        .rs2_v(rs2_v),
+        //.rs1_v(rs1_v),
+        //.rs2_v(rs2_v),
         .rs1_s(rs1_s),
         .rs2_s(rs2_s),
         .id_ex(id_ex_stage_next)
