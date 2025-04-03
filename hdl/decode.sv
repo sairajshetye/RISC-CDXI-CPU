@@ -87,9 +87,9 @@ import rv32i_types::*;
         id_ex.pc = if_id.pc;
         id_ex.pc_next = if_id.pc_next;
         id_ex.order = if_id.order;
-        id_ex.alu_m1_sel = if_id.alu_m1_sel;
+        //id_ex.alu_m1_sel = '0; //if_id.alu_m1_sel;
         id_ex.valid = if_id.valid;
-        id_ex.stall = if_id.stall;
+        id_ex.stall = if_id.fetch_stall;
 
         id_ex.funct3 = funct3;
         id_ex.funct7 = funct7;

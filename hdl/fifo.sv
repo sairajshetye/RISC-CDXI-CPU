@@ -1,14 +1,17 @@
-module fifo #(
+module fifo
+import rv32i_types::*;
+ #(
             parameter               DEPTH     = 8,
             parameter               PTR_SIZE  = $clog2(DEPTH),
-            parameter               WIDTH     = 32
+            parameter               WIDTH     = 164
+
 )(
     input   logic                   clk,
     input   logic                   rst,
     input   logic                   enq,
     input   logic                   deq,
-    input   logic   [WIDTH-1:0]     inst_in,
-    output  logic   [WIDTH-1:0]     inst_out,
+    input   if_id_stage_reg_t     inst_in,
+    output  if_id_stage_reg_t     inst_out,
     output  logic                   valid_rdata,
     output  logic                   iq_stall
 
