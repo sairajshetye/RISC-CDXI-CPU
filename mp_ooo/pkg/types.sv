@@ -16,6 +16,11 @@ package rv32i_types;
         done = 1'b1
     } status_t;
 
+    typedef enum logic {
+        not_taken = 1'b0,
+        taken = 1'b1
+    } branch_t;
+
     typedef enum logic [6:0] {
         op_b_lui       = 7'b0110111, // load upper immediate (U type)
         op_b_auipc     = 7'b0010111, // add upper immediate PC (U type)
@@ -96,6 +101,7 @@ package rv32i_types;
         logic   [63:0]      order;
         logic               valid;
         logic               fetch_stall;
+        logic   [3:0]       rob_idx; // 16 entries for now 
         logic   [1:0]       useless; // zero padding
 
         // alu_m1_sel_t        alu_m1_sel;
@@ -145,8 +151,8 @@ package rv32i_types;
         rv32i_opcode opcode;
         logic [6:0] rd_paddr;
         logic [4:0] rd_addr;
-        logic br_pred;
-        logic br_result;
+        branch_t br_pred;
+        branch_t br_result;
     } rob_entry_t;
 
 
