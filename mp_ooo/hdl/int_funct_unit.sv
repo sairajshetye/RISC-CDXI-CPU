@@ -1,4 +1,4 @@
-module ex_stage
+module integer_unit
 import rv32i_types::*;
 (
     input id_ex_stage_reg_t id_ex,
@@ -62,19 +62,7 @@ import rv32i_types::*;
             default   : aluout = 'x;
         endcase
     end
-    // branch stuff, dont need for this checkpoint, will be its own FU
-    always_comb begin
-        unique case (cmpop)
-            branch_f3_beq : br_en = (au == bu);
-            branch_f3_bne : br_en = (au != bu);
-            branch_f3_blt : br_en = (as <  bs);
-            branch_f3_bge : br_en = (as >=  bs); // changed added =
-            branch_f3_bltu: br_en = (au <  bu);
-            branch_f3_bgeu: br_en = (au >=  bu); // changed added =
-            default       : br_en = 1'bx;
-        endcase
-    end
-
+    
     always_comb
     begin
         a          = 'x;
@@ -106,102 +94,6 @@ import rv32i_types::*;
                 rd_v = id_ex.pc + id_ex.u_imm;
                 rd_s_real = id_ex.rd_s;
                 regf_we = 1'b1;
-            end
-            op_b_jal  : begin // uses rd, but not rs1 or rs2
-                // NOT NEEDED YET
-                regf_we = 1'b1;
-                rd_v = id_ex.pc_next;
-                rd_s_real = id_ex.rd_s;
-                a = '0;
-                b = '0;
-                aluop = '0;
-                cmpop = '0;
-                pc_next = id_ex.pc + id_ex.j_imm;
-                branch_taken = '1;
-            end
-            op_b_jalr : begin
-                // NOT NEEDED YET
-                regf_we = 1'b1;
-                rd_v = id_ex.pc_next;
-                rd_s_real = id_ex.rd_s;
-                a = '0;
-                b = '0;
-                aluop = '0;
-                cmpop = '0;
-                pc_next = (rs1_v + id_ex.i_imm) & 32'hfffffffe;
-                use_rs1 = '1;
-                branch_taken = '1;
-            end
-            op_b_br   : begin
-                // NOT NEEDED YET - CP3
-                regf_we = 1'b0;
-                aluop = '0;
-
-                rd_v = '0;//id_ex.rd_v;
-                a = rs1_v;
-                b = rs2_v;            
-                cmpop = id_ex.funct3;
-                if (br_en) begin
-                    pc_next = id_ex.pc + id_ex.b_imm;
-                    branch_taken = '1;
-                end else begin
-                    pc_next = id_ex.pc_next;
-                    branch_taken = '0;
-                end
-                use_rs1 = '1;
-                use_rs2 = '1;
-                rs2_s_real = id_ex.rs2_s;
-            end
-            op_b_load : begin
-                // NOT NEEDED YET CP2 NEEDS IT - just want to calculate the addr
-                regf_we = 1'b0;
-                rd_v = id_ex.rd_v;
-                rd_s_real = id_ex.rd_s;
-                a = rs1_v;
-                b = id_ex.i_imm;
-                aluop = '0; // 0 for add
-                cmpop = '0;
-                dmem_addr = aluout; // add rs1_v + id_ex.i_imm
-                dmem_addr_saved = aluout;
-                unique case (id_ex.funct3)
-                    load_f3_lb, load_f3_lbu: dmem_rmask = 4'b0001 << dmem_addr[1:0];
-                    load_f3_lh, load_f3_lhu: dmem_rmask = 4'b0011 << dmem_addr[1:0];
-                    load_f3_lw             : dmem_rmask = 4'b1111;
-                    default                : dmem_rmask = 'x;
-                endcase
-                dreq = '1;
-                dreq_load = '1;
-                dmem_addr[1:0] = 2'd0; // align
-                use_rs1 = '1; // IS THIS RIGHT
-            end
-            op_b_store: begin // uses rs2
-                // NOT NEEDED YET CP2 NEEDS IT
-                regf_we = 1'b0;
-                rd_v = '0;//id_ex.rd_v;
-                rd_s_real = '0;
-                a = rs1_v;
-                b = id_ex.s_imm;
-                aluop = '0; // 0 for add
-                cmpop = '0;
-                dmem_addr = aluout;
-                dmem_addr_saved = aluout;
-                rs2_s_real = id_ex.rs2_s;
-                unique case (id_ex.funct3)
-                    store_f3_sb: dmem_wmask = 4'b0001 << dmem_addr[1:0];
-                    store_f3_sh: dmem_wmask = 4'b0011 << dmem_addr[1:0];
-                    store_f3_sw: dmem_wmask = 4'b1111;
-                    default    : dmem_wmask = 'x;
-                endcase
-                unique case (id_ex.funct3)
-                    store_f3_sb: dmem_wdata[8 *dmem_addr[1:0] +: 8 ] = rs2_v[7 :0];
-                    store_f3_sh: dmem_wdata[16*dmem_addr[1]   +: 16] = rs2_v[15:0];
-                    store_f3_sw: dmem_wdata = rs2_v;
-                    default    : dmem_wdata = 'x;
-                endcase
-                dreq = '1;
-                dmem_addr[1:0] = 2'd0; // align
-                use_rs1 = '1; // IS THIS RIGHT
-                use_rs2 = '1; // IS THIS RIGHT
             end
             op_b_imm  : begin
                 a = rs1_v; // potential point of failure, make sure rs1_v is right
@@ -326,4 +218,4 @@ import rv32i_types::*;
         ex_mem.branch_taken = branch_taken;
     end
     
-endmodule : ex_stage
+endmodule : integer_unit
