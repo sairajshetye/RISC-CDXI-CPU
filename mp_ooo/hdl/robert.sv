@@ -13,11 +13,11 @@ import rv32i_types::*;
     input   logic                   ld_branch_res,
     input   branch_t                branch_res_in, 
     input   rob_entry_t             rob_in,
-    input   logic [3:0]             rob_idx_in,     
+    input   logic [PTR_SIZE-1:0]    rob_idx_in,     
     output  rob_entry_t             rob_out,
     output  logic                   valid_rdata,
     output  logic                   alloc_stall,
-    output  logic                   rob_tail_idx
+    output  logic [PTR_SIZE-1:0]    rob_tail_idx
 
 );
 
@@ -43,7 +43,7 @@ import rv32i_types::*;
         alloc_stall = full;
         valid_rdata = ~empty;
 
-        rob_tail_idx = tail; // in rename and allocate, set inst rob idx field to this tail
+        rob_tail_idx = tail[PTR_SIZE-1:0]; // in rename and allocate, set inst rob idx field to this tail
 
         deq = (rob[head[PTR_SIZE-1:0]].status == done);
 
