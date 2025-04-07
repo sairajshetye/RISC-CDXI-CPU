@@ -12,9 +12,9 @@ import rv32i_types::*;
 (   
     input logic clk, 
     input logic rst,
-    input logic [INST_SIZE-1:0] inst,
-    input logic [RS1_DATA_SIZE-1:0] op1,
-    input logic [RS2_DATA_SIZE-1:0] op2,
+    input prf_ex_stage_reg_t prf_out,           //only use inst (change to be just that?)
+    input logic [RS1_DATA_SIZE-1:0] rs1_v,        //rs1 read data
+    input logic [RS2_DATA_SIZE-1:0] rs2_v,        //rs2 read data
 
     output logic [RS1_DATA_SIZE-1:0] out
 
@@ -38,61 +38,62 @@ import rv32i_types::*;
     3'b110 : rem of div signed
     3'b111 : rem of div unsigned
     */
-
-    assign funct3 = inst[14:12];
-
+    always_ff @(posedge clk) begin
+    //assign funct3 = prf_out.inst[14:12];
+        funct3 = prf_out.funct3;
+    end
     always_comb begin
         unique case (funct3)
-            3'b000 : begin      //MUL
+            md_MUL : begin      //MUL, signed x signed
                 mult_en = '1;
-                mult_tc = '0;
+                mult_tc = '1;
                 div_en = '0;
                 div_tc = '0;
                 out_select = 3'b001;
             end
-            3'b001 : begin      //MUL High, signed x signed
+            md_MULH : begin      //MUL High, signed x signed
                 mult_en = '1;
                 mult_tc = '1;
                 div_en = '0;
                 div_tc = '0;
                 out_select = 3'b010;
             end
-            3'b010 : begin      //MUL High (S)(U), signed x unsigned
+            md_MULHSU : begin      //MUL High (S)(U), signed x unsigned
                 mult_en = '1;
                 mult_tc = '1;   //?
                 div_en = '0;
                 div_tc = '0;
                 out_select = 3'b010;
             end
-            3'b011 : begin      //MUL High (U), unsigned x unisgned
+            md_MULHU : begin      //MUL High (U), unsigned x unisgned
                 mult_en = '1;
                 mult_tc = '0;
                 div_en = '0;
                 div_tc = '0;
                 out_select = 3'b010;
             end
-            3'b100 : begin      //DIV
+            md_DIV : begin      //DIV
                 mult_en = '0;
                 mult_tc = '0;
                 div_en = '0;
                 div_tc = '1;
                 out_select = 3'b100;
             end
-            3'b101 : begin      //DIV (U)
+            md_DIVU : begin      //DIV (U)
                 mult_en = '0;
                 mult_tc = '0;
                 div_en = '1;
                 div_tc = '0;
                 out_select = 3'b101;
             end
-            3'b110 : begin      //Remainder
+            md_REM : begin      //Remainder
                 mult_en = '0;
                 mult_tc = '0;
                 div_en = '0;
                 div_tc = '1;
                 out_select = 3'b110;
             end
-            3'b111 : begin      //Remainder (U)
+            md_REMU : begin      //Remainder (U)
                 mult_en = '0;
                 mult_tc = '0;
                 div_en = '1;
@@ -118,8 +119,8 @@ import rv32i_types::*;
         .rst_n(rst), //active low
         .en(mult_en),    //enable
         .tc(mult_tc),   //two's complement 
-        .a(op1),
-        .b(op2), 
+        .a(rs1_v),
+        .b(rs2_v), 
         .product(product) 
 
     );
@@ -133,8 +134,8 @@ import rv32i_types::*;
         .clk(clk),
         .rst_n(rst),    //active low
         .en(div_en),     //enable
-        .a(op1),
-        .b(op2),
+        .a(rs1_v),
+        .b(rs2_v),
         .quotient(quotient),
         .remainder(remainder),
         .divide_by_0(div0)
@@ -149,8 +150,8 @@ import rv32i_types::*;
         .clk(clk),
         .rst_n(rst),    //active low
         .en(div_tc),     //enable
-        .a(op1),
-        .b(op2),
+        .a(rs1_v),
+        .b(rs2_v),
         .quotient(quotient_tc),
         .remainder(remainder_tc),
         .divide_by_0(div0_tc)
@@ -169,6 +170,7 @@ import rv32i_types::*;
     
     */
     always_comb begin
+        out = '0;
         case (out_select)
             3'b000 : begin  //nothing
                 out = '0;
@@ -198,7 +200,12 @@ import rv32i_types::*;
             end
             3'b110 : begin //rem of div signed
                 if (!div0_tc) begin
-                    out = remainder_tc;
+                    if (rs1_v[RS1_DATA_SIZE-1] == 1) begin
+                        out = -1 * remainder_tc;
+                    end
+                    else begin
+                        out = remainder_tc;
+                    end
                 end else begin
                     out = '0;
                 end
