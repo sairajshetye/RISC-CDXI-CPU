@@ -109,7 +109,7 @@ REMU -
         rst = 1'b0;     //active low reset
         repeat (2) @(posedge clk);
         rst <= 1'b1;
-
+        
         //MUL tests
         prf_reg.funct3 <= 3'b0;
         op1 <= 'd1;

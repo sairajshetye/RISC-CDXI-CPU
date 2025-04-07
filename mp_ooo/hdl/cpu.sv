@@ -15,18 +15,23 @@ import rv32i_types::*;
     input   logic               bmem_rvalid
 );
 
-    logic iq_stall;
+    logic iq_stall, dq_stall;
     logic [31:0] pc;
     logic [31:0] pc_next;
 
     logic iq_enq;
     logic iq_deq;
+    logic dq_enq;
+    logic dq_deq;
+
 
     if_id_stage_reg_t if_id_reg_next;
 
     if_id_stage_reg_t inst_out;
 
-    id_ex_stage_reg_t id_ex_stage_next;
+    id_ex_stage_reg_t id_ex_reg_next;
+
+    id_ex_stage_reg_t id_ex_inst_out;
 
     logic lb_rvalid;
     logic lb_wen;
@@ -37,7 +42,7 @@ import rv32i_types::*;
 
     logic [255:0] lb_rdata;
 
-    logic iq_valid_rdata;
+    logic iq_valid_rdata, dq_valid_rdata;
 
     //logic [31:0] rs1_v, rs2_v;
     logic [4:0] rs1_s, rs2_s;
@@ -200,8 +205,24 @@ import rv32i_types::*;
         //.rs2_v(rs2_v),
         .rs1_s(rs1_s),
         .rs2_s(rs2_s),
-        .id_ex(id_ex_stage_next)
+        .id_ex(id_ex_reg_next)
     );
+
+    decode_q #(
+        .DEPTH      (8),
+        .WIDTH      (563) // size of the if_id struct
+    ) dec_queue (
+        .clk(clk),
+        .rst(rst),
+        .enq(dq_enq),   //undriven
+        .deq(dq_deq),   //undriven
+        .inst_in(id_ex_reg_next),
+        .inst_out(id_ex_inst_out),
+        .valid_rdata(dq_valid_rdata),
+        .dq_stall(dq_stall)
+
+    );
+
 
     /*
             logic           monitor_valid;
