@@ -1,4 +1,4 @@
-module full_cpu_tb;//; top_tb
+module top_tb;//;  full_cpu_tb
 
     timeunit 1ps;
     timeprecision 1ps;
@@ -26,17 +26,17 @@ module full_cpu_tb;//; top_tb
     logic               bmem_rvalid; // input   
 
     // instantiate the dut
-    cpu test_cpu (
+    cpu dut (
         .*
     );
 
     initial begin
         $fsdbDumpfile("dump.fsdb");
         if ($test$plusargs("NO_DUMP_ALL_ECE411")) begin
-            $fsdbDumpvars(0, test_cpu, "+all");
+            $fsdbDumpvars(0, dut, "+all");
             $fsdbDumpoff();
         end else begin
-            $fsdbDumpvars(0, test_cpu, "+all");
+            $fsdbDumpvars(0, dut, "+all");
         end
 
         rst = 1'b1;
@@ -52,10 +52,10 @@ module full_cpu_tb;//; top_tb
         repeat (2) @(posedge clk);
         bmem_rvalid <= '1;
         bmem_raddr <= 32'hAAAAA000;
-        bmem_rdata <= 64'hFFFFFFFFFFFFFFFF;
+        bmem_rdata <= 64'h0031011300508093;
 
         repeat (1) @(posedge clk);
-        bmem_rdata <= 64'hFFFFFFFFFFFFFFF0;
+        bmem_rdata <= 64'h002081b3;
 
         repeat (1) @(posedge clk);
         bmem_rdata <= 64'hFFFFFFFFFFFFFF00;
