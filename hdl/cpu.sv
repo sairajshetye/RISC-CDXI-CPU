@@ -141,8 +141,8 @@ import rv32i_types::*;
         .rst(rst),
         .enq(dq_enq),
         .deq(dq_deq),
-        .inst_in(id_ex_reg_next),
-        .inst_out(id_ex_inst_out),
+        .inst_in_d(id_ex_reg_next),
+        .inst_out_d(id_ex_inst_out),
         .valid_rdata(dq_valid_rdata),
         .dq_stall(dq_stall)
     );

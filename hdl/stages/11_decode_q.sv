@@ -9,8 +9,8 @@ import rv32i_types::*;
     input   logic                   rst,
     input   logic                   enq,
     input   logic                   deq,
-    input   id_ex_stage_reg_t     inst_in,
-    output  id_ex_stage_reg_t     inst_out,
+    input   id_ex_stage_reg_t     inst_in_d,
+    output  id_ex_stage_reg_t     inst_out_d,
     output  logic                   valid_rdata,
     output  logic                   dq_stall
 
@@ -19,10 +19,11 @@ import rv32i_types::*;
     logic valid_op;
     logic valid_enq;
     logic valid_deq;
+    logic in_out; // for enq and deq same time
     logic [PTR_SIZE:0] head;
     logic [PTR_SIZE:0] tail;
 
-    id_ex_stage_reg_t internal_array [DEPTH];
+    id_ex_stage_reg_t internal_array_d [DEPTH];
 
     logic full;
     logic empty;
@@ -58,6 +59,7 @@ import rv32i_types::*;
 
         dq_stall = full;
         valid_rdata = ~empty;
+        in_out = (enq && deq);
 
     end
 
@@ -73,18 +75,18 @@ import rv32i_types::*;
     always_ff @(posedge clk) begin
         if (rst) begin
             for (integer i = 0; i < DEPTH; i++) begin
-                internal_array[i] <= '0;
+                internal_array_d[i] <= '0;
             end
             tail <= '0;
             head <= '0;
         end else begin
-            if (inst_in.valid) begin
+            if (inst_in_d.valid) begin
                 if (enq && deq) begin
-                    internal_array[tail] <= inst_in;
+                    internal_array_d[tail] <= inst_in_d;
                     tail <= (tail + 4'b0001);
                     head <= (head + 4'b0001);
                 end else if (enq && !full) begin
-                    internal_array[tail] <= inst_in; 
+                    internal_array_d[tail] <= inst_in_d; 
                     tail <= (tail + 4'b0001);
                 end else if (deq && !empty) begin
                     head <= (head + 4'b0001);
@@ -94,11 +96,15 @@ import rv32i_types::*;
     
     end
 
-    always_comb begin
-        if (empty) begin
-            inst_out = '0;
-        end else begin
-            inst_out = internal_array[head[2:0]];
+    always_ff @ (posedge clk) begin
+        if (in_out) begin
+            inst_out_d <= inst_in_d;
+        end
+        else if (empty) begin
+            inst_out_d <= '0;
+        end 
+        else begin
+            inst_out_d <= internal_array_d[head[PTR_SIZE-1:0]];
         end
     end
 

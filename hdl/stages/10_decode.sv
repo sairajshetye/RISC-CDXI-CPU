@@ -114,6 +114,7 @@ import rv32i_types::*;
         id_ex.use_rs2 = use_rs2;
         id_ex.is_store = is_store;
         id_ex.use_rd = use_rd;
+        id_ex.useless = '0;
 
         enq = if_id.deq;
     end
