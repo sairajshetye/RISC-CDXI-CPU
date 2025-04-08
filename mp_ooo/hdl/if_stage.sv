@@ -36,6 +36,7 @@ import rv32i_types::*;
             if_id.order = order_reg;
             if_id.valid = '0;
             if_id.fetch_stall = '1;
+            if_id.rob_idx = 'x;
             if_id.useless = '0;
 
             imem_addr = pc_next;
