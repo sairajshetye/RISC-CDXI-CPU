@@ -1,4 +1,4 @@
-module inst_q
+module decode_q
 import rv32i_types::*;
  #(
             parameter               DEPTH     = 8,
@@ -9,10 +9,10 @@ import rv32i_types::*;
     input   logic                   rst,
     input   logic                   enq,
     input   logic                   deq,
-    input   if_id_stage_reg_t     inst_in,
-    output  if_id_stage_reg_t     inst_out,
+    input   id_ex_stage_reg_t     inst_in,
+    output  id_ex_stage_reg_t     inst_out,
     output  logic                   valid_rdata,
-    output  logic                   iq_stall
+    output  logic                   dq_stall
 
 );
 
@@ -22,12 +22,12 @@ import rv32i_types::*;
     logic [PTR_SIZE:0] head;
     logic [PTR_SIZE:0] tail;
 
-    if_id_stage_reg_t internal_array [DEPTH];
+    id_ex_stage_reg_t internal_array [DEPTH];
 
     logic full;
     logic empty;
 
-    if_id_stage_reg_t inst_in_reg;
+    //logic [WIDTH-1:0] inst_in_reg;
 
     always_comb begin
 
@@ -53,21 +53,21 @@ import rv32i_types::*;
         // the fifo is empty
         // deq by itself should not be allowed since empty
 
-        full = (head[PTR_SIZE] != tail[PTR_SIZE] && head[PTR_SIZE-1:0] == tail[PTR_SIZE-1:0]); 
+        full = (head[3] != tail[3] && head[2:0] == tail[2:0]); 
         empty = (head == tail);
 
-        iq_stall = full;
+        dq_stall = full;
         valid_rdata = ~empty;
 
     end
 
-    always_ff @(posedge clk) begin // NOT BEING USED, CAN DELETE LATER?
-        if (rst) begin
-            inst_in_reg  <= 'x;
-        end else begin
-            inst_in_reg  <= inst_in;
-        end
-    end
+    // always_ff @(posedge clk) begin // NOT BEING USED, CAN DELETE LATER?
+    //     if (rst) begin
+    //         inst_in_reg  <= 'x;
+    //     end else begin
+    //         inst_in_reg  <= inst_in;
+    //     end
+    // end
 
 
     always_ff @(posedge clk) begin
@@ -96,8 +96,8 @@ import rv32i_types::*;
         if (empty) begin
             inst_out = 'x;
         end else begin
-            inst_out = internal_array[head[PTR_SIZE-1:0]];
+            inst_out = internal_array[head[2:0]];
         end
     end
 
-endmodule : inst_q
+endmodule : decode_q
