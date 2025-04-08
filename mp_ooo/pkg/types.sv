@@ -129,7 +129,8 @@ package rv32i_types;
         logic           regf_we;
         logic           is_store;
         logic           use_rd;
-        // what else?
+        // what else? - 391 bits
+        logic           useless;
 
     } id_ex_stage_reg_t;
 

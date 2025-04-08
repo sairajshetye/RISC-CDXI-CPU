@@ -19,6 +19,7 @@ import rv32i_types::*;
     logic valid_op;
     logic valid_enq;
     logic valid_deq;
+    logic in_out; // for enq and deq same time
     logic [PTR_SIZE:0] head;
     logic [PTR_SIZE:0] tail;
 
@@ -58,6 +59,7 @@ import rv32i_types::*;
 
         iq_stall = full;
         valid_rdata = ~empty;
+        in_out = (enq && deq);
 
     end
 
@@ -94,11 +96,15 @@ import rv32i_types::*;
     
     end
 
-    always_comb begin
-        if (empty) begin
-            inst_out = '0;
-        end else begin
-            inst_out = internal_array[head[PTR_SIZE-1:0]];
+    always_ff @ (posedge clk) begin
+        if (in_out) begin
+            inst_out <= inst_in;
+        end
+        else if (empty) begin
+            inst_out <= '0;
+        end 
+        else begin
+            inst_out <= internal_array[head[PTR_SIZE-1:0]];
         end
     end
 
