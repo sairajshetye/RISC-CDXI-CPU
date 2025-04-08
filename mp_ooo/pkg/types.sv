@@ -90,7 +90,8 @@ package rv32i_types;
         logic   [63:0]      order;
         logic               valid;
         logic               fetch_stall;
-        logic   [1:0]       useless; // zero padding
+        logic               deq;
+        logic               useless; // zero padding
 
         // alu_m1_sel_t        alu_m1_sel;
 
@@ -107,7 +108,7 @@ package rv32i_types;
         logic               valid;
         logic               stall;
 
-        alu_m1_sel_t        alu_m1_sel;
+        //alu_m1_sel_t        alu_m1_sel;
 
         logic   [2:0]   funct3;
         logic   [6:0]   funct7;
@@ -159,7 +160,7 @@ package rv32i_types;
         logic               valid;
         logic               stall;
 
-        alu_m1_sel_t        alu_m1_sel;
+        //alu_m1_sel_t        alu_m1_sel;
 
         logic   [2:0]   funct3;
         logic   [6:0]   funct7;
@@ -203,7 +204,7 @@ package rv32i_types;
         logic               valid;
         logic               stall;
 
-        alu_m1_sel_t        alu_m1_sel;
+        //alu_m1_sel_t        alu_m1_sel;
 
         logic   [2:0]   funct3;
         logic   [6:0]   funct7;
