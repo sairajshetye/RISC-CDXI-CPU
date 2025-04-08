@@ -123,4 +123,22 @@ package rv32i_types;
     } id_ex_stage_reg_t;
 
 
+
+    typedef struct packed {
+        //valid, renamed, p_addr, value
+        logic           valid;
+        logic           renamed; // not renamed = 0, renamed = 1
+        logic   [6:0]   p_addr;
+        logic   [6:0]   p_addr_ret; // retirement
+        logic   [31:0]  value;
+    } arf_reg_t;
+
+
+    typedef struct packed {
+        //valid, value
+        logic           valid;
+        logic   [31:0]  value;
+    } prf_t;
+
+
 endpackage : rv32i_types
