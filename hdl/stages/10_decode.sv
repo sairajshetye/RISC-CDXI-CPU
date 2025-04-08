@@ -4,6 +4,8 @@ import rv32i_types::*;
     input if_id_stage_reg_t if_id,
    //input   logic [31:0]  rs1_v,
     //input   logic [31:0]  rs2_v,
+    output  logic         enq,
+    output  logic         deq,
     output  logic [4:0]   rs1_s,
     output  logic [4:0]   rs2_s,
     //input   logic         global_stall,
@@ -36,6 +38,8 @@ import rv32i_types::*;
     //assign rd_s   = if_id.inst[11:7];
     assign is_store = opcode == 7'b0100011 ? 1'b1 : 1'b0;
     assign regf_we = 1'b1; // should only write back at wb stage tho hmm and if needed
+
+    assign deq = '0; // dont dequeue from decode queue
     
     always_comb begin // sets if we use rs1, rs2, rd
         unique case (opcode)
@@ -110,6 +114,8 @@ import rv32i_types::*;
         id_ex.use_rs2 = use_rs2;
         id_ex.is_store = is_store;
         id_ex.use_rd = use_rd;
+
+        enq = if_id.deq;
     end
 
 endmodule : id_stage

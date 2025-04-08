@@ -4,6 +4,7 @@ import rv32i_types::*;
     input   logic           clk,
     input   logic           rst,
     input   logic           iq_stall,
+    input   logic           dq_stall,
     output  logic           enq,
     output  logic           deq,
 
@@ -43,13 +44,29 @@ import rv32i_types::*;
             imem_rmask = '1;
 
             enq = '0;
-            deq = '0;
+
+            if (dq_stall) begin
+                deq = '0;
+                if_id.deq = '0;
+            end
+            else begin
+                deq = '1;
+                if_id.deq = '1;
+            end
 
             if (imem_resp) begin
                 if_id.inst = imem_rdata;
                 if_id.fetch_stall = '0;
                 if_id.valid = '1;
                 enq = '1;
+                if (dq_stall) begin
+                    deq = '0;
+                    if_id.deq = '0;
+                end
+                else begin
+                    deq = '1;
+                    if_id.deq = '1;
+                end
             end
     end
 

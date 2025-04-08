@@ -15,21 +15,14 @@ import rv32i_types::*;
     input   logic               bmem_rvalid
 );
 
-    logic iq_stall;
     logic [31:0] pc;
     logic [31:0] pc_next;
 
-    logic iq_enq;
-    logic iq_deq;
+    logic iq_enq, dq_enq;
+    logic iq_deq, dq_deq;
 
-    if_id_stage_reg_t if_id_reg_next;
-
-    if_id_stage_reg_t inst_out;
-
-    id_ex_stage_reg_t id_ex_stage_next;
-
-    logic lb_rvalid;
-    logic lb_wen;
+    if_id_stage_reg_t if_id_reg_next, if_id_inst_out;
+    id_ex_stage_reg_t id_ex_reg_next, id_ex_inst_out;
 
     logic [255:0] cache_rdata;
 
@@ -37,7 +30,8 @@ import rv32i_types::*;
 
     logic [255:0] lb_rdata;
 
-    logic iq_valid_rdata;
+    logic iq_valid_rdata, dq_valid_rdata;
+    logic iq_stall, dq_stall;
 
     //logic [31:0] rs1_v, rs2_v;
     logic [4:0] rs1_s, rs2_s;
@@ -90,19 +84,32 @@ import rv32i_types::*;
         end
     end
 
-    // fifo #(
-    //     .DEPTH      (8),
-    //     .WIDTH      (164) // size of the if_id struct
-    // ) inst_q(
-    //     .clk(clk),
-    //     .rst(rst),
-    //     .enq(iq_enq),
-    //     .deq(iq_deq),
-    //     .inst_in(if_id_reg_next),
-    //     .inst_out(inst_out),
-    //     .valid_rdata(iq_valid_rdata),
-    //     .iq_stall(iq_stall)
-    // );
+    pcreg pcreg(
+        .clk(clk),
+        .rst(rst),
+        .pc(pc),
+        .pc_next(pc_next)
+    );
+
+    if_stage if_stage_1 (
+        .clk(clk),
+        .rst(rst),
+        .iq_stall(iq_stall),
+        .dq_stall(dq_stall),
+        .enq(iq_enq),
+        .deq(iq_deq),
+
+        .imem_addr(ufp_addr),
+        .imem_rmask(ufp_rmask),
+        .imem_rdata(cache_rdata_32),
+        .imem_resp(ufp_resp),
+
+        .pc(pc),
+        .pc_next(pc_next),
+
+        .if_id(if_id_reg_next)
+    );
+
     inst_q #(
         .DEPTH      (8)
     ) inst_q(
@@ -111,10 +118,48 @@ import rv32i_types::*;
         .enq(iq_enq),
         .deq(iq_deq),
         .inst_in(if_id_reg_next),
-        .inst_out(inst_out),
+        .inst_out(if_id_inst_out),
         .valid_rdata(iq_valid_rdata),
         .iq_stall(iq_stall)
     );
+
+    id_stage id_stage_1 (
+        .if_id(if_id_inst_out),
+        //.rs1_v(rs1_v),
+        //.rs2_v(rs2_v),
+        .enq(dq_enq),
+        .deq(dq_deq),
+        .rs1_s(rs1_s),
+        .rs2_s(rs2_s),
+        .id_ex(id_ex_reg_next)
+    );
+
+    decode_q #(
+        .DEPTH      (8)
+    ) decode_q(
+        .clk(clk),
+        .rst(rst),
+        .enq(dq_enq),
+        .deq(dq_deq),
+        .inst_in(id_ex_reg_next),
+        .inst_out(id_ex_inst_out),
+        .valid_rdata(dq_valid_rdata),
+        .dq_stall(dq_stall)
+    );
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
 
     arbiter arbiter(
         .clk(clk), // input
@@ -141,33 +186,6 @@ import rv32i_types::*;
         .bmem_ready(bmem_ready) // input
     );
 
-    pcreg pcreg(
-        .clk(clk),
-        .rst(rst),
-        .pc(pc),
-        .pc_next(pc_next)
-    );
-
-    // cache icache(
-    //     .clk(clk), // input
-    //     .rst(rst), // input
-
-    //     .ufp_addr(ufp_addr), // input
-    //     .ufp_rmask(ufp_rmask), // input
-    //     .ufp_wmask(ufp_wmask), // input
-    //     .ufp_rdata(ufp_rdata),
-    //     .ufp_wdata(ufp_wdata), // input
-    //     .ufp_resp(ufp_resp),
-
-    //     // memory side signals, dfp -> downward facing port
-    //     .dfp_addr(dfp_addr),
-    //     .dfp_read(dfp_read),
-    //     .dfp_write(dfp_write),
-    //     .dfp_rdata(dfp_rdata), // input
-    //     .dfp_wdata(dfp_wdata),
-    //     .dfp_resp(dfp_resp) // input
-    // );
-
     cache_mod icache(
         .clk(clk), // input
         .rst(rst), // input
@@ -188,32 +206,6 @@ import rv32i_types::*;
         .dfp_resp(dfp_resp) // input
     );
 
-    if_stage if_stage_1 (
-        .clk(clk),
-        .rst(rst),
-        .iq_stall(iq_stall),
-        .enq(iq_enq),
-        .deq(iq_deq),
-
-        .imem_addr(ufp_addr),
-        .imem_rmask(ufp_rmask),
-        .imem_rdata(cache_rdata_32),
-        .imem_resp(ufp_resp),
-
-        .pc(pc),
-        .pc_next(pc_next),
-
-        .if_id(if_id_reg_next)
-    );
-
-    id_stage id_stage_1 (
-        .if_id(inst_out),
-        //.rs1_v(rs1_v),
-        //.rs2_v(rs2_v),
-        .rs1_s(rs1_s),
-        .rs2_s(rs2_s),
-        .id_ex(id_ex_stage_next)
-    );
 
     /*
             logic           monitor_valid;
