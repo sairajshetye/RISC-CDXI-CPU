@@ -70,7 +70,7 @@ import rv32i_types::*;
 
         for (integer unsigned i = 0; i < 4; i++) begin
             // ufp_addr[4:0] = offset
-            cache_rdata_32[unsigned'(i)*8+:8] = cache_rdata[((ufp_addr[4:0]*8)+(unsigned'(i)*8))+:8]; 
+            cache_rdata_32[unsigned'(i)*8+:8] = cache_rdata[((pc[4:0]*8)+(unsigned'(i)*8))+:8]; 
         end
     end
 

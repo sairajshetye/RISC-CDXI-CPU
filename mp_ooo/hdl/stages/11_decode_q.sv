@@ -53,7 +53,7 @@ import rv32i_types::*;
         // the fifo is empty
         // deq by itself should not be allowed since empty
 
-        full = (head[3] != tail[3] && head[2:0] == tail[2:0]); 
+        full = (head[PTR_SIZE] != tail[PTR_SIZE] && head[PTR_SIZE-1:0] == tail[PTR_SIZE-1:0]); 
         empty = (head == tail);
 
         dq_stall = full;
@@ -78,15 +78,17 @@ import rv32i_types::*;
             tail <= '0;
             head <= '0;
         end else begin
-            if (enq && deq) begin
-                internal_array[tail] <= inst_in;
-                tail <= (tail + 4'b0001);
-                head <= (head + 4'b0001);
-            end else if (enq && !full) begin
-                internal_array[tail] <= inst_in; 
-                tail <= (tail + 4'b0001);
-            end else if (deq && !empty) begin
-                head <= (head + 4'b0001);
+            if (inst_in.valid) begin
+                if (enq && deq) begin
+                    internal_array[tail] <= inst_in;
+                    tail <= (tail + 4'b0001);
+                    head <= (head + 4'b0001);
+                end else if (enq && !full) begin
+                    internal_array[tail] <= inst_in; 
+                    tail <= (tail + 4'b0001);
+                end else if (deq && !empty) begin
+                    head <= (head + 4'b0001);
+                end
             end
         end
     
@@ -94,7 +96,7 @@ import rv32i_types::*;
 
     always_comb begin
         if (empty) begin
-            inst_out = 'x;
+            inst_out = '0;
         end else begin
             inst_out = internal_array[head[2:0]];
         end

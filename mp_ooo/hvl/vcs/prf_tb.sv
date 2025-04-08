@@ -1,4 +1,4 @@
-module top_tb // prf_tb
+module prf_tb //  top_tb
 
 import rv32i_types::*;
 ();
