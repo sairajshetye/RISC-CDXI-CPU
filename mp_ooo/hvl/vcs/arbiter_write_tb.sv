@@ -1,4 +1,4 @@
-module top_tb;//arbiter_write_tb;
+module arbiter_write_tb;//top_tb;
 
     timeunit 1ps;
     timeprecision 1ps;

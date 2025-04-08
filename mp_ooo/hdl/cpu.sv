@@ -90,9 +90,21 @@ import rv32i_types::*;
         end
     end
 
-    fifo #(
-        .DEPTH      (8),
-        .WIDTH      (164) // size of the if_id struct
+    // fifo #(
+    //     .DEPTH      (8),
+    //     .WIDTH      (164) // size of the if_id struct
+    // ) inst_q(
+    //     .clk(clk),
+    //     .rst(rst),
+    //     .enq(iq_enq),
+    //     .deq(iq_deq),
+    //     .inst_in(if_id_reg_next),
+    //     .inst_out(inst_out),
+    //     .valid_rdata(iq_valid_rdata),
+    //     .iq_stall(iq_stall)
+    // );
+    inst_q #(
+        .DEPTH      (8)
     ) inst_q(
         .clk(clk),
         .rst(rst),

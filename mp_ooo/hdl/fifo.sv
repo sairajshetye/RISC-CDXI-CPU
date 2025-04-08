@@ -3,15 +3,15 @@ import rv32i_types::*;
  #(
             parameter               DEPTH     = 8,
             parameter               PTR_SIZE  = $clog2(DEPTH),
-            parameter               WIDTH     = 164
+            parameter               WIDTH     = 32
 
 )(
     input   logic                   clk,
     input   logic                   rst,
     input   logic                   enq,
     input   logic                   deq,
-    input   if_id_stage_reg_t     inst_in,
-    output  if_id_stage_reg_t     inst_out,
+    input   logic   [WIDTH-1:0]     inst_in,
+    output  logic   [WIDTH-1:0]     inst_out,
     output  logic                   valid_rdata,
     output  logic                   iq_stall
 
@@ -54,7 +54,7 @@ import rv32i_types::*;
         // the fifo is empty
         // deq by itself should not be allowed since empty
 
-        full = (head[3] != tail[3] && head[2:0] == tail[2:0]); 
+        full = (head[PTR_SIZE] != tail[PTR_SIZE] && head[PTR_SIZE-1:0] == tail[PTR_SIZE-1:0]); 
         empty = (head == tail);
 
         iq_stall = full;
@@ -97,7 +97,7 @@ import rv32i_types::*;
         if (empty) begin
             inst_out = 'x;
         end else begin
-            inst_out = internal_array[head[2:0]];
+            inst_out = internal_array[head[PTR_SIZE-1:0]];
         end
     end
 
