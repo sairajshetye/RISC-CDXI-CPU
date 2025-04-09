@@ -8,13 +8,13 @@ import rv32i_types::*;
     input   logic                   clk,
     input   logic                   rst,
     input   logic                   funct_unit_busy,
-    input   if_id_stage_reg_t       inst_in,
-    output  if_id_stage_reg_t       inst_out,
+    input   dp_is_stage_reg_t       inst_in,
+    output  dp_is_stage_reg_t       inst_out,
     output  logic                   valid_rdata,
     output  logic                   dispatch_stall
 );
 
-    if_id_stage_reg_t station [DEPTH];
+    dp_is_stage_reg_t station [DEPTH];
 
     logic full;
     logic empty;
@@ -47,7 +47,7 @@ import rv32i_types::*;
         for (integer i = 0; i < DEPTH; i++) begin
             // need to add rs1_ready and rs2_ready fields to dispatch struct? change from if_id struct to that
             //  && station[i].rs1_ready && station[i].rs2_ready (put in first if statement once fields are created)
-            if (station[i].valid) begin
+            if (station[i].valid && station[i].rs1_ready && station[i].rs2_ready) begin
                 if (station[i].rob_idx <= oldest_inst_rob_idx) begin
                     oldest_inst_rob_idx = station[i].rob_idx;
                     oldest_inst_station_idx = i;

@@ -59,6 +59,10 @@ import rv32i_types::*;
 
     assign ufp_wdata = '0;
     assign ufp_wmask = '0;
+
+    logic funct_unit_busy_mult, funct_unit_busy_int;
+    logic valid_rdata_mult, valid_rdata_int;
+    logic dispatch_stall_mult, dispatch_stall_int;
     
 
     always_comb begin
@@ -145,6 +149,24 @@ import rv32i_types::*;
         .inst_out_d(id_ex_inst_out),
         .valid_rdata(dq_valid_rdata),
         .dq_stall(dq_stall)
+    );
+
+    r_station # (
+        .DEPTH      (4)
+    ) mult_station(
+        .clk(clk),
+        .rst(rst),
+        .funct_unit_busy(funct_unit_busy_mult),
+        .inst_in(),
+        .inst_out(),
+        .valid_rdata(valid_rdata_mult),
+        .dispatch_stall(dispatch_stall)
+    );
+
+    r_station # (
+        .DEPTH      (4)
+    ) int_station(
+
     );
 
 

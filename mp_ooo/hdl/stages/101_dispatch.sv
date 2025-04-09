@@ -7,6 +7,10 @@ import rv32i_types::*;
 
     // output enq/load to RS
 
+    input  logic            dispatch_stall_mult,
+    input  logic            dispatch_stall_int,
+    
+
     output dp_is_stage_reg_t dp_is
 );
 
