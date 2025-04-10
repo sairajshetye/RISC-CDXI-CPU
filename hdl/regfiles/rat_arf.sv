@@ -60,8 +60,8 @@ import rv32i_types::*;
 
     always_ff @(posedge clk) begin
         if (rst) begin
-            ars1_v <= 'x;
-            ars2_v <= 'x;
+            ars1_v <= '0;
+            ars2_v <= '0;
         end 
         else begin
             if (rs1_s != 5'd0) begin
@@ -128,11 +128,19 @@ import rv32i_types::*;
         */
     end
 
-    always_comb begin
-        rs1_renamed = data[rat_rs1].renamed;
-        rs2_renamed = data[rat_rs2].renamed;
-        rs1_paddr = data[rat_rs1].p_addr;
-        rs2_paddr = data[rat_rs2].p_addr;
+    always_ff @ (posedge clk) begin // always comb??????
+        if (rst) begin
+            rs1_renamed <= '0;
+            rs2_renamed <= '0;
+            rs1_paddr <= '0;
+            rs2_paddr <= '0;
+        end
+        else begin
+            rs1_renamed <= data[rat_rs1].renamed;
+            rs2_renamed <= data[rat_rs2].renamed;
+            rs1_paddr <= data[rat_rs1].p_addr;
+            rs2_paddr <= data[rat_rs2].p_addr;
+        end
     end
 
 endmodule : rat_arf
