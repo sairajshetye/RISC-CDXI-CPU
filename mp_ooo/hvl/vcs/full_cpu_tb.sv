@@ -1,4 +1,4 @@
-module top_tb;//;  full_cpu_tb
+module full_cpu_tb; //top_tb;//;  full_cpu_tb
 
     timeunit 1ps;
     timeprecision 1ps;

@@ -29,6 +29,7 @@ import rv32i_types::*;
     
 
     logic [2:0] out_select;
+    logic start_sig, end_sig;
     /* out_select
     3'b000 : '0 
     3'b001 : mult low bits
@@ -42,6 +43,8 @@ import rv32i_types::*;
     always_ff @(posedge clk) begin
     //assign funct3 = prf_out.inst[14:12];
         funct3 = prf_out.funct3;
+        //start_sig = '1;
+
     end
     always_comb begin
         unique case (funct3)
@@ -74,12 +77,13 @@ import rv32i_types::*;
                 out_select = 3'b010;
             end
             md_DIV : begin      //DIV
-                if ((rs2_v == -1) && (rs1_v == 'hFFFFFFFF)) begin //signed overflow
+                if ((signed'(rs2_v) == -1) && (rs1_v == 'hFFFFFFFF)) begin //signed overflow
                     mult_en = '0;
                     mult_tc = '0;
                     div_en = '0;
                     div_tc = '0;
                     out_select = 3'b011;
+                
                 end else begin
                     mult_en = '0;
                     mult_tc = '0;
@@ -208,21 +212,21 @@ import rv32i_types::*;
                 end
             end
             3'b100 : begin  //div signed
-                if (!div0_tc) begin
+                if (!div0_tc && (rs2_v != '0)) begin
                     out = quotient_tc;
-                end else begin
+                end else begin  //divide by 0, quoteint = -1 (s)
                     out = 'hFFFFFFFF;
                 end
             end
             3'b101 : begin  //div unsigned
                 if (!div0) begin
                     out = quotient;
-                end else begin
+                end else begin  //divide by 0, quoteint = all 1's (u)
                     out = 'hFFFFFFFF;
                 end
             end
             3'b110 : begin //rem of div signed
-                if (!div0_tc) begin
+                if (!div0_tc && (rs2_v != '0)) begin
                     if (rs1_v[RS1_DATA_SIZE-1] == 1) begin
                         out = -1 * remainder_tc;
                     end
@@ -234,10 +238,10 @@ import rv32i_types::*;
                     end
                 end
             3'b111 : begin  //rem of div unsigned
-                if (!div0) begin
+                if (!div0 && (rs2_v != '0)) begin
                     out = remainder;
                 end else begin
-                    out = 'hFFFFFFFF;
+                    out = rs1_v;
                 end
             end
             default : begin
