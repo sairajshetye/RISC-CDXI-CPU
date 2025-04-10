@@ -277,6 +277,10 @@ import rv32i_types::*;
             counter <= counter + 1;
             funct_unit_busy <= '1;
         end
+        else begin
+            counter <= 0;
+            funct_unit_busy <= '0;
+        end
         
     end
 
