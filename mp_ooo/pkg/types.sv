@@ -166,7 +166,7 @@ package rv32i_types;
         logic           use_rd;
         // what else? - 391 bits
         // logic             rs1_data
-        logic           rob_idx;
+        logic    [3:0]  rob_idx;
         logic           use_prs1;
         logic    [6:0]  rs1_paddr;
         logic           rs1_ready;

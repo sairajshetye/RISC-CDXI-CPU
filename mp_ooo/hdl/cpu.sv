@@ -51,6 +51,8 @@ import rv32i_types::*;
     logic rs1_renamed, rs2_renamed;
     logic       rename_we;
 
+    //logic big_valid;
+
 
     // cache port variables
 
@@ -75,6 +77,15 @@ import rv32i_types::*;
     assign ufp_wdata = '0;
     assign ufp_wmask = '0;
     
+
+    // always_ff @ (posedge clk) begin
+    //     if (rst) begin
+    //         big_valid <= '0;
+    //     end
+    //     else if ()
+
+    // end
+
 
     always_comb begin
         if (|ufp_rmask && ufp_resp) begin

@@ -97,7 +97,10 @@ import rv32i_types::*;
     end
 
     always_ff @ (posedge clk) begin
-        if (in_out) begin
+        if (rst) begin
+            inst_out <= '0;
+        end
+        else if (in_out) begin
             inst_out <= inst_in;
         end
         else if (empty) begin
