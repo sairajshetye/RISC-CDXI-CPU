@@ -10,8 +10,8 @@ import rv32i_types::*;
     input   logic                   rst,
     input   logic                   enq,
     input   logic                   deq,
-    input   logic   [WIDTH-1:0]     inst_in, // there are 128 physical registers
-    output  logic   [WIDTH-1:0]     inst_out,
+    input   logic   [WIDTH-1:0]     p_addr_in, // there are 128 physical registers
+    output  logic   [WIDTH-1:0]     p_addr_out,
     output  logic                   valid_rdata,
     output  logic                   rename_stall
 
@@ -28,7 +28,7 @@ import rv32i_types::*;
     logic full;
     logic empty;
 
-    logic [WIDTH-1:0] inst_in_reg;
+    //logic [WIDTH-1:0] inst_in_reg;
 
     always_comb begin
 
@@ -62,13 +62,13 @@ import rv32i_types::*;
 
     end
 
-    always_ff @(posedge clk) begin // NOT BEING USED, CAN DELETE LATER?
-        if (rst) begin
-            inst_in_reg  <= 'x;
-        end else begin
-            inst_in_reg  <= inst_in;
-        end
-    end
+    // always_ff @(posedge clk) begin // NOT BEING USED, CAN DELETE LATER?
+    //     if (rst) begin
+    //         inst_in_reg  <= 'x;
+    //     end else begin
+    //         inst_in_reg  <= inst_in;
+    //     end
+    // end
 
 
     always_ff @(posedge clk) begin
@@ -80,11 +80,11 @@ import rv32i_types::*;
             head <= '0;
         end else begin
             if (enq && deq) begin
-                internal_array[tail] <= inst_in;
+                internal_array[tail] <= p_addr_in;
                 tail <= (tail + 4'b0001);
                 head <= (head + 4'b0001);
             end else if (enq && !full) begin
-                internal_array[tail] <= inst_in; 
+                internal_array[tail] <= p_addr_in; 
                 tail <= (tail + 4'b0001);
             end else if (deq && !empty) begin
                 head <= (head + 4'b0001);
@@ -95,9 +95,9 @@ import rv32i_types::*;
 
     always_comb begin
         if (empty) begin
-            inst_out = 'x;
+            p_addr_out = 'x;
         end else begin
-            inst_out = internal_array[head[PTR_SIZE-1:0]];
+            p_addr_out = internal_array[head[PTR_SIZE-1:0]];
         end
     end
 
