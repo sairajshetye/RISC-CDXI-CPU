@@ -12,7 +12,7 @@ import rv32i_types::*;
 (   
     input logic clk, 
     input logic rst,
-    input prf_ex_stage_reg_t prf_out,           //only use inst (change to be just that?)
+    input dp_is_stage_reg_t rs_out,           //only use inst (change to be just that?)
     input logic [RS1_DATA_SIZE-1:0] rs1_v,        //rs1 read data
     input logic [RS2_DATA_SIZE-1:0] rs2_v,        //rs2 read data
     output logic funct_unit_busy,
@@ -30,6 +30,9 @@ import rv32i_types::*;
 
     logic [2:0] out_select;
     logic start_sig, end_sig;
+
+    integer counter;
+
     /* out_select
     3'b000 : '0 
     3'b001 : mult low bits
@@ -40,13 +43,19 @@ import rv32i_types::*;
     3'b110 : rem of div signed
     3'b111 : rem of div unsigned
     */
-    always_ff @(posedge clk) begin
-    //assign funct3 = prf_out.inst[14:12];
-        funct3 = prf_out.funct3;
-        //start_sig = '1;
+    
 
+    always_comb begin
+        funct3 = rs_out.funct3;
     end
     always_comb begin
+        if (!rst) begin
+            mult_en = '0;
+                mult_tc = '0;
+                div_en = '0;
+                div_tc = '0;
+                out_select = 3'b000;
+        end else begin 
         unique case (funct3)
             md_MUL : begin      //MUL, signed x signed
                 mult_en = '1;
@@ -95,7 +104,7 @@ import rv32i_types::*;
             md_DIVU : begin      //DIV (U)
                 mult_en = '0;
                 mult_tc = '0;
-                div_en = '0;
+                div_en = '1;
                 div_tc = '0;
                 out_select = 3'b101;
             end
@@ -129,6 +138,7 @@ import rv32i_types::*;
                 out_select = '0;
             end
         endcase
+        end
 
     end
     DW_mult_pipe #(
@@ -197,7 +207,7 @@ import rv32i_types::*;
                 out = '0;
             end
             3'b001 : begin  //mult low bits
-                out = product[31:0];
+                out = signed'(product[31:0]);
             end
             3'b010 : begin  //mult high bits
                 out = product[63:32];
@@ -249,6 +259,25 @@ import rv32i_types::*;
             end
 
         endcase
+    end
+
+
+    always_ff @(posedge clk) begin
+        if (!rst) begin
+            counter <= 0;
+            funct_unit_busy <= '0;
+        end
+        else if (counter == 2) begin
+         
+            counter <= 0;
+            funct_unit_busy <= '0;
+        
+        end 
+        else if (mult_en | div_en | div_tc) begin
+            counter <= counter + 1;
+            funct_unit_busy <= '1;
+        end
+        
     end
 
 endmodule : multiply_divide_unit

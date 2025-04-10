@@ -25,14 +25,14 @@ import rv32i_types::*;
     logic [63:0] full_mul;
     logic busy;
 
-    prf_ex_stage_reg_t prf_reg;
+    dp_is_stage_reg_t prf_reg;
 
     // instantiate the dut
     multiply_divide_unit dut (
         
         .clk(clk), 
         .rst(rst), //active low
-        .prf_out(prf_reg),
+        .rs_out(prf_reg),
         .rs1_v(op1),
         .rs2_v(op2), 
         .funct_unit_busy(busy),
@@ -59,15 +59,74 @@ REMU -
         end else begin
             $fsdbDumpvars(0, dut, "+all");
         end
-
+    
         rst = 1'b0;     //active low reset
-        repeat (2) @(posedge clk);
-        rst <= 1'b1;
-        
-        //MUL tests
-        prf_reg.funct3 <= 3'b0;
+        repeat (1) @(posedge clk);
         op1 <= 'd1;
         op2 <= 'd2;
+        prf_reg.funct3 <= 3'b0;
+        rst <= 1'b1;
+        
+        @(posedge clk);
+        //repeat (2) @(posedge clk);
+        wait (!busy) begin
+        if (out_tb != 'd1) begin        //positive test
+            $error("wrong, 2 != %d", out_tb);
+            $fatal;
+        end
+        end
+
+        @(posedge clk);
+        
+        wait (!busy)
+        op1 <= -'d4;
+        
+         @(posedge clk);
+        //repeat (2) @(posedge clk);
+        wait (!busy)begin
+            @(posedge clk);
+        if (out_tb != -'d8) begin   //negative test
+            $error("wrong, -8 != %d", out_tb);
+            $fatal;
+        end
+        end
+
+        @(posedge clk);
+         wait (!busy)
+        op2 <= -'d4;
+
+         @(posedge clk);
+        //repeat (2) @(posedge clk);
+        wait (!busy) begin
+            @(posedge clk);
+        if (out_tb != 'd16) begin   //neg*neg test
+            $error("wrong, 16 != %d", out_tb);
+            //$fatal;
+        end
+        end
+
+
+        @(posedge clk);
+        //MUL High sxs tests
+         wait (!busy) begin
+        op1 <= -'d4;
+        op2 <= -'d8;
+        prf_reg.funct3 <= 3'b001;   
+         end
+        @(posedge clk);
+        full_mul = 64'(signed'(op1*op2));
+        wait (!busy) begin
+            @(posedge clk);
+        if (out_tb != full_mul[63:32]) begin   //sxs test
+            $error("wrong, %d != %d", full_mul[63:32], out_tb);
+            $fatal;
+        end
+        end
+
+        
+        //MUL tests
+        //prf_reg.funct3 <= 3'b0;
+        /*
         repeat (2) @(posedge clk);
         if (out_tb != 'd1) begin        //positive test
             $error("wrong, 2 != %d", out_tb);
@@ -211,7 +270,7 @@ REMU -
             $fatal;
         end
         
-
+        */
         $display("All Tests Passed");
         $finish;
 
