@@ -6,6 +6,7 @@ import rv32i_types::*;
     input logic [31:0] rs2_v,
     //input logic [31:0] ex_mem_rd_v,
     //input logic [31:0] mem_wb_rd_v,
+    output logic funct_unit_busy,
     output ex_mem_stage_reg_t ex_mem
     //input mem_wb_stage_reg_t mem_wb, wb
 );

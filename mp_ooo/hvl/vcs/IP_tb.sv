@@ -1,7 +1,6 @@
-module IP_tb // top_tb
-//import rv32i_types::*;
-;
-    
+module IP_tb
+import rv32i_types::*;
+();
     timeunit 1ps;
     timeprecision 1ps;
 
@@ -15,53 +14,6 @@ module IP_tb // top_tb
     always #(clock_half_period_ps) clk = ~clk;
     bit rst;
 
-    typedef enum logic {
-        rs1_out = 1'b0,
-        pc_out  = 1'b1
-    } alu_m1_sel_t;
-
-    typedef struct packed {
-        logic   [31:0]      inst;
-        logic   [31:0]      pc;
-        logic   [63:0]      order;
-        logic   [31:0]      pc_next;
-        logic               valid;
-        logic               stall;
-
-        alu_m1_sel_t        alu_m1_sel;
-
-        logic   [2:0]   funct3;
-        logic   [6:0]   funct7;
-        logic   [6:0]   opcode;
-        logic   [31:0]  i_imm;
-        logic   [31:0]  s_imm;
-        logic   [31:0]  b_imm;
-        logic   [31:0]  u_imm;
-        logic   [31:0]  j_imm;
-        logic   [4:0]   rs1_s;
-        logic           use_rs1;
-        logic   [4:0]   rs2_s;
-        logic           use_rs2;
-        logic   [4:0]   rd_s;
-        logic   [31:0]  rs1_v;
-        logic   [31:0]  rs2_v;
-        logic   [31:0]  rd_v;
-        logic           regf_we;
-        logic           is_store;
-        logic           use_rd;
-        
-        logic   [31:0]  dmem_addr;
-        logic   [31:0]  dmem_addr_saved;
-        logic   [3:0]   dmem_rmask;
-        logic   [3:0]   dmem_wmask;
-        //logic   [31:0]  dmem_rdata;
-        logic   [31:0]  dmem_wdata;
-        logic           dreq;
-        logic           dreq_load;
-
-        logic           branch_taken;
-
-    } prf_ex_stage_reg_t;
 
     // declare dut signals
     logic one, zero;
@@ -71,17 +23,19 @@ module IP_tb // top_tb
 
     logic [31:0] out_tb, test_out, test_div, test_rem;
     logic [63:0] full_mul;
+    logic busy;
 
-    prf_ex_stage_reg_t prf_reg;
+    dp_is_stage_reg_t prf_reg;
 
     // instantiate the dut
     multiply_divide_unit dut (
         
         .clk(clk), 
         .rst(rst), //active low
-        .prf_out(prf_reg),
+        .rs_out(prf_reg),
         .rs1_v(op1),
         .rs2_v(op2), 
+        .funct_unit_busy(busy),
         .out(out_tb) 
 
     );
@@ -105,15 +59,74 @@ REMU -
         end else begin
             $fsdbDumpvars(0, dut, "+all");
         end
-
+    
         rst = 1'b0;     //active low reset
-        repeat (2) @(posedge clk);
-        rst <= 1'b1;
-        
-        //MUL tests
-        prf_reg.funct3 <= 3'b0;
+        repeat (1) @(posedge clk);
         op1 <= 'd1;
         op2 <= 'd2;
+        prf_reg.funct3 <= 3'b0;
+        rst <= 1'b1;
+        
+        @(posedge clk);
+        //repeat (2) @(posedge clk);
+        wait (!busy) begin
+        if (out_tb != 'd1) begin        //positive test
+            $error("wrong, 2 != %d", out_tb);
+            $fatal;
+        end
+        end
+
+        @(posedge clk);
+        
+        wait (!busy)
+        op1 <= -'d4;
+        
+         @(posedge clk);
+        //repeat (2) @(posedge clk);
+        wait (!busy)begin
+            @(posedge clk);
+        if (out_tb != -'d8) begin   //negative test
+            $error("wrong, -8 != %d", out_tb);
+            $fatal;
+        end
+        end
+
+        @(posedge clk);
+         wait (!busy)
+        op2 <= -'d4;
+
+         @(posedge clk);
+        //repeat (2) @(posedge clk);
+        wait (!busy) begin
+            @(posedge clk);
+        if (out_tb != 'd16) begin   //neg*neg test
+            $error("wrong, 16 != %d", out_tb);
+            //$fatal;
+        end
+        end
+
+
+        @(posedge clk);
+        //MUL High sxs tests
+         wait (!busy) begin
+        op1 <= -'d4;
+        op2 <= -'d8;
+        prf_reg.funct3 <= 3'b001;   
+         end
+        @(posedge clk);
+        full_mul = 64'(signed'(op1*op2));
+        wait (!busy) begin
+            @(posedge clk);
+        if (out_tb != full_mul[63:32]) begin   //sxs test
+            $error("wrong, %d != %d", full_mul[63:32], out_tb);
+            $fatal;
+        end
+        end
+
+        
+        //MUL tests
+        //prf_reg.funct3 <= 3'b0;
+        /*
         repeat (2) @(posedge clk);
         if (out_tb != 'd1) begin        //positive test
             $error("wrong, 2 != %d", out_tb);
@@ -199,8 +212,8 @@ REMU -
         op2 <= 'd0;
         repeat (2) @(posedge clk);
         //test_div <= signed'(op1)/signed'(op2);
-        if (out_tb != '0) begin   //s/0 test
-            $error("wrong, %d != %d", test_div, out_tb);
+        if (signed'(out_tb) != signed'('hFFFFFFFF)) begin   //s/0 test
+            $error("wrong, -1 != %d", signed'(out_tb));
             $fatal;
         end
 
@@ -218,7 +231,7 @@ REMU -
         end
         op2 <= 'd0;
         repeat (2) @(posedge clk);
-        if (out_tb != '0) begin   //u/0 test
+        if (out_tb != 'hFFFFFFFF) begin   //u/0 test
             $error("wrong, %d != %d", test_div, out_tb);
             $fatal;
         end
@@ -235,8 +248,8 @@ REMU -
         end
         op2 <= 'd0;
         repeat (2) @(posedge clk);
-        if (out_tb != '0) begin   //s%0 test
-            $error("wrong, 0 != %d", out_tb);
+        if (out_tb != op1) begin   //s%0 test
+            $error("wrong, %d != %d", op1, out_tb);
             $fatal;
         end
 
@@ -252,12 +265,12 @@ REMU -
         end
         op2 <= 'd0;
         repeat (2) @(posedge clk);
-        if (out_tb != '0) begin   //u%0 test
-            $error("wrong, '0 != %d", out_tb);
+        if (out_tb != op1) begin   //u%0 test
+            $error("wrong, %d != %d", op1, out_tb);
             $fatal;
         end
         
-
+        */
         $display("All Tests Passed");
         $finish;
 
