@@ -157,16 +157,22 @@ import rv32i_types::*;
         .clk(clk),
         .rst(rst),
         .funct_unit_busy(funct_unit_busy_mult),
-        .inst_in(),
-        .inst_out(),
+        .inst_in(), // ra_dp_stage_reg_t
+        .inst_out(), // ra_dp_stage_reg_t
         .valid_rdata(valid_rdata_mult),
-        .dispatch_stall(dispatch_stall)
+        .dispatch_stall(dispatch_stall_mult)
     );
 
     r_station # (
         .DEPTH      (4)
     ) int_station(
-
+        .clk(clk),
+        .rst(rst),
+        .funct_unit_busy(funct_unit_busy_int),
+        .inst_in(), // ra_dp_stage_reg_t
+        .inst_out(), // ra_dp_stage_reg_t
+        .valid_rdata(valid_rdata_int),
+        .dispatch_stall(dispatch_stall_int)
     );
 
 
