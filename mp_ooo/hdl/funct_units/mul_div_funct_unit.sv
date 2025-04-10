@@ -33,7 +33,7 @@ import rv32i_types::*;
     3'b000 : '0 
     3'b001 : mult low bits
     3'b010 : mult high bits
-    3'b011 : 
+    3'b011 : signed overflow
     3'b100 : div signed
     3'b101 : div unsigned
     3'b110 : rem of div signed
@@ -74,25 +74,41 @@ import rv32i_types::*;
                 out_select = 3'b010;
             end
             md_DIV : begin      //DIV
-                mult_en = '0;
-                mult_tc = '0;
-                div_en = '0;
-                div_tc = '1;
-                out_select = 3'b100;
+                if ((rs2_v == -1) && (rs1_v == 'hFFFFFFFF)) begin //signed overflow
+                    mult_en = '0;
+                    mult_tc = '0;
+                    div_en = '0;
+                    div_tc = '0;
+                    out_select = 3'b011;
+                end else begin
+                    mult_en = '0;
+                    mult_tc = '0;
+                    div_en = '0;
+                    div_tc = '1;
+                    out_select = 3'b100;
+                end
             end
             md_DIVU : begin      //DIV (U)
                 mult_en = '0;
                 mult_tc = '0;
-                div_en = '1;
+                div_en = '0;
                 div_tc = '0;
                 out_select = 3'b101;
             end
             md_REM : begin      //Remainder
-                mult_en = '0;
-                mult_tc = '0;
-                div_en = '0;
-                div_tc = '1;
-                out_select = 3'b110;
+                if ((rs2_v == -1) && (rs1_v == 'hFFFFFFFF)) begin //signed overflow
+                    mult_en = '0;
+                    mult_tc = '0;
+                    div_en = '0;
+                    div_tc = '0;
+                    out_select = 3'b011;
+                end else begin
+                    mult_en = '0;
+                    mult_tc = '0;
+                    div_en = '0;
+                    div_tc = '1;
+                    out_select = 3'b110;
+                end
             end
             md_REMU : begin      //Remainder (U)
                 mult_en = '0;
@@ -182,8 +198,14 @@ import rv32i_types::*;
             3'b010 : begin  //mult high bits
                 out = product[63:32];
             end
-            3'b011 : begin  //nothing
-                out = '0;
+            3'b011 : begin //signed divison overflow
+                if (md_REM) begin   //
+                     out = '0;   //rem is 0
+                end else if (md_DIV) begin 
+                    out = rs1_v;      //quoteint = dividend
+                end else begin
+                    out = '0;
+                end
             end
             3'b100 : begin  //div signed
                 if (!div0_tc) begin
@@ -207,10 +229,10 @@ import rv32i_types::*;
                     else begin
                         out = remainder_tc;
                     end
-                end else begin
-                    out = 'hFFFFFFFF;
+                end else begin //div by 0, rem = dividend
+                        out = rs1_v;
+                    end
                 end
-            end
             3'b111 : begin  //rem of div unsigned
                 if (!div0) begin
                     out = remainder;
