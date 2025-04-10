@@ -176,7 +176,7 @@ package rv32i_types;
 
         logic    [6:0]  rd_paddr;
 
-        logic           useless;
+        // logic           useless;
     } ra_dp_stage_reg_t;
 
     typedef struct packed {
