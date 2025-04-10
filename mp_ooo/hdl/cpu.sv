@@ -48,7 +48,7 @@ import rv32i_types::*;
 
     arf_reg_t ars1_v, ars2_v;
 
-    logic [6:0] rs1_renamed, rs2_renamed;
+    logic rs1_renamed, rs2_renamed;
     logic       rename_we;
 
 

@@ -76,8 +76,13 @@ import rv32i_types::*;
         ra_dp.inst = id_ex.inst;
         ra_dp.pc = id_ex.pc;
         ra_dp.order = id_ex.order;
+        ra_dp.pc = id_ex.pc;
         ra_dp.pc_next = id_ex.pc_next;
-        ra_dp.funct3 = id_ex.funct7;
+        ra_dp.valid = id_ex.valid;
+        ra_dp.stall = id_ex.stall;
+        //ra_dp.funct3 = id_ex.funct7;???
+        ra_dp.funct3 = id_ex.funct3;
+        ra_dp.funct7 = id_ex.funct7;
         ra_dp.opcode = id_ex.opcode;
         ra_dp.i_imm = id_ex.i_imm;
         ra_dp.s_imm = id_ex.s_imm;

@@ -74,7 +74,7 @@ import rv32i_types::*;
     always_ff @(posedge clk) begin
         if (rst) begin
             for (integer i = 0; i < DEPTH; i++) begin
-                internal_array[i] <= i; 
+                internal_array[i] <= unsigned'(i); 
             end
             tail <= {1'b1, {(PTR_SIZE-1){1'b0}}};
             head <= '0;
