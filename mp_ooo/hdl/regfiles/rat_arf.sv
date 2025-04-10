@@ -128,18 +128,18 @@ import rv32i_types::*;
         */
     end
 
-    always_ff @ (posedge clk) begin // always comb??????
+    always_comb begin // always comb??????
         if (rst) begin
-            rs1_renamed <= '0;
-            rs2_renamed <= '0;
-            rs1_paddr <= '0;
-            rs2_paddr <= '0;
+            rs1_renamed = '0;
+            rs2_renamed = '0;
+            rs1_paddr = '0;
+            rs2_paddr = '0;
         end
         else begin
-            rs1_renamed <= data[rat_rs1].renamed;
-            rs2_renamed <= data[rat_rs2].renamed;
-            rs1_paddr <= data[rat_rs1].p_addr;
-            rs2_paddr <= data[rat_rs2].p_addr;
+            rs1_renamed = data[rat_rs1].renamed;
+            rs2_renamed = data[rat_rs2].renamed;
+            rs1_paddr = data[rat_rs1].p_addr;
+            rs2_paddr = data[rat_rs2].p_addr;
         end
     end
 
