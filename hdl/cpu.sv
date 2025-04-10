@@ -24,6 +24,7 @@ import rv32i_types::*;
     if_id_stage_reg_t if_id_reg_next, if_id_inst_out;
     id_ex_stage_reg_t id_ex_reg_next, id_ex_inst_out;
     ra_dp_stage_reg_t ra_dp_reg_next, ra_dp_inst_out;
+    dp_is_stage_reg_t dp_is_reg_next, dp
 
     rob_entry_t rob_entry, rob_out;
 
@@ -85,6 +86,14 @@ import rv32i_types::*;
     //     else if ()
 
     // end
+
+    logic dispatch_stall_mult, dispatch_stall_int;
+
+    logic load_funct_mult, load_funct_int;
+
+    logic [31:0] rs1_rdata, rs2_rdata;
+
+    logic 
 
 
     always_comb begin
@@ -230,6 +239,22 @@ import rv32i_types::*;
         .inst_out_r(ra_dp_inst_out),
         .valid_rdata(rq_valid_rdata),
         .rq_stall(rq_stall)
+    );
+
+    dispatch dispatch(
+        .ra_dp(ra_dp_inst_out), // comes from rename queue, input
+
+        .dispatch_stall_mult(), // input
+        .dispatch_stall_int(), // input
+
+        .load_funct_mult(), // output
+        .load_funct_int(), // output
+
+        .rs1_rdata(), // input
+        .rs2_rdata(), // input
+
+        .dp_is(), // output
+        .valid_output() // output
     );
 
     free_list #(
