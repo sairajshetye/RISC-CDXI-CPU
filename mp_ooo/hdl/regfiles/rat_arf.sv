@@ -10,6 +10,12 @@ import rv32i_types::*;
     input   logic   [4:0]   rd_rename,
     input   logic   [6:0]   p_addr, // speculative (rat)
     input   logic   [6:0]   p_addr_ret, // real (rrf)
+
+    // RAT read
+    input   logic   [4:0]   rat_rs1, rat_rs2,
+    output  logic           rs1_renamed, rs2_renamed,
+    output  logic   [6:0]   rs1_paddr, rs2_paddr,
+
     //input   logic   [4:0]   rs1_s_ex, rs2_s_ex,
     //output  logic   [31:0]  rs1_v, rs2_v,
     //input   logic           load_stall,
@@ -120,6 +126,13 @@ import rv32i_types::*;
                 rs1_v <= (rs2_s_ex != 5'd0) ? rd_v : '0;
         end
         */
+    end
+
+    always_comb begin
+        rs1_renamed = data[rat_rs1].renamed;
+        rs2_renamed = data[rat_rs2].renamed;
+        rs1_paddr = data[rat_rs1].p_addr;
+        rs2_paddr = data[rat_rs2].p_addr;
     end
 
 endmodule : rat_arf

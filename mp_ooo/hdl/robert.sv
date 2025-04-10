@@ -17,6 +17,7 @@ import rv32i_types::*;
     output  rob_entry_t             rob_out,
     output  logic                   valid_rdata,
     output  logic                   alloc_stall,
+    output  logic                   deq,
     output  logic [PTR_SIZE-1:0]    rob_tail_idx
 
 );
@@ -31,7 +32,7 @@ import rv32i_types::*;
 
     logic full;
     logic empty;
-    logic deq;
+    //logic deq;
 
     rob_entry_t rob_in_reg;
 
@@ -83,7 +84,7 @@ import rv32i_types::*;
         end
 
         if (ld_branch_res) begin
-            rob[rob_idx_in].status <= branch_res_in;
+            rob[rob_idx_in].br_result <= branch_res_in;
         end
     
     end
