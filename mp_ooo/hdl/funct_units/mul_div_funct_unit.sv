@@ -15,7 +15,8 @@ import rv32i_types::*;
     input prf_ex_stage_reg_t prf_out,           //only use inst (change to be just that?)
     input logic [RS1_DATA_SIZE-1:0] rs1_v,        //rs1 read data
     input logic [RS2_DATA_SIZE-1:0] rs2_v,        //rs2 read data
-
+    output logic funct_unit_busy,
+    
     output logic [RS1_DATA_SIZE-1:0] out
 
 );  
@@ -188,14 +189,14 @@ import rv32i_types::*;
                 if (!div0_tc) begin
                     out = quotient_tc;
                 end else begin
-                    out = '0;
+                    out = 'hFFFFFFFF;
                 end
             end
             3'b101 : begin  //div unsigned
                 if (!div0) begin
                     out = quotient;
                 end else begin
-                    out = '0;
+                    out = 'hFFFFFFFF;
                 end
             end
             3'b110 : begin //rem of div signed
@@ -207,18 +208,18 @@ import rv32i_types::*;
                         out = remainder_tc;
                     end
                 end else begin
-                    out = '0;
+                    out = 'hFFFFFFFF;
                 end
             end
             3'b111 : begin  //rem of div unsigned
                 if (!div0) begin
                     out = remainder;
                 end else begin
-                    out = '0;
+                    out = 'hFFFFFFFF;
                 end
             end
             default : begin
-                out = '0;
+                out = 'hFFFFFFFF;
             end
 
         endcase
