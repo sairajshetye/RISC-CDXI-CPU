@@ -12,10 +12,11 @@ import rv32i_types::*;
 (   
     input logic clk, 
     input logic rst,
-    input prf_ex_stage_reg_t prf_out,           //only use inst (change to be just that?)
+    input dp_is_stage_reg_t rs_out,           //only use inst (change to be just that?)
     input logic [RS1_DATA_SIZE-1:0] rs1_v,        //rs1 read data
     input logic [RS2_DATA_SIZE-1:0] rs2_v,        //rs2 read data
-
+    output logic funct_unit_busy,
+    
     output logic [RS1_DATA_SIZE-1:0] out
 
 );  
@@ -28,21 +29,33 @@ import rv32i_types::*;
     
 
     logic [2:0] out_select;
+    logic start_sig, end_sig;
+
+    integer counter;
+
     /* out_select
     3'b000 : '0 
     3'b001 : mult low bits
     3'b010 : mult high bits
-    3'b011 : 
+    3'b011 : signed overflow
     3'b100 : div signed
     3'b101 : div unsigned
     3'b110 : rem of div signed
     3'b111 : rem of div unsigned
     */
-    always_ff @(posedge clk) begin
-    //assign funct3 = prf_out.inst[14:12];
-        funct3 = prf_out.funct3;
+    
+
+    always_comb begin
+        funct3 = rs_out.funct3;
     end
     always_comb begin
+        if (!rst) begin
+            mult_en = '0;
+                mult_tc = '0;
+                div_en = '0;
+                div_tc = '0;
+                out_select = 3'b000;
+        end else begin 
         unique case (funct3)
             md_MUL : begin      //MUL, signed x signed
                 mult_en = '1;
@@ -73,11 +86,20 @@ import rv32i_types::*;
                 out_select = 3'b010;
             end
             md_DIV : begin      //DIV
-                mult_en = '0;
-                mult_tc = '0;
-                div_en = '0;
-                div_tc = '1;
-                out_select = 3'b100;
+                if ((signed'(rs2_v) == -1) && (rs1_v == 'hFFFFFFFF)) begin //signed overflow
+                    mult_en = '0;
+                    mult_tc = '0;
+                    div_en = '0;
+                    div_tc = '0;
+                    out_select = 3'b011;
+                
+                end else begin
+                    mult_en = '0;
+                    mult_tc = '0;
+                    div_en = '0;
+                    div_tc = '1;
+                    out_select = 3'b100;
+                end
             end
             md_DIVU : begin      //DIV (U)
                 mult_en = '0;
@@ -87,11 +109,19 @@ import rv32i_types::*;
                 out_select = 3'b101;
             end
             md_REM : begin      //Remainder
-                mult_en = '0;
-                mult_tc = '0;
-                div_en = '0;
-                div_tc = '1;
-                out_select = 3'b110;
+                if ((rs2_v == -1) && (rs1_v == 'hFFFFFFFF)) begin //signed overflow
+                    mult_en = '0;
+                    mult_tc = '0;
+                    div_en = '0;
+                    div_tc = '0;
+                    out_select = 3'b011;
+                end else begin
+                    mult_en = '0;
+                    mult_tc = '0;
+                    div_en = '0;
+                    div_tc = '1;
+                    out_select = 3'b110;
+                end
             end
             md_REMU : begin      //Remainder (U)
                 mult_en = '0;
@@ -108,6 +138,7 @@ import rv32i_types::*;
                 out_select = '0;
             end
         endcase
+        end
 
     end
     DW_mult_pipe #(
@@ -176,52 +207,81 @@ import rv32i_types::*;
                 out = '0;
             end
             3'b001 : begin  //mult low bits
-                out = product[31:0];
+                out = signed'(product[31:0]);
             end
             3'b010 : begin  //mult high bits
                 out = product[63:32];
             end
-            3'b011 : begin  //nothing
-                out = '0;
-            end
-            3'b100 : begin  //div signed
-                if (!div0_tc) begin
-                    out = quotient_tc;
+            3'b011 : begin //signed divison overflow
+                if (md_REM) begin   //
+                     out = '0;   //rem is 0
+                end else if (md_DIV) begin 
+                    out = rs1_v;      //quoteint = dividend
                 end else begin
                     out = '0;
+                end
+            end
+            3'b100 : begin  //div signed
+                if (!div0_tc && (rs2_v != '0)) begin
+                    out = quotient_tc;
+                end else begin  //divide by 0, quoteint = -1 (s)
+                    out = 'hFFFFFFFF;
                 end
             end
             3'b101 : begin  //div unsigned
                 if (!div0) begin
                     out = quotient;
-                end else begin
-                    out = '0;
+                end else begin  //divide by 0, quoteint = all 1's (u)
+                    out = 'hFFFFFFFF;
                 end
             end
             3'b110 : begin //rem of div signed
-                if (!div0_tc) begin
+                if (!div0_tc && (rs2_v != '0)) begin
                     if (rs1_v[RS1_DATA_SIZE-1] == 1) begin
                         out = -1 * remainder_tc;
                     end
                     else begin
                         out = remainder_tc;
                     end
-                end else begin
-                    out = '0;
+                end else begin //div by 0, rem = dividend
+                        out = rs1_v;
+                    end
                 end
-            end
             3'b111 : begin  //rem of div unsigned
-                if (!div0) begin
+                if (!div0 && (rs2_v != '0)) begin
                     out = remainder;
                 end else begin
-                    out = '0;
+                    out = rs1_v;
                 end
             end
             default : begin
-                out = '0;
+                out = 'hFFFFFFFF;
             end
 
         endcase
+    end
+
+
+    always_ff @(posedge clk) begin
+        if (!rst) begin
+            counter <= 0;
+            funct_unit_busy <= '0;
+        end
+        else if (counter == 2) begin
+         
+            counter <= 0;
+            funct_unit_busy <= '0;
+        
+        end 
+        else if (mult_en | div_en | div_tc) begin
+            counter <= counter + 1;
+            funct_unit_busy <= '1;
+        end
+        else begin
+            counter <= 0;
+            funct_unit_busy <= '0;
+        end
+        
     end
 
 endmodule : multiply_divide_unit

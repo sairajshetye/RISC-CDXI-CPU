@@ -408,6 +408,10 @@ package rv32i_types;
         md_REMU     = 3'b111
     } mul_div_ops;
 
+    typedef enum logic [6:0] {
+        funct7_mult = 7'b0000001
+    } reg_funct7_vals;
+
 
 
 endpackage : rv32i_types
