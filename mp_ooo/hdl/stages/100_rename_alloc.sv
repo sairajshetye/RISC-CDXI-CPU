@@ -92,7 +92,7 @@ import rv32i_types::*;
         ra_dp.use_rs1 = id_ex.use_rs1;
         ra_dp.rs2_s = id_ex.rs2_s;
         ra_dp.use_rs2 = id_ex.use_rs2;
-        ra_dp.rd_s = id_ex.rs1_s;
+        ra_dp.rd_s = id_ex.rd_s;
         ra_dp.regf_we = id_ex.regf_we;
         ra_dp.is_store = id_ex.is_store;
         ra_dp.use_rd = id_ex.use_rd;
@@ -100,10 +100,10 @@ import rv32i_types::*;
         // new
         ra_dp.rob_idx = rob_idx;
         ra_dp.use_prs1 = rs1_renamed; // inputs from RAT
-        ra_dp.rs1_paddr = rs1_renamed ? rs1_paddr : 'x;
+        ra_dp.rs1_paddr = rs1_renamed ? rs1_paddr : 7'h7E;
         ra_dp.rs1_ready = '0; // not ready
         ra_dp.use_prs2 = rs2_renamed;
-        ra_dp.rs2_paddr = rs2_renamed ? rs2_paddr : 'x;
+        ra_dp.rs2_paddr = rs2_renamed ? rs2_paddr : 7'h7E;
         ra_dp.rs2_ready = '0;
         ra_dp.rd_paddr = prd_s;
         // ra_dp.useless = '0;
