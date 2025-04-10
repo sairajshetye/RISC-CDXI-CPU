@@ -76,7 +76,6 @@ import rv32i_types::*;
         ra_dp.inst = id_ex.inst;
         ra_dp.pc = id_ex.pc;
         ra_dp.order = id_ex.order;
-        ra_dp.pc = id_ex.pc;
         ra_dp.pc_next = id_ex.pc_next;
         ra_dp.valid = id_ex.valid;
         ra_dp.stall = id_ex.stall;
@@ -94,7 +93,6 @@ import rv32i_types::*;
         ra_dp.rs2_s = id_ex.rs2_s;
         ra_dp.use_rs2 = id_ex.use_rs2;
         ra_dp.rd_s = id_ex.rs1_s;
-        ra_dp.use_rs1 = id_ex.use_rs1;
         ra_dp.regf_we = id_ex.regf_we;
         ra_dp.is_store = id_ex.is_store;
         ra_dp.use_rd = id_ex.use_rd;
@@ -108,7 +106,7 @@ import rv32i_types::*;
         ra_dp.rs2_paddr = rs2_renamed ? rs2_paddr : 'x;
         ra_dp.rs2_ready = '0;
         ra_dp.rd_paddr = prd_s;
-        ra_dp.useless = '0;
+        // ra_dp.useless = '0;
 
         enq = id_ex.deq;
     end
