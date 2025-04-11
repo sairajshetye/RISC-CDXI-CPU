@@ -25,6 +25,7 @@ import rv32i_types::*;
     id_ex_stage_reg_t id_ex_reg_next, id_ex_inst_out;
     ra_dp_stage_reg_t ra_dp_reg_next, ra_dp_inst_out;
     dp_is_stage_reg_t dp_is_inst_out, dp_is_out_mult, dp_is_out_int;
+    dp_is_stage_reg_t int_to_wb, mult_to_wb;
 
     rob_entry_t rob_entry, rob_out;
 
@@ -308,23 +309,23 @@ import rv32i_types::*;
         .data_in('0) // input
     );
 
-    // multiply_divide_unit funct_mult(
-    //     .clk(clk),
-    //     .rst(rst),
-    //     .rs_out(),
-    //     .rs1_v(),
-    //     .rs2_v(),
-    //     .funct_unit_busy(funct_mult_busy),
-    //     .out()
-    // );
+    multiply_divide_unit funct_mult(
+        .clk(clk),
+        .rst(rst),
+        .rs_out(dp_is_out_mult),
+        //.rs1_v(),
+        //.rs2_v(),
+        .funct_unit_busy(funct_mult_busy),
+        .out_inst(mult_to_wb)
+    );
 
-    // integer_unit funct_int(
-    //     .id_ex(),
-    //     .rs1_v(),
-    //     .rs2_v(),
-    //     .funct_unit_busy(funct_int_busy),
-    //     .ex_mem()
-    // );
+    integer_unit funct_int(
+        .id_ex(dp_is_out_int),
+        //.rs1_v(),
+        //.rs2_v(),
+        .funct_unit_busy(funct_int_busy),
+        .ex_mem(int_to_wb)
+    );
 
 
     free_list #(

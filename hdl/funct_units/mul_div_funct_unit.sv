@@ -13,11 +13,11 @@ import rv32i_types::*;
     input logic clk, 
     input logic rst,
     input dp_is_stage_reg_t rs_out,           //only use inst (change to be just that?)
-    input logic [RS1_DATA_SIZE-1:0] rs1_v,        //rs1 read data
-    input logic [RS2_DATA_SIZE-1:0] rs2_v,        //rs2 read data
+    //input logic [RS1_DATA_SIZE-1:0] rs1_v,        //rs1 read data
+    //input logic [RS2_DATA_SIZE-1:0] rs2_v,        //rs2 read data
     output logic funct_unit_busy,
-    
-    output logic [RS1_DATA_SIZE-1:0] out
+    output dp_is_stage_reg_t out_inst
+    //output logic [RS1_DATA_SIZE-1:0] out
 
 );  
     logic [2:0] funct3;
@@ -33,6 +33,10 @@ import rv32i_types::*;
 
     integer counter;
 
+    logic [RS1_DATA_SIZE-1:0] rs1_v, rs2_v;
+    logic [RS1_DATA_SIZE-1:0] out;
+
+
     /* out_select
     3'b000 : '0 
     3'b001 : mult low bits
@@ -47,7 +51,10 @@ import rv32i_types::*;
 
     always_comb begin
         funct3 = rs_out.funct3;
+        rs1_v = rs_out.rs1_data;
+        rs2_v = rs_out.rs2_data;
     end
+
     always_comb begin
         if (!rst) begin
             mult_en = '0;
@@ -213,9 +220,9 @@ import rv32i_types::*;
                 out = product[63:32];
             end
             3'b011 : begin //signed divison overflow
-                if (md_REM) begin   //
+                if (funct3 == md_REM) begin   //
                      out = '0;   //rem is 0
-                end else if (md_DIV) begin 
+                end else if (funct3 == md_DIV) begin 
                     out = rs1_v;      //quoteint = dividend
                 end else begin
                     out = '0;
@@ -259,6 +266,11 @@ import rv32i_types::*;
             end
 
         endcase
+    end
+
+    always_comb begin
+        out_inst = rs_out;
+        out_inst.rd_data = out;
     end
 
 
