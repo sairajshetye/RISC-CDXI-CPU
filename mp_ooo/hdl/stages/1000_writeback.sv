@@ -1,24 +1,51 @@
 module writeback
+#(
+            parameter               DEPTH     = 16,
+            parameter               PTR_SIZE  = $clog2(DEPTH),
+            parameter               WIDTH     = 32
 
-(
-    //input from functional unit(s?)
+)(
+    input dp_is_stage_reg_t inst_in_wb
+    //is_wb_stage_reg_t
 
-    //output to prf, robert, 
-    //output to arf?, would this be through ROB? i think so
-    //output to reservation stations? or would that be through CPU
+    //output deq signal for pre_wb queue
+
+    //output wb to prf
+
+    //output wb to robert
+    output logic     [PTR_SIZE-1:0]     rob_idx_out,   //to robert
+
+    //output wb to res stations
+    output   logic   [PTR_SIZE-1:0]     p_addr_out,     //to res station + prf
+
+    output   logic   [WIDTH-1:0]        data_out,    //to all
+
+    output  logic                       deq         //for pre-wb queue
 );
+//need new ports to prf & robert, change reservation station port?
+//if we do a CDB need to output all info as one thing, then select parts the thing needs
+//might be better to do individual ports
 
-//maybe have this stage as part of funct units? 
-//or just a queue coming out of the funct unit?
-//could send func_unit_busy signal to res station based on enq to queue
-//if its part of funct unit it would only be free after wb is done
-//need to think about wb per funct unit vs one wb
-//area vs only being able to wb one at a time
+    logic wb_done;      //deq signal for pre_wb queue
 
-//need to be able to write to ROB from wb which i think can't be done rn
-//add new prf ports? probably
 
-//
+
+//add 00 to MSB end of addr if phys reg isnt used
+
+    always_comb begin
+        deq = '0;
+        p_addr_out = inst_in_wb.rd_paddr;
+        data_out = inst_in_wb.rd_data;
+        rob_idx_out = inst_in_wb.rob_idx;
+        //prf_out?
+
+        //confirm wb is done? then send deq signal to pre-wb queue
+        deq = '0;
+
+    end
+
+
+
 
 
 endmodule : writeback
