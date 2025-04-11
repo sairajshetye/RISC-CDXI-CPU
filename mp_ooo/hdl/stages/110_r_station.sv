@@ -29,6 +29,7 @@ import rv32i_types::*;
     logic full;
     logic empty;
     logic in_out;
+    logic remove;
     //logic valid_rdata;  //indicates there is something in res station
 
     logic found_idx;
@@ -67,18 +68,19 @@ import rv32i_types::*;
         rs1_or_rs2 = '0;
         replace = '0;
         oldest_inst_station_idx = '0;   //???? to get rid of latch
+        remove = '0;
         for (integer i = 0; i < DEPTH; i++) begin
             if (!funct_unit_busy && station[i].valid) begin //if funct unit busy do nothing, if no inst in fu do nothing
             // need to add rs1_ready and rs2_ready fields to dispatch struct? change from if_id struct to that
             //  && station[i].rs1_ready && station[i].rs2_ready (put in first if statement once fields are created)
-                if (station[i].use_rs1 && (station[i].rs1_paddr == data_paddr)) begin    //if using rs1 check if bus_in is for rs1
+                if (!station[i].rs1_ready && station[i].use_rs1 && (station[i].rs1_paddr == data_paddr)) begin    //if using rs1 check if bus_in is for rs1
                         data_t = data_in;
                         idx_rep = i;
                         rs1_or_rs2 = '0;    //rs1
                         replace = '1;
                         //station[i].rs1_ready = data_in;
                 end
-                if (station[i].use_rs2 && (station[i].rs2_paddr == data_paddr)) begin      //if using rs2 check if bus_in is for rs2
+                if (!station[i].rs2_ready && station[i].use_rs2 && (station[i].rs2_paddr == data_paddr)) begin      //if using rs2 check if bus_in is for rs2
                         data_t = data_in;
                         idx_rep = i;
                         rs1_or_rs2 = '1;
@@ -91,18 +93,21 @@ import rv32i_types::*;
                     if (station[i].rob_idx <= oldest_inst_rob_idx) begin
                         oldest_inst_rob_idx = station[i].rob_idx;
                         oldest_inst_station_idx = 4'(unsigned'(i));
+                        remove = '1;
                     end
                 end
                 else if ((station[i].use_rs1 && station[i].rs1_ready) && !(station[i].use_rs2)) begin   //only use rs1 & rs1 ready
                     if (station[i].rob_idx <= oldest_inst_rob_idx) begin
                         oldest_inst_rob_idx = station[i].rob_idx;
                         oldest_inst_station_idx = 4'(unsigned'(i));
+                        remove = '1;
                     end
                 end 
                 else if ((station[i].use_rs2 && station[i].rs2_ready) && !(station[i].use_rs1)) begin   //only use rs2 & rs2 ready
                     if (station[i].rob_idx <= oldest_inst_rob_idx) begin
                         oldest_inst_rob_idx = station[i].rob_idx;
                         oldest_inst_station_idx = 4'(unsigned'(i));
+                        remove = '1;
                     end
                 end
             end
@@ -161,9 +166,9 @@ import rv32i_types::*;
 
             if (empty || funct_unit_busy) begin
                 inst_out <= '0;
-            end else if (!empty && !funct_unit_busy) begin
+            end else if (!empty && !funct_unit_busy && remove) begin
                 inst_out <= station[oldest_inst_station_idx];
-                station[oldest_inst_station_idx].valid <= '0;
+                station[oldest_inst_station_idx] <= '0;
             end
         end
     end

@@ -52,7 +52,7 @@ import rv32i_types::*;
             prf_regf_we = '0;
 
             //res stations & prf signals out
-            p_addr_out = '0;
+            p_addr_out = '1;
             data_out = '0;
             prf_regf_we = '0;
 
