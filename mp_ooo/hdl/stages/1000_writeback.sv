@@ -1,24 +1,74 @@
-module writeback
+// module writeback
+// #(
+//             parameter               DEPTH     = 16,
+//             parameter               PTR_SIZE  = $clog2(DEPTH),
+//             parameter               WIDTH     = 32
 
-(
-    //input from functional unit(s?)
+// )(
+//     input dp_is_stage_reg_t inst_in_wb
+//     //is_wb_stage_reg_t
 
-    //output to prf, robert, 
-    //output to arf?, would this be through ROB? i think so
-    //output to reservation stations? or would that be through CPU
-);
+//     //output deq signal for pre_wb queue
 
-//maybe have this stage as part of funct units? 
-//or just a queue coming out of the funct unit?
-//could send func_unit_busy signal to res station based on enq to queue
-//if its part of funct unit it would only be free after wb is done
-//need to think about wb per funct unit vs one wb
-//area vs only being able to wb one at a time
+//     //output wb to prf
+//     output   logic                   prf_regf_we,
 
-//need to be able to write to ROB from wb which i think can't be done rn
-//add new prf ports? probably
-
-//
+//     //output wb to robert
+//     output   logic                   ld_status,
+//     output   status_t                status_out,
+//     output   logic [PTR_SIZE-1:0]    rob_idx_ld, 
 
 
-endmodule : writeback
+//     //output wb to res stations
+//     output   logic   [PTR_SIZE-1:0]     p_addr_out,     //to res station + prf
+
+//     output   logic   [WIDTH-1:0]        data_out,    //to all
+
+//     output  logic                       deq         //for pre-wb queue
+// );
+
+//     always_comb begin
+//         if (inst_in.valid) begin
+//             deq = '0;
+//             prf_regf_we = '0;
+
+//             //res stations & prf signals out
+//             p_addr_out = inst_in_wb.rd_paddr;
+//             data_out = inst_in_wb.rd_data;
+//             prf_regf_we = '1;
+
+//             //robert signals out
+//             status_out = done;
+//             ld_status = '1;
+//             rob_idx_ld = inst_in_wb.rob_idx;
+
+//             //confirm wb is done? then send deq signal to pre-wb queue
+//             //prf_regf_we = '0;
+//             deq = '1;
+
+//         end else begin
+//             deq = '0;
+//             prf_regf_we = '0;
+
+//             //res stations & prf signals out
+//             p_addr_out = '0;
+//             data_out = '0;
+//             prf_regf_we = '0;
+
+
+//             //robert signals out
+//             status_out = waiting;
+//             ld_status = '0;
+//             rob_idx_ld = '0;
+
+//             //prf_regf_we = '0;
+//             deq = '1;
+//         end
+
+//     end
+
+
+
+
+
+// endmodule : writeback
