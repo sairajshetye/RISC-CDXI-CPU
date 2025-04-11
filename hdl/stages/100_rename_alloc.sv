@@ -6,11 +6,13 @@ import rv32i_types::*;
     // inputs from RAT, FL, stalls?
     input   logic   [6:0]   p_addr,
     input   logic   [3:0]   rob_idx,
+    input   logic           rob_overflow,
     // from RAT
     input   logic           rs1_renamed, rs2_renamed,
     input   logic   [6:0]   rs1_paddr, rs2_paddr,
 
     input   logic           res_stall,
+    input   logic           rob_stall,
     // output to ROB + dispatch, RAT
     //output  [4:0]   rd_s,
     output  logic           enq,
@@ -60,7 +62,7 @@ import rv32i_types::*;
     // enqueue into the rob
     // - set rob idx in the ra_dp 
     always_comb begin
-        if (id_ex.valid) begin
+        if (id_ex.valid && !rob_stall) begin
             rob_enq = '1;
         end
         else begin
@@ -105,6 +107,7 @@ import rv32i_types::*;
 
         // new
         ra_dp.rob_idx = rob_idx;
+        ra_dp.rob_overflow = rob_overflow;
         ra_dp.use_prs1 = rs1_renamed; // inputs from RAT
         ra_dp.rs1_paddr = rs1_renamed ? rs1_paddr : 7'h7E;
         ra_dp.rs1_ready = '0; // not ready

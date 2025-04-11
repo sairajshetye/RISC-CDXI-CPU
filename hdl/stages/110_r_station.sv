@@ -37,6 +37,7 @@ import rv32i_types::*;
 
     logic [PTR_SIZE-1:0] oldest_inst_station_idx;
     logic [3:0] oldest_inst_rob_idx;
+    logic       oldest_inst_rob_overflow;
 
     logic   [WIDTH-1:0]     data_t;
     integer idx_rep; 
@@ -63,6 +64,7 @@ import rv32i_types::*;
     // will issue to the functional unit 
     always_comb begin
         oldest_inst_rob_idx = '1;
+        oldest_inst_rob_overflow = '0;
         data_t = '0;
         idx_rep = '0;
         rs1_or_rs2 = '0;
@@ -150,7 +152,8 @@ import rv32i_types::*;
                 station[i] <= '0;
             end
             inst_out <= '0;
-        end else if (replace) begin
+        end else begin
+        if (replace) begin
             if (rs1_or_rs2) begin   //rs2 replace
                 station[idx_rep].rs2_data <= data_t;
                 station[idx_rep].rs2_ready <= '1;
@@ -158,10 +161,10 @@ import rv32i_types::*;
                 station[idx_rep].rs1_data <= data_t;
                 station[idx_rep].rs1_ready <= '1;
             end
-        end else begin
+        end 
             if (!full && load_station) begin
                 station[open_idx] <= inst_tmp;
-                //station[open_idx].valid <= '1;
+                station[open_idx].valid <= '1;
             end
 
             if ((inst_in.use_rs1 && inst_in.rs1_ready) && (inst_in.use_rs2 && inst_in.rs2_ready) && !funct_unit_busy && load_station) begin
@@ -174,8 +177,9 @@ import rv32i_types::*;
                 inst_out <= '0;
             end else if (!empty && !funct_unit_busy && remove) begin
                 inst_out <= station[oldest_inst_station_idx];
-                station[oldest_inst_station_idx] <= '0;
+                station[oldest_inst_station_idx].valid <= '0;
             end
+        
         end
     end
 
