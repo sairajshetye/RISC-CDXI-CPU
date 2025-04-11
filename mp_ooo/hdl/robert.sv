@@ -19,7 +19,10 @@ import rv32i_types::*;
     output  logic                   valid_rdata,
     output  logic                   alloc_stall,
     output  logic                   deq,
-    output  logic [PTR_SIZE-1:0]    rob_tail_idx
+    output  logic [PTR_SIZE-1:0]    rob_tail_idx,
+    output  logic                   aregf_we,
+    output  logic [4:0]             ard_s,
+    output  logic [6:0]             p_addr_ret
 
 );
 
@@ -80,13 +83,22 @@ import rv32i_types::*;
             end
         end
 
+        aregf_we <= '0;
+        ard_s <= '0;
+        p_addr_ret <= '0;
         if (ld_status) begin
             rob[rob_idx_ld].status <= status_in;
+            if (status_in == done) begin
+                aregf_we <= '1;
+                ard_s <= rob[rob_idx_ld].rd_addr;
+                p_addr_ret <= rob[rob_idx_ld].rd_paddr;
+            end
         end
 
         if (ld_branch_res) begin
             rob[rob_idx_in].br_result <= branch_res_in;
         end
+
     
     end
 

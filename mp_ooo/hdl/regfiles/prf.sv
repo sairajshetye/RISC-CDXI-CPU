@@ -11,7 +11,8 @@ import rv32i_types::*;
     input   logic                     regf_we,
     input   logic   [WIDTH-1:0]       rd_v,
     input   logic   [PTR_SIZE-1:0]    rs1_s, rs2_s, rd_s,
-    output  prf_t                     prs1_v, prs2_v
+    input   logic   [PTR_SIZE-1:0]    commit_rs,
+    output  prf_t                     prs1_v, prs2_v, commit_prs
     //input   logic           load_stall,
     //input   logic           global_stall
     //input   logic           transparent_1, transparent_2
@@ -75,6 +76,7 @@ import rv32i_types::*;
         // end
     end
 
+    assign commit_prs = data[commit_rs]; // shouldnt do p0 -> change later
     //assign rs1_v_comb = (rs1_s != 5'd0) ? data[rs1_s] : '0;
     //assign rs2_v_comb = (rs2_s != 5'd0) ? data[rs2_s] : '0;
 

@@ -84,7 +84,13 @@ import rv32i_types::*;
     // other arbiter variables
 
     logic [31:0] a_raddr;
+
+    logic           aregf_we;
+    logic [4:0]     ard_s;
+    logic [6:0]     p_addr_ret;
     
+    //logic [6:0]     commit_rs;
+    prf_t           commit_prs;
 
     // always_ff @ (posedge clk) begin
     //     if (rst) begin
@@ -231,15 +237,15 @@ import rv32i_types::*;
     rat_arf rat_arf_1 (
         .clk(clk),
         .rst(rst),
-        .regf_we('0),
-        .rd_v('0),
+        .regf_we(aregf_we),
+        .rd_v(commit_prs.value),
         .rs1_s(rs1_s), 
         .rs2_s(rs2_s), 
-        .rd_s('0),
+        .rd_s(ard_s),
         .rename_we(rename_we),
         .rd_rename(ra_dp_reg_next.rd_s),
         .p_addr(ra_dp_reg_next.rd_paddr), // speculative (rat)
-        .p_addr_ret('0), // real (rrf)
+        .p_addr_ret(p_addr_ret), // real (rrf)
         .rat_rs1(rat_rs1), 
         .rat_rs2(rat_rs2),
         .rs1_renamed(rs1_renamed), 
@@ -258,8 +264,10 @@ import rv32i_types::*;
         .rs1_s(prs1_s), 
         .rs2_s(prs2_s), 
         .rd_s(p_addr_out_wb),
+        .commit_rs(p_addr_ret),
         .prs1_v(prs1_v), 
-        .prs2_v(prs2_v)
+        .prs2_v(prs2_v),
+        .commit_prs(commit_prs)
     );
 
     rename_q #(
@@ -433,7 +441,10 @@ import rv32i_types::*;
         .valid_rdata(rob_valid_rdata),
         .alloc_stall(rob_stall),
         .deq(fl_enq),
-        .rob_tail_idx(rob_tail_idx)
+        .rob_tail_idx(rob_tail_idx),
+        .aregf_we(aregf_we),
+        .ard_s(ard_s),
+        .p_addr_ret(p_addr_ret)
     );
     
     always_comb begin
