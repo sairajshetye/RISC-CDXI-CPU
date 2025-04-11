@@ -52,7 +52,7 @@ import rv32i_types::*;
     logic   [63:0]      bram_wdata_reg;
     logic   [63:0]      bram_wdata_reg_next;
 
-    logic               check, got_response;
+    logic               check, check_next, got_response, bmem_read_next;
 
     logic               ready;
 
@@ -71,21 +71,38 @@ import rv32i_types::*;
         end
     end
 
+    always_comb begin
+        if (rst) begin
+            check_next = '0;
+            bmem_read_next = '0;
+        end
+        else if (cache_read && !check) begin
+            check_next = '1;
+            bmem_read_next = '1;
+        end
+        else if (check && cache_read) begin
+            check_next = check;
+            bmem_read_next = '0;
+        end
+        else if (!cache_read) begin
+            check_next = '0;
+            bmem_read_next = bmem_read; 
+        end
+        else begin
+            check_next = check;
+            bmem_read_next = bmem_read;
+        end
+    end
+
 
     always_ff @(posedge clk) begin
         if (rst) begin
-            bmem_read <= '0;
             check <= '0;
-        end
-        else if (cache_read && !check) begin
-            bmem_read <= '1;
-            check <= '1;
-        end
-        else if (check) begin
             bmem_read <= '0;
         end
-        else if (got_response) begin
-            check <= '0;
+        else begin
+            check <= check_next;
+            bmem_read <= bmem_read_next;
         end
     end
 
