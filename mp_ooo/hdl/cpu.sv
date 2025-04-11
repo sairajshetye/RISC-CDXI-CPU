@@ -247,7 +247,7 @@ import rv32i_types::*;
         .rename_we(rename_we),
         .rd_rename(ra_dp_reg_next.rd_s),
         .p_addr(ra_dp_reg_next.rd_paddr), // speculative (rat)
-        .p_addr_ret(p_addr_ret), // real (rrf)
+        .p_addr_ret(p_addr_ret), // rrf
         .rat_rs1(rat_rs1), 
         .rat_rs2(rat_rs2),
         .rs1_renamed(rs1_renamed), 
@@ -376,24 +376,24 @@ import rv32i_types::*;
     );
 
     always_comb begin
-        wb_int_deq = '0;
-        wb_mult_deq = '0;
+        wb_int_deq = '1;
+        wb_mult_deq = '1;
         if (wb_int_out.valid && !wb_mult_out.valid) begin
             wb_inst_out = wb_int_out;
-            wb_int_deq = '1;
+            //wb_int_deq = '1;
 
         end else if (!wb_int_out.valid && wb_mult_out.valid) begin
             wb_inst_out = wb_mult_out;
-            wb_mult_deq = '1;
+            //wb_mult_deq = '1;
 
         end else if (wb_int_out.valid && wb_mult_out.valid) begin
             if (wb_int_out.rob_idx < wb_mult_out.rob_idx) begin
                 wb_inst_out = wb_int_out;
-                wb_int_deq = '1;
+                //wb_int_deq = '1;
 
             end else begin
                 wb_inst_out = wb_mult_out;
-                wb_mult_deq = '1;
+                //wb_mult_deq = '1;
             end
         end else begin
             wb_inst_out = '0;

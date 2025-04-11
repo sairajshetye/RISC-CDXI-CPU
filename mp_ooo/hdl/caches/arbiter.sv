@@ -52,6 +52,8 @@ import rv32i_types::*;
     logic   [63:0]      bram_wdata_reg;
     logic   [63:0]      bram_wdata_reg_next;
 
+    logic               check, got_response;
+
     logic               ready;
 
     assign ready = bmem_ready;
@@ -69,14 +71,32 @@ import rv32i_types::*;
         end
     end
 
+
+    always_ff @(posedge clk) begin
+        if (rst) begin
+            bmem_read <= '0;
+            check <= '0;
+        end
+        else if (cache_read && !check) begin
+            bmem_read <= '1;
+            check <= '1;
+        end
+        else if (check) begin
+            bmem_read <= '0;
+        end
+        else if (got_response) begin
+            check <= '0;
+        end
+    end
+
     always_comb begin
         // default signals go here
         state_next = state;
 
         // outputs to DRAM
         bmem_addr = cache_addr;
-        bmem_read = cache_read;
-        bmem_write = cache_write;
+        //bmem_read = '0;//cache_read;
+        bmem_write = cache_write; // CHANGE WHEN CP3!!!
         bmem_wdata = 'x; // cache_wdata[63:0];
 
         cache_rdata_reg_next = cache_rdata_reg;
@@ -84,9 +104,10 @@ import rv32i_types::*;
         a_rdata = '0;
         a_raddr = bmem_raddr; // not needed?
         a_resp = '0;
+        got_response = '0;
         unique case (state)
             rw_0: begin
-                if (bmem_rvalid && cache_read && ready) begin
+                if (bmem_rvalid && cache_read && ready && (bmem_raddr == cache_addr)) begin
                     cache_rdata_reg_next = {cache_rdata_reg[255:64], bmem_rdata};
                     a_rdata = '0;
                     a_resp = '0;
@@ -148,6 +169,7 @@ import rv32i_types::*;
                     a_rdata = {bmem_rdata, cache_rdata_reg[191:0]};
                     a_resp = '1; // resp high
                     state_next = rw_0;
+                    got_response = '1;
                 end
                 else if (cache_write && ready) begin
                     a_resp = '1;

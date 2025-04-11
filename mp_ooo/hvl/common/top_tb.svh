@@ -23,7 +23,7 @@
         .bmem_rvalid(mem_itf.rvalid)
     );
 
-    // `include "rvfi_reference.svh"
+    `include "rvfi_reference.svh"
 
     always @(posedge clk) begin
         if (mon_itf.halt) begin
