@@ -93,7 +93,7 @@ import rv32i_types::*;
                 out_select = 3'b010;
             end
             md_DIV : begin      //DIV
-                if ((signed'(rs2_v) == -1) && (rs1_v == 'hFFFFFFFF)) begin //signed overflow
+                if ((signed'(rs2_v) == signed'(-1'b1)) && (signed'(rs1_v) == signed'('hFFFFFFFF))) begin //signed overflow
                     mult_en = '0;
                     mult_tc = '0;
                     div_en = '0;
@@ -116,7 +116,7 @@ import rv32i_types::*;
                 out_select = 3'b101;
             end
             md_REM : begin      //Remainder
-                if ((rs2_v == -1) && (rs1_v == 'hFFFFFFFF)) begin //signed overflow
+                if ((signed'(rs2_v) == signed'(-1'b1)) && (signed'(rs1_v) == signed'('hFFFFFFFF))) begin //signed overflow
                     mult_en = '0;
                     mult_tc = '0;
                     div_en = '0;
@@ -214,7 +214,7 @@ import rv32i_types::*;
                 out = '0;
             end
             3'b001 : begin  //mult low bits
-                out = signed'(product[31:0]);
+                out = product[31:0];
             end
             3'b010 : begin  //mult high bits
                 out = product[63:32];
@@ -245,7 +245,11 @@ import rv32i_types::*;
             3'b110 : begin //rem of div signed
                 if (!div0_tc && (rs2_v != '0)) begin
                     if (rs1_v[RS1_DATA_SIZE-1] == 1) begin
-                        out = -1 * remainder_tc;
+                        if (remainder_tc[RS1_DATA_SIZE-1] != 1) begin
+                            out = {1'b1, remainder_tc[RS1_DATA_SIZE-2:0]};
+                        end else begin
+                            out = remainder_tc;
+                        end
                     end
                     else begin
                         out = remainder_tc;

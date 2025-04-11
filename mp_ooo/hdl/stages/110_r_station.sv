@@ -152,31 +152,36 @@ import rv32i_types::*;
                 station[idx_rep].rs1_data <= data_t;
                 station[idx_rep].rs1_ready <= '1;
             end
-        end
-        else begin
+        end else begin
             if (!full && load_station) begin
                 station[open_idx] <= inst_tmp;
                 //station[open_idx].valid <= '1;
-                
+            end
+
+            if (empty || funct_unit_busy) begin
+                inst_out <= '0;
+            end else if (!empty && !funct_unit_busy) begin
+                inst_out <= station[oldest_inst_station_idx];
+                station[oldest_inst_station_idx].valid <= '0;
             end
         end
     end
 
     // removing instrs happens on the clock
     // check that valid_rdata is high before reading inst_out outside of this module
-    always_ff @(posedge clk) begin
-        if (empty | funct_unit_busy) begin
-            inst_out <= '0;
-        end 
-        //need in_out case b4 checking if empty?
-        else begin
-            inst_out <= station[oldest_inst_station_idx];
-            // remove from station if and only if it can be put into the funct_unit
-            if (!funct_unit_busy) begin
-                //station[oldest_inst_station_idx].valid <= '0;
-                //cannot remove this way, gives valid multiple driver error in lint
-            end
-        end
-    end
+    // always_ff @(posedge clk) begin
+    //     if (empty | funct_unit_busy) begin
+    //         inst_out <= '0;
+    //     end 
+    //     //need in_out case b4 checking if empty?
+    //     else begin
+    //         inst_out <= station[oldest_inst_station_idx];
+    //         // remove from station if and only if it can be put into the funct_unit
+    //         if (!funct_unit_busy) begin
+    //             //station[oldest_inst_station_idx].valid <= '0;
+    //             //cannot remove this way, gives valid multiple driver error in lint
+    //         end
+    //     end
+    // end
 
 endmodule : r_station
