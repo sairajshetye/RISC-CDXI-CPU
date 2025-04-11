@@ -170,7 +170,7 @@ import rv32i_types::*;
                 inst_out <= inst_in;
             end else if ((inst_in.use_rs2 && inst_in.rs2_ready) && (!inst_in.use_rs1) && !funct_unit_busy && load_station) begin
                 inst_out <= inst_in;
-            end else if (empty || funct_unit_busy) begin
+            end else if (empty && !funct_unit_busy) begin
                 inst_out <= '0;
             end else if (!empty && !funct_unit_busy && remove) begin
                 inst_out <= station[oldest_inst_station_idx];

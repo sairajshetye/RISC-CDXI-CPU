@@ -6,7 +6,8 @@ import rv32i_types::*;
         parameter RS2_DATA_SIZE = 32,
         parameter RESET_MODE = 0,
         parameter ONE = 1,
-        parameter ZERO = 0
+        parameter ZERO = 0,
+        parameter NUM_STAGES = 5
 
 )
 (   
@@ -154,6 +155,7 @@ import rv32i_types::*;
     DW_mult_pipe #(
         .a_width(RS1_DATA_SIZE), 
         .b_width(RS2_DATA_SIZE), 
+        .num_stages(NUM_STAGES),
         .rst_mode(RESET_MODE)
         ) mult (
         .clk(clk), 
@@ -170,6 +172,7 @@ import rv32i_types::*;
         .a_width(RS1_DATA_SIZE), 
         .b_width(RS2_DATA_SIZE), 
         .tc_mode(ZERO),      //two's complement 
+        .num_stages(NUM_STAGES),
         .rst_mode(RESET_MODE)
     ) div (
         .clk(clk),
@@ -186,6 +189,7 @@ import rv32i_types::*;
         .a_width(RS1_DATA_SIZE), 
         .b_width(RS2_DATA_SIZE), 
         .tc_mode(ONE),      //two's complement 
+        .num_stages(NUM_STAGES),
         .rst_mode(RESET_MODE)
     ) div_signed (
         .clk(clk),
@@ -309,7 +313,7 @@ import rv32i_types::*;
             funct_unit_busy <= '1;
             funct_mult_done <= '0;
         end
-        else if (counter == 2) begin
+        else if (counter == 5) begin
          
             counter <= 0;
             funct_unit_busy <= '0;
@@ -319,17 +323,14 @@ import rv32i_types::*;
         else if (mult_en | div_en | div_tc) begin
             counter <= counter + 1;
             funct_unit_busy <= '1;
-            funct_mult_done <= '1;
+            //funct_mult_done <= '1;
             
         end
         //else if (rs_out.valid) begin
         //    counter <= counter + 1;
         //    funct_unit_busy <= '1;
         //end
-        else begin
-            counter <= 0;
-            funct_unit_busy <= '0;
-        end
+        
 
         end
         
