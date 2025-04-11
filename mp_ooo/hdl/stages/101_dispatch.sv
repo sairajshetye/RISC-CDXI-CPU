@@ -93,6 +93,8 @@ import rv32i_types::*;
             valid_output_int = '1;
         end
 
+        dp_is.rfvi_monitor_vals = ra_dp.rfvi_monitor_vals;
+
     end
 
     // choose which reservation station to load with the 

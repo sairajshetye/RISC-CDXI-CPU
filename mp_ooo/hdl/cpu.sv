@@ -92,6 +92,8 @@ import rv32i_types::*;
     //logic [6:0]     commit_rs;
     prf_t           commit_prs;
 
+    rfvi_packet_t       rfvi_monitor_vals;
+
     // always_ff @ (posedge clk) begin
     //     if (rst) begin
     //         big_valid <= '0;
@@ -406,7 +408,8 @@ import rv32i_types::*;
         .status_out(status_n),
         .rob_idx_ld(rob_idx_ld),
         .p_addr_out(p_addr_out_wb),
-        .data_out(wb_data_out)
+        .data_out(wb_data_out),
+        .rfvi_monitor_vals(rfvi_monitor_vals)
         //.deq(wb_deq)
     );
 
@@ -434,6 +437,7 @@ import rv32i_types::*;
         .status_in(status_n), // '0
         .ld_branch_res('0),
         .rob_idx_ld(rob_idx_ld),
+        .rfvi_monitor_vals(rfvi_monitor_vals),
         .branch_res_in(not_taken), // '0
         .rob_in(rob_entry),
         .rob_idx_in('0),
@@ -534,45 +538,40 @@ import rv32i_types::*;
         .dfp_resp(dfp_resp) // input
     );
 
-
-
-
-
-    /*
-            logic           monitor_valid;
-            logic   [63:0]  monitor_order;
-            logic   [31:0]  monitor_inst;
-            logic   [4:0]   monitor_rs1_addr;
-            logic   [4:0]   monitor_rs2_addr;
-            logic   [31:0]  monitor_rs1_rdata;
-            logic   [31:0]  monitor_rs2_rdata;
-            logic           monitor_regf_we;
-            logic   [4:0]   monitor_rd_addr;
-            logic   [31:0]  monitor_rd_wdata;
-            logic   [31:0]  monitor_pc_rdata;
-            logic   [31:0]  monitor_pc_wdata;
-            logic   [31:0]  monitor_mem_addr;
-            logic   [3:0]   monitor_mem_rmask;
-            logic   [3:0]   monitor_mem_wmask;
-            logic   [31:0]  monitor_mem_rdata;
-            logic   [31:0]  monitor_mem_wdata;
+    logic           monitor_valid;
+    logic   [63:0]  monitor_order;
+    logic   [31:0]  monitor_inst;
+    logic   [4:0]   monitor_rs1_addr;
+    logic   [4:0]   monitor_rs2_addr;
+    logic   [31:0]  monitor_rs1_rdata;
+    logic   [31:0]  monitor_rs2_rdata;
+    logic           monitor_regf_we;
+    logic   [4:0]   monitor_rd_addr;
+    logic   [31:0]  monitor_rd_wdata;
+    logic   [31:0]  monitor_pc_rdata;
+    logic   [31:0]  monitor_pc_wdata;
+    logic   [31:0]  monitor_mem_addr;
+    logic   [3:0]   monitor_mem_rmask;
+    logic   [3:0]   monitor_mem_wmask;
+    logic   [31:0]  monitor_mem_rdata;
+    logic   [31:0]  monitor_mem_wdata;
     
-    assign monitor_valid     = mem_wb_reg.valid&~global_stall;
-    assign monitor_order     = mem_wb_reg.order;
-    assign monitor_inst      = mem_wb_reg.inst;
-    assign monitor_rs1_addr  = mem_wb_reg.rs1_s;
-    assign monitor_rs2_addr  = mem_wb_reg.rs2_s;
-    assign monitor_rs1_rdata = mem_wb_reg.rs1_v; // need
-    assign monitor_rs2_rdata = mem_wb_reg.rs2_v; // need
-    assign monitor_rd_addr   = mem_wb_reg.regf_we ? mem_wb_reg.rd_s : 5'd0; // need
-    assign monitor_rd_wdata  = mem_wb_reg.rd_v; // need
-    assign monitor_pc_rdata  = mem_wb_reg.pc;
-    assign monitor_pc_wdata  = mem_wb_reg.pc_next;
-    assign monitor_mem_addr  = mem_wb_reg.dmem_addr; // should be i or d?
-    assign monitor_mem_rmask = mem_wb_reg.dmem_rmask;
-    assign monitor_mem_wmask = mem_wb_reg.dmem_wmask;
-    assign monitor_mem_rdata = mem_wb_reg.dmem_rdata;
-    assign monitor_mem_wdata = mem_wb_reg.dmem_wdata;
-    */
+    assign monitor_valid     = rob_out.rfvi_monitor_vals.monitor_valid;
+    assign monitor_order     = rob_out.rfvi_monitor_vals.monitor_order;
+    assign monitor_inst      = rob_out.rfvi_monitor_vals.monitor_inst;
+    assign monitor_rs1_addr  = rob_out.rfvi_monitor_vals.monitor_rs1_addr;
+    assign monitor_rs2_addr  = rob_out.rfvi_monitor_vals.monitor_rs2_addr;
+    assign monitor_rs1_rdata = rob_out.rfvi_monitor_vals.monitor_rs1_rdata;
+    assign monitor_rs2_rdata = rob_out.rfvi_monitor_vals.monitor_rs2_rdata;
+    assign monitor_rd_addr   = rob_out.rfvi_monitor_vals.monitor_rd_addr;
+    assign monitor_rd_wdata  = rob_out.rfvi_monitor_vals.monitor_rd_wdata;
+    assign monitor_pc_rdata  = rob_out.rfvi_monitor_vals.monitor_pc_rdata;
+    assign monitor_pc_wdata  = rob_out.rfvi_monitor_vals.monitor_pc_wdata;
+    assign monitor_mem_addr  = '0;
+    assign monitor_mem_rmask = '0;
+    assign monitor_mem_wmask = '0;
+    assign monitor_mem_rdata = '0;
+    assign monitor_mem_wdata = '0;
+    
 
 endmodule : cpu

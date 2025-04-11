@@ -45,6 +45,12 @@ import rv32i_types::*;
 
             enq = '0;
 
+            if_id.rfvi_monitor_vals = '0;
+
+            if_id.rfvi_monitor_vals.monitor_order = order_reg;
+            if_id.rfvi_monitor_vals.monitor_pc_rdata = pc;
+            if_id.rfvi_monitor_vals.monitor_pc_wdata = pc_next;
+
             if (dq_stall) begin
                 deq = '0;
                 if_id.deq = '0;
@@ -55,6 +61,9 @@ import rv32i_types::*;
             end
 
             if (imem_resp) begin
+                if_id.rfvi_monitor_vals.monitor_inst = imem_rdata;
+                if_id.rfvi_monitor_vals.monitor_valid = '1;
+
                 if_id.inst = imem_rdata;
                 if_id.fetch_stall = '0;
                 if_id.valid = '1;

@@ -15,6 +15,7 @@ import rv32i_types::*;
     input   rob_entry_t             rob_in,
     input   logic [PTR_SIZE-1:0]    rob_idx_in,     //read idx
     input   logic [PTR_SIZE-1:0]    rob_idx_ld,     //for ld status
+    input   rfvi_packet_t           rfvi_monitor_vals,
     output  rob_entry_t             rob_out,
     output  logic                   valid_rdata,
     output  logic                   alloc_stall,
@@ -92,6 +93,7 @@ import rv32i_types::*;
                 aregf_we <= '1;
                 ard_s <= rob[rob_idx_ld].rd_addr;
                 p_addr_ret <= rob[rob_idx_ld].rd_paddr;
+                rob[rob_idx_ld].rfvi_monitor_vals <= rfvi_monitor_vals;
             end
         end
 

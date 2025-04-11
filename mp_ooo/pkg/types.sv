@@ -84,6 +84,27 @@ package rv32i_types;
     // } if_id_stage_reg_t;
 
     typedef struct packed {
+        logic           monitor_valid; //
+        logic   [63:0]  monitor_order; //
+        logic   [31:0]  monitor_inst; //
+        logic   [4:0]   monitor_rs1_addr; //
+        logic   [4:0]   monitor_rs2_addr; //
+        logic   [31:0]  monitor_rs1_rdata; //
+        logic   [31:0]  monitor_rs2_rdata; //
+        logic           monitor_regf_we; //
+        logic   [4:0]   monitor_rd_addr; //
+        logic   [31:0]  monitor_rd_wdata; //
+        logic   [31:0]  monitor_pc_rdata; //
+        logic   [31:0]  monitor_pc_wdata; //
+        logic   [31:0]  monitor_mem_addr; //
+        logic   [3:0]   monitor_mem_rmask; //
+        logic   [3:0]   monitor_mem_wmask; //
+        logic   [31:0]  monitor_mem_rdata; //
+        logic   [31:0]  monitor_mem_wdata; //
+        logic           monitor_useless; //
+    } rfvi_packet_t;
+
+    typedef struct packed {
         logic   [31:0]      inst;
         logic   [31:0]      pc;
         logic   [31:0]      pc_next;
@@ -92,6 +113,7 @@ package rv32i_types;
         logic               fetch_stall;
         logic               deq;
         logic               useless; // zero padding
+        rfvi_packet_t       rfvi_monitor_vals;
 
         // alu_m1_sel_t        alu_m1_sel;
 
@@ -132,6 +154,7 @@ package rv32i_types;
         // what else? - 391-32 bits
         logic           deq;
         //logic           useless;
+        rfvi_packet_t       rfvi_monitor_vals;
 
     } id_ex_stage_reg_t;
 
@@ -181,6 +204,10 @@ package rv32i_types;
         logic           deq;
 
         logic    [2:0]  useless;
+
+        rfvi_packet_t       rfvi_monitor_vals;
+
+
     } ra_dp_stage_reg_t;
 
     typedef struct packed {
@@ -228,6 +255,8 @@ package rv32i_types;
         logic    [31:0] rd_data;
 
         logic    [3:0]  rob_idx;
+
+        rfvi_packet_t       rfvi_monitor_vals;
 
         // logic           useless;
     } dp_is_stage_reg_t;
@@ -358,6 +387,8 @@ package rv32i_types;
         logic [4:0] rd_addr;
         branch_t br_pred;
         branch_t br_result;
+
+        rfvi_packet_t       rfvi_monitor_vals;
     } rob_entry_t;
 
     typedef enum logic [2:0] {
