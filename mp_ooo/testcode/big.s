@@ -1,6 +1,16 @@
 .section .text
 .globl _start
 _start:
+    li x1, 10
+    li x26, 20
+    li x3, 50
+    li x12, 60
+    li x30, 21
+    li x17, 28
+    li x11, 8
+    li x12, 4
+    li x14, 3
+    li x15, 1
     andi x16, x26, -1576
     and x17, x12, x3
     add x16, x1, x14
