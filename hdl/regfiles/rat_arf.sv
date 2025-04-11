@@ -44,18 +44,18 @@ import rv32i_types::*;
                 data[i].p_addr_ret <= '0;
                 data[i].value <= '0;
             end
-        end 
-        else if (regf_we && (rd_s != 5'd0)) begin // write data - is this done on commit? -> should be commit 
-            //data[rd_s].renamed <= '0; // when commited, can un-rename
-            //data[rd_s].p_addr <= '0; // un renames
-            data[rd_s].p_addr_ret <= p_addr_ret; // allows for rolling back (later?)
-            data[rd_s].value <= rd_v;
+        end else begin
+            if (regf_we && (rd_s != 5'd0)) begin // write data - is this done on commit? -> should be commit 
+                //data[rd_s].renamed <= '0; // when commited, can un-rename
+                //data[rd_s].p_addr <= '0; // un renames
+                data[rd_s].p_addr_ret <= p_addr_ret; // allows for rolling back (later?)
+                data[rd_s].value <= rd_v;
+            end
+            if (rename_we && (rd_rename != 5'd0)) begin // write renamed + p_addr
+                data[rd_rename].renamed <= '1; // mark 1 = renamed
+                data[rd_rename].p_addr <= p_addr; // assign to input p_addr
+            end
         end
-        else if (rename_we && (rd_rename != 5'd0)) begin // write renamed + p_addr
-            data[rd_rename].renamed <= '1; // mark 1 = renamed
-            data[rd_rename].p_addr <= p_addr; // assign to input p_addr
-        end
-
     end
 
     always_ff @(posedge clk) begin
