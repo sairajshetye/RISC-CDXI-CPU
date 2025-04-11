@@ -51,7 +51,7 @@ import rv32i_types::*;
 
         rob_tail_idx = tail[PTR_SIZE-1:0]; // in rename and allocate, set inst rob idx field to this tail
 
-        deq = (rob[head[PTR_SIZE-1:0]].status == done);
+        deq = (rob[head[PTR_SIZE-1:0]].status == done && rob[head[PTR_SIZE-1:0]].valid && !empty);
 
     end
 
@@ -73,13 +73,14 @@ import rv32i_types::*;
             head <= '0;
         end else begin
             if (enq && deq) begin
-                rob[tail] <= rob_in;
+                rob[tail[PTR_SIZE-1:0]] <= rob_in;
                 tail <= (tail + 4'b0001);
                 head <= (head + 4'b0001);
             end else if (enq && !full) begin
-                rob[tail] <= rob_in; 
+                rob[tail[PTR_SIZE-1:0]] <= rob_in; 
                 tail <= (tail + 4'b0001);
             end else if (deq && !empty) begin
+                rob[head[PTR_SIZE-1:0]].valid <= '0;
                 head <= (head + 4'b0001);
             end
         end
@@ -89,6 +90,7 @@ import rv32i_types::*;
         p_addr_ret <= '0;
         if (ld_status) begin
             rob[rob_idx_ld].status <= status_in;
+            //rob[rob_idx_ld].valid <= '0;
             if (status_in == done) begin
                 aregf_we <= '1;
                 ard_s <= rob[rob_idx_ld].rd_addr;

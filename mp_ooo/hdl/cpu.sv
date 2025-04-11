@@ -105,7 +105,7 @@ import rv32i_types::*;
     logic dispatch_stall_mult, dispatch_stall_int;
 
     logic load_station_mult, load_station_int;
-    logic funct_mult_busy, funct_int_busy;
+    logic funct_mult_busy, funct_int_busy, funct_mult_done;
 
     logic [31:0] rs1_rdata, rs2_rdata;
 
@@ -122,7 +122,7 @@ import rv32i_types::*;
     assign prs2_s = ra_dp_reg_next.rs2_paddr;
 
     assign wb_int_enq = int_to_wb.valid && !funct_int_busy;
-    assign wb_mult_enq = mult_to_wb.valid && !funct_mult_busy;
+    assign wb_mult_enq = mult_to_wb.valid && funct_mult_done;
     
 
     always_comb begin
@@ -338,7 +338,8 @@ import rv32i_types::*;
         //.rs1_v(),
         //.rs2_v(),
         .funct_unit_busy(funct_mult_busy),
-        .out_inst(mult_to_wb)
+        .out_inst(mult_to_wb),
+        .funct_mult_done(funct_mult_done)
     );
 
     integer_unit funct_int(
