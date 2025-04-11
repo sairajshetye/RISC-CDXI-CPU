@@ -23,7 +23,7 @@ import rv32i_types::*;
     //logic           br_en;
 
     logic   [4:0]   rs2_s_real;
-    logic   [4:0]   rd_s_real;
+    logic   [4:0]   rd_s_arch;
 
     
     logic   [31:0]  rd_v, rs1_temp, rs2_temp;
@@ -82,7 +82,7 @@ import rv32i_types::*;
         dreq_load  = '0;
         rs2_s_real = '0;
         regf_we    = '0;
-        rd_s_real  = '0;
+        rd_s_arch  = '0;
         dmem_addr_saved = '0;
         use_rs1    = '0;
         use_rs2    = '0;
@@ -92,18 +92,18 @@ import rv32i_types::*;
         unique case (id_ex.opcode)
             op_b_lui  : begin
                 rd_v = id_ex.u_imm;
-                rd_s_real = id_ex.rd_data;
+                rd_s_arch = id_ex.rd_s;
                 regf_we = 1'b1;
             end
             op_b_auipc: begin
                 rd_v = id_ex.pc + id_ex.u_imm;
-                rd_s_real = id_ex.rd_data;
+                rd_s_arch = id_ex.rd_s;
                 regf_we = 1'b1;
             end
             op_b_imm  : begin
                 a = rs1_v; // potential point of failure, make sure rs1_v is right
                 b = id_ex.i_imm;
-                rd_s_real = id_ex.rd_data;
+                rd_s_arch = id_ex.rd_s;
                 unique case (id_ex.funct3)
                     arith_f3_slt: begin
                         cmpop = branch_f3_blt;
@@ -133,7 +133,7 @@ import rv32i_types::*;
                 a = rs1_v; // potential point of failure, make sure rs1_v is right
                 b = rs2_v;
                 rs2_s_real = id_ex.rs2_s;
-                rd_s_real = id_ex.rd_data;
+                rd_s_arch = id_ex.rd_s;
                 unique case (id_ex.funct3)
                     arith_f3_slt: begin
                         cmpop = branch_f3_blt;
@@ -176,7 +176,7 @@ import rv32i_types::*;
                 aluop = '0;
                 cmpop = '0;
                 rs2_s_real = '0;
-                rd_s_real = '0;
+                rd_s_arch = '0;
             end
         endcase
     end
@@ -205,13 +205,14 @@ import rv32i_types::*;
         ex_mem.j_imm = id_ex.j_imm;
         ex_mem.rs1_s = use_rs1 ? id_ex.rs1_s : '0; // CHANGE THIS!!! - store still uses it but cannot use rs1
         ex_mem.rs2_s = rs2_s_real;
-        ex_mem.rd_s = rd_s_real;
+        ex_mem.rd_s = rd_s_arch;
         ex_mem.rs1_data = use_rs1 ? id_ex.rs1_data : '0; // reg file or forwarded
         ex_mem.use_rs1 = use_rs1;
         ex_mem.rs2_data = use_rs2 ? id_ex.rs2_data : '0; // reg file or forwarded
         ex_mem.use_rs2 = use_rs2;
         ex_mem.rd_data = rd_v; // new
-        ex_mem.regf_we = regf_we; // new
+        ex_mem.regf_we = regf_we; // new -> phys
+        ex_mem.is_store = '0; // NO STORES IN THIS ONE
         //ex_mem.dmem_addr = dmem_addr;
         //ex_mem.dmem_addr_saved = dmem_addr_saved;
         //ex_mem.dmem_rmask = dmem_rmask;
@@ -221,6 +222,20 @@ import rv32i_types::*;
        // ex_mem.dreq_load = dreq_load;
         ex_mem.use_rd = id_ex.use_rd;
         //ex_mem.branch_taken = branch_taken;
+        ex_mem.use_prs1 = id_ex.use_prs1;
+        ex_mem.rs1_paddr = id_ex.rs1_paddr;
+        ex_mem.rs1_ready = id_ex.rs1_ready;
+
+        ex_mem.use_prs2 = id_ex.use_prs2;
+        ex_mem.rs2_paddr = id_ex.rs2_paddr;
+        ex_mem.rs2_ready = id_ex.rs2_ready;
+
+        ex_mem.rd_paddr = id_ex.rd_paddr;
+
+
+        ex_mem.rob_idx = id_ex.rob_idx;
+
+        // ex_mem.useless = id_ex.useless;
 
 
         funct_unit_busy = '0;   //CHANGE

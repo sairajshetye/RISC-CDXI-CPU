@@ -206,6 +206,7 @@ import rv32i_types::*;
         .rs2_renamed(rs2_renamed),
         .rs1_paddr(rs1_paddr), 
         .rs2_paddr(rs2_paddr),
+        .res_stall(dispatch_stall_mult || dispatch_stall_int),
         // output to ROB + dispatch, RAT
         .enq(rq_enq),
         .deq(rq_deq),
