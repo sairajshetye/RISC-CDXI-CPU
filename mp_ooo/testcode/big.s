@@ -108,8 +108,8 @@ _start:
     xori x19, x29, 607
     add x18, x17, x22
     andi x8, x26, -592
-    sltu x3, x23, x20
-    add x2, x8, x8
+    sltu x3, x23, x20 
+    add x2, x8, x8 # err 108
     ori x9, x26, -1570
     and x15, x23, x10
     or x28, x25, x7

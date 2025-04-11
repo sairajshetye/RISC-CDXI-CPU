@@ -21,6 +21,7 @@ import rv32i_types::*;
     output  logic                   alloc_stall,
     output  logic                   deq,
     output  logic [PTR_SIZE-1:0]    rob_tail_idx,
+    output  logic                   rob_overflow,
     output  logic                   aregf_we,
     output  logic [4:0]             ard_s,
     output  logic [6:0]             p_addr_ret
@@ -50,6 +51,7 @@ import rv32i_types::*;
         valid_rdata = ~empty;
 
         rob_tail_idx = tail[PTR_SIZE-1:0]; // in rename and allocate, set inst rob idx field to this tail
+        rob_overflow = tail[PTR_SIZE];
 
         deq = (rob[head[PTR_SIZE-1:0]].status == done && rob[head[PTR_SIZE-1:0]].valid &&!empty);
 

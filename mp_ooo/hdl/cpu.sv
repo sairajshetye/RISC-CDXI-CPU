@@ -56,6 +56,7 @@ import rv32i_types::*;
     logic       rename_we;
     logic       rs1_ready, rs2_ready;
     logic [3:0]    rob_idx_ld;
+    logic           rob_overflow;
     logic [6:0]    p_addr_out_wb;
 
     logic prf_we, ld_status;
@@ -217,12 +218,14 @@ import rv32i_types::*;
         // inputs from RAT, FL, stalls?
         .p_addr(p_addr_out), // FL
         .rob_idx(rob_tail_idx),
+        .rob_overflow(rob_overflow),
         // from RAT
         .rs1_renamed(rs1_renamed), 
         .rs2_renamed(rs2_renamed),
         .rs1_paddr(rs1_paddr), 
         .rs2_paddr(rs2_paddr),
         .res_stall(dispatch_stall_mult || dispatch_stall_int),
+        .rob_stall(rob_stall),
         // output to ROB + dispatch, RAT
         .enq(rq_enq),
         .deq(rq_deq),
@@ -447,6 +450,7 @@ import rv32i_types::*;
         .alloc_stall(rob_stall),
         .deq(fl_enq),
         .rob_tail_idx(rob_tail_idx),
+        .rob_overflow(rob_overflow),
         .aregf_we(aregf_we),
         .ard_s(ard_s),
         .p_addr_ret(p_addr_ret)
