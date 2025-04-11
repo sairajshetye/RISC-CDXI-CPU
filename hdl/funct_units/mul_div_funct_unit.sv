@@ -93,7 +93,7 @@ import rv32i_types::*;
                 out_select = 3'b010;
             end
             md_DIV : begin      //DIV
-                if ((signed'(rs2_v) == signed'(-1'b1)) && (signed'(rs1_v) == signed'('hFFFFFFFF))) begin //signed overflow
+                if ((signed'(rs2_v) == signed'(-32'b1)) && (signed'(rs1_v) == signed'('hFFFFFFFF))) begin //signed overflow
                     mult_en = '0;
                     mult_tc = '0;
                     div_en = '0;
@@ -116,7 +116,7 @@ import rv32i_types::*;
                 out_select = 3'b101;
             end
             md_REM : begin      //Remainder
-                if ((signed'(rs2_v) == signed'(-1'b1)) && (signed'(rs1_v) == signed'('hFFFFFFFF))) begin //signed overflow
+                if ((signed'(rs2_v) == signed'(-32'b1)) && (signed'(rs1_v) == signed'('hFFFFFFFF))) begin //signed overflow
                     mult_en = '0;
                     mult_tc = '0;
                     div_en = '0;

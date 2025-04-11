@@ -60,8 +60,12 @@ import rv32i_types::*;
     // enqueue into the rob
     // - set rob idx in the ra_dp 
     always_comb begin
-        rob_enq = '1;
-
+        if (id_ex.valid) begin
+            rob_enq = '1;
+        end
+        else begin
+            rob_enq = '0;
+        end
         rob_entry.valid = '1;
         rob_entry.status = waiting;
         rob_entry.opcode = id_ex.opcode;
