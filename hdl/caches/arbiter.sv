@@ -72,6 +72,8 @@ import rv32i_types::*;
     end
 
     always_comb begin
+        check_next = check;
+        bmem_read_next = bmem_read;
         if (rst) begin
             check_next = '0;
             bmem_read_next = '0;
@@ -88,10 +90,10 @@ import rv32i_types::*;
             check_next = '0;
             bmem_read_next = bmem_read; 
         end
-        else begin
-            check_next = check;
-            bmem_read_next = bmem_read;
-        end
+        // else begin
+        //     check_next = check;
+        //     bmem_read_next = bmem_read;
+        // end
     end
 
 
