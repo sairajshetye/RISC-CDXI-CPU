@@ -82,11 +82,11 @@ import rv32i_types::*;
         end else begin
             if (inst_in_wb.valid) begin
                 if (enq && deq) begin
-                    internal_array_wb[tail] <= inst_in_wb;
+                    internal_array_wb[tail[PTR_SIZE-1:0]] <= inst_in_wb;
                     tail <= (tail + 4'b0001);
                     head <= (head + 4'b0001);
                 end else if (enq && !full) begin
-                    internal_array_wb[tail] <= inst_in_wb; 
+                    internal_array_wb[tail[PTR_SIZE-1:0]] <= inst_in_wb; 
                     tail <= (tail + 4'b0001);
                 end else if (deq && !empty) begin
                     head <= (head + 4'b0001);
