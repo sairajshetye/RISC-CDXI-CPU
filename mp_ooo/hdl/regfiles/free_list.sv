@@ -73,11 +73,11 @@ import rv32i_types::*;
 
     always_ff @(posedge clk) begin
         if (rst) begin
-            for (integer i = 0; i < DEPTH; i++) begin
+            for (integer i = 1; i < DEPTH-1; i++) begin
                 internal_array[i] <= 7'(unsigned'(i)); 
             end
             tail <= {1'b1, {(PTR_SIZE){1'b0}}};
-            head <= '0;
+            head <= 8'b0001;
         end else begin
             if (enq && deq) begin
                 internal_array[tail] <= p_addr_in;

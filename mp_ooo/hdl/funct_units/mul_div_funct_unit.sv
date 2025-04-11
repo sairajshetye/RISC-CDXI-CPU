@@ -37,6 +37,7 @@ import rv32i_types::*;
     logic [RS1_DATA_SIZE-1:0] rs1_v, rs2_v;
     logic [RS1_DATA_SIZE-1:0] out;
 
+    logic done;
 
     /* out_select
     3'b000 : '0 
@@ -57,12 +58,12 @@ import rv32i_types::*;
     end
 
     always_comb begin
-        if (!rst) begin
+        if (!rs_out.valid) begin
             mult_en = '0;
-                mult_tc = '0;
-                div_en = '0;
-                div_tc = '0;
-                out_select = 3'b000;
+            mult_tc = '0;
+            div_en = '0;
+            div_tc = '0;
+            out_select = 3'b000;
         end else begin 
         unique case (funct3)
             md_MUL : begin      //MUL, signed x signed
@@ -275,23 +276,33 @@ import rv32i_types::*;
 
     always_comb begin
         out_inst = rs_out;
-        out_inst.rd_data = out;
-
         out_inst.rfvi_monitor_vals = rs_out.rfvi_monitor_vals;
+
+        //if (counter == 1) begin
+            out_inst.rd_data = out;
+            out_inst.rfvi_monitor_vals.monitor_rd_wdata = out;
+        //end
+        //out_inst.rfvi_monitor_vals = rs_out.rfvi_monitor_vals;
 
         out_inst.rfvi_monitor_vals.monitor_rs1_rdata = rs1_v;
         out_inst.rfvi_monitor_vals.monitor_rs2_rdata = rs2_v;
         out_inst.rfvi_monitor_vals.monitor_regf_we = '1;
-        out_inst.rfvi_monitor_vals.monitor_rd_wdata = out;
+        //out_inst.rfvi_monitor_vals.monitor_rd_wdata = out;
     end
 
 
     always_ff @(posedge clk) begin
+        
         if (!rst) begin
             counter <= 0;
             funct_unit_busy <= '0;
+            done <= '0;
         end
-        else if (pre_wb_mult_stall) begin
+        else begin
+        //if (rs_out.valid && !done) begin
+
+        //end
+        if (pre_wb_mult_stall) begin
             funct_unit_busy <= '1;
         end
         else if (counter == 2) begin
@@ -304,11 +315,19 @@ import rv32i_types::*;
             counter <= counter + 1;
             funct_unit_busy <= '1;
         end
+        //else if (rs_out.valid) begin
+        //    counter <= counter + 1;
+        //    funct_unit_busy <= '1;
+        //end
         else begin
             counter <= 0;
             funct_unit_busy <= '0;
         end
+
+        end
         
     end
+
+
 
 endmodule : multiply_divide_unit
