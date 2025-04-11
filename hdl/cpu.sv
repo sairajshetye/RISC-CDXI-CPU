@@ -123,7 +123,7 @@ import rv32i_types::*;
 
     assign wb_int_enq = int_to_wb.valid && !funct_int_busy;
     assign wb_mult_enq = mult_to_wb.valid && !funct_mult_busy;
-
+    
 
     always_comb begin
         if (|ufp_rmask && ufp_resp) begin
@@ -332,7 +332,7 @@ import rv32i_types::*;
 
     multiply_divide_unit funct_mult(
         .clk(clk),
-        .rst(rst),
+        .rst(!rst),
         .rs_out(dp_is_out_mult),
         .pre_wb_mult_stall(mult_wb_stall),
         //.rs1_v(),
