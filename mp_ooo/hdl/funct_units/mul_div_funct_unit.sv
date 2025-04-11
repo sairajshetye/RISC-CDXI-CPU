@@ -17,7 +17,8 @@ import rv32i_types::*;
     //input logic [RS1_DATA_SIZE-1:0] rs1_v,        //rs1 read data
     //input logic [RS2_DATA_SIZE-1:0] rs2_v,        //rs2 read data
     output logic funct_unit_busy,
-    output dp_is_stage_reg_t out_inst
+    output dp_is_stage_reg_t out_inst,
+    output logic funct_mult_done
     //output logic [RS1_DATA_SIZE-1:0] out
 
 );  
@@ -292,11 +293,13 @@ import rv32i_types::*;
 
 
     always_ff @(posedge clk) begin
-        
+        //funct_mult_done = '0;
         if (!rst) begin
             counter <= 0;
             funct_unit_busy <= '0;
             done <= '0;
+            funct_mult_done <= '0;
+            
         end
         else begin
         //if (rs_out.valid && !done) begin
@@ -304,16 +307,20 @@ import rv32i_types::*;
         //end
         if (pre_wb_mult_stall) begin
             funct_unit_busy <= '1;
+            funct_mult_done <= '0;
         end
         else if (counter == 2) begin
          
             counter <= 0;
             funct_unit_busy <= '0;
+            funct_mult_done <= '1;
         
         end 
         else if (mult_en | div_en | div_tc) begin
             counter <= counter + 1;
             funct_unit_busy <= '1;
+            funct_mult_done <= '1;
+            
         end
         //else if (rs_out.valid) begin
         //    counter <= counter + 1;
