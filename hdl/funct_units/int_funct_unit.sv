@@ -6,6 +6,7 @@ import rv32i_types::*;
     //input logic [31:0] rs2_v,
     //input logic [31:0] ex_mem_rd_v,
     //input logic [31:0] mem_wb_rd_v,
+    input  logic pre_wb_int_stall,
     output logic funct_unit_busy,
     output dp_is_stage_reg_t ex_mem
     //input mem_wb_stage_reg_t mem_wb, wb
@@ -238,7 +239,7 @@ import rv32i_types::*;
         // ex_mem.useless = id_ex.useless;
 
 
-        funct_unit_busy = '0;   //CHANGE
+        funct_unit_busy = pre_wb_int_stall;   //CHANGE
 
     end
     
