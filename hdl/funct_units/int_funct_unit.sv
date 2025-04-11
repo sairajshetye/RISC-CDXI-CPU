@@ -21,7 +21,7 @@ import rv32i_types::*;
 
     logic   [31:0]  aluout;
     logic   [31:0]  pc_next;
-    //logic           br_en;
+    logic           br_en;
 
     logic   [4:0]   rs2_s_real;
     logic   [4:0]   rd_s_arch;
@@ -68,6 +68,18 @@ import rv32i_types::*;
             default   : aluout = 'x;
         endcase
     end
+
+    always_comb begin
+        unique case (cmpop)
+            branch_f3_beq : br_en = (au == bu);
+            branch_f3_bne : br_en = (au != bu);
+            branch_f3_blt : br_en = (as <  bs);
+            branch_f3_bge : br_en = (as >=  bs); // changed added =
+            branch_f3_bltu: br_en = (au <  bu);
+            branch_f3_bgeu: br_en = (au >=  bu); // changed added =
+            default       : br_en = 1'bx;
+        endcase
+    end
     
     always_comb
     begin
@@ -108,11 +120,11 @@ import rv32i_types::*;
                 unique case (id_ex.funct3)
                     arith_f3_slt: begin
                         cmpop = branch_f3_blt;
-                        rd_v = '0; //{31'd0, br_en};
+                        rd_v = {31'd0, br_en};
                     end
                     arith_f3_sltu: begin
                         cmpop = branch_f3_bltu;
-                        rd_v = '0; //{31'd0, br_en};
+                        rd_v = {31'd0, br_en}; //{31'd0, br_en};
                     end
                     arith_f3_sr: begin
                         if (id_ex.funct7[5]) begin
@@ -138,11 +150,11 @@ import rv32i_types::*;
                 unique case (id_ex.funct3)
                     arith_f3_slt: begin
                         cmpop = branch_f3_blt;
-                        rd_v = '0; //{31'd0, br_en};
+                        rd_v = {31'd0, br_en}; //{31'd0, br_en};
                     end
                     arith_f3_sltu: begin
                         cmpop = branch_f3_bltu;
-                        rd_v = '0; //{31'd0, br_en};
+                        rd_v = {31'd0, br_en}; //{31'd0, br_en};
                     end
                     arith_f3_sr: begin
                         if (id_ex.funct7[5]) begin
