@@ -127,6 +127,13 @@ import rv32i_types::*;
             id_ex.deq = '1;
         end
         enq = if_id.deq;
+
+
+        id_ex.rfvi_monitor_vals = if_id.rfvi_monitor_vals;
+        id_ex.rfvi_monitor_vals.monitor_rs1_addr = rs1_s;
+        id_ex.rfvi_monitor_vals.monitor_rs2_addr = rs2_s;
+
+        id_ex.rfvi_monitor_vals.monitor_rd_addr = rd_s;
     end
 
 endmodule : id_stage

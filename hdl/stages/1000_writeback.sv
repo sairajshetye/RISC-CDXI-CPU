@@ -23,12 +23,16 @@ import rv32i_types::*;
     //output wb to res stations
     output   logic   [6:0]           p_addr_out,     //to res station + prf
 
-    output   logic   [WIDTH-1:0]        data_out    //to all
+    output   logic   [WIDTH-1:0]        data_out,    //to all
+
+    output rfvi_packet_t       rfvi_monitor_vals
 
     //output  logic                       deq         //for pre-wb queue
 );
 
     always_comb begin
+        rfvi_monitor_vals = inst_in_wb.rfvi_monitor_vals;
+        
         if (inst_in_wb.valid) begin
             //deq = '0;
             prf_regf_we = '0;

@@ -276,6 +276,13 @@ import rv32i_types::*;
     always_comb begin
         out_inst = rs_out;
         out_inst.rd_data = out;
+
+        out_inst.rfvi_monitor_vals = rs_out.rfvi_monitor_vals;
+
+        out_inst.rfvi_monitor_vals.monitor_rs1_rdata = rs1_v;
+        out_inst.rfvi_monitor_vals.monitor_rs2_rdata = rs2_v;
+        out_inst.rfvi_monitor_vals.monitor_regf_we = '1;
+        out_inst.rfvi_monitor_vals.monitor_rd_wdata = out;
     end
 
 

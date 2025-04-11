@@ -241,6 +241,11 @@ import rv32i_types::*;
 
         funct_unit_busy = pre_wb_int_stall;   //CHANGE
 
+        ex_mem.rfvi_monitor_vals = id_ex.rfvi_monitor_vals;
+        ex_mem.rfvi_monitor_vals.monitor_rs1_rdata = use_rs1 ? id_ex.rs1_data : '0;
+        ex_mem.rfvi_monitor_vals.monitor_rs2_rdata = use_rs2 ? id_ex.rs2_data : '0;
+        ex_mem.rfvi_monitor_vals.monitor_regf_we = regf_we;
+        ex_mem.rfvi_monitor_vals.monitor_rd_wdata = rd_v;
     end
     
 endmodule : integer_unit

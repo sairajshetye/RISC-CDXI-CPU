@@ -74,6 +74,7 @@ import rv32i_types::*;
         rob_entry.rd_addr = id_ex.rd_s; 
         rob_entry.br_pred = not_taken;
         rob_entry.br_result = not_taken; // should be not known CHANGE LATER
+        rob_entry.rfvi_monitor_vals = '0;
     end
 
     // 3. send to dispatch
@@ -123,6 +124,8 @@ import rv32i_types::*;
         end
 
         enq = id_ex.deq;
+
+        ra_dp.rfvi_monitor_vals = id_ex.rfvi_monitor_vals;
     end
 
 
