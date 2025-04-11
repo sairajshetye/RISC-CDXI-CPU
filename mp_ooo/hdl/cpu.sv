@@ -18,14 +18,14 @@ import rv32i_types::*;
     logic [31:0] pc;
     logic [31:0] pc_next;
 
-    logic iq_enq, dq_enq, rq_enq, fl_enq, rob_enq;
-    logic iq_deq, dq_deq, rq_deq, fl_deq;
+    logic iq_enq, dq_enq, rq_enq, fl_enq, rob_enq, wb_int_enq, wb_mult_enq;
+    logic iq_deq, dq_deq, rq_deq, fl_deq, wb_int_deq, wb_mult_deq;
 
     if_id_stage_reg_t if_id_reg_next, if_id_inst_out;
     id_ex_stage_reg_t id_ex_reg_next, id_ex_inst_out;
     ra_dp_stage_reg_t ra_dp_reg_next, ra_dp_inst_out;
     dp_is_stage_reg_t dp_is_inst_out, dp_is_out_mult, dp_is_out_int;
-    dp_is_stage_reg_t int_to_wb, mult_to_wb;
+    dp_is_stage_reg_t int_to_wb, mult_to_wb, wb_reg_next, wb_int_out, wb_mult_out, wb_inst_out;
 
     rob_entry_t rob_entry, rob_out;
 
@@ -35,8 +35,8 @@ import rv32i_types::*;
 
     logic [255:0] lb_rdata;
 
-    logic iq_valid_rdata, dq_valid_rdata, rq_valid_rdata, fl_valid_rdata, rob_valid_rdata;
-    logic iq_stall, dq_stall, rq_stall, fl_stall, rob_stall;
+    logic iq_valid_rdata, dq_valid_rdata, rq_valid_rdata, fl_valid_rdata, rob_valid_rdata, int_valid_rdata, mult_valid_rdata;
+    logic iq_stall, dq_stall, rq_stall, fl_stall, rob_stall, int_wb_stall, mult_wb_stall;
 
     //logic [31:0] rs1_v, rs2_v;
     logic [4:0] rs1_s, rs2_s;
@@ -55,7 +55,12 @@ import rv32i_types::*;
     logic       rs1_renamed, rs2_renamed;
     logic       rename_we;
     logic       rs1_ready, rs2_ready;
+    logic [3:0]    rob_idx_ld;
+    logic [6:0]    p_addr_out_wb;
 
+    logic prf_we, ld_status;
+    status_t status_n;
+    logic [31:0] wb_data_out;
 
     //logic big_valid;
 
@@ -79,14 +84,6 @@ import rv32i_types::*;
     // other arbiter variables
 
     logic [31:0] a_raddr;
-
-    assign ufp_wdata = '0;
-    assign ufp_wmask = '0;
-
-    assign rs1_s = ra_dp_reg_next.rs1_s;
-    assign rs2_s = ra_dp_reg_next.rs2_s;
-    assign prs1_s = ra_dp_reg_next.rs1_paddr;
-    assign prs2_s = ra_dp_reg_next.rs2_paddr;
     
 
     // always_ff @ (posedge clk) begin
@@ -107,6 +104,17 @@ import rv32i_types::*;
     logic valid_output_mult, valid_output_int;
 
     logic valid_rdata_mult, valid_rdata_int;
+
+    assign ufp_wdata = '0;
+    assign ufp_wmask = '0;
+
+    assign rs1_s = ra_dp_reg_next.rs1_s;
+    assign rs2_s = ra_dp_reg_next.rs2_s;
+    assign prs1_s = ra_dp_reg_next.rs1_paddr;
+    assign prs2_s = ra_dp_reg_next.rs2_paddr;
+
+    assign wb_int_enq = int_to_wb.valid && !funct_int_busy;
+    assign wb_mult_enq = mult_to_wb.valid && !funct_mult_busy;
 
 
     always_comb begin
@@ -245,11 +253,11 @@ import rv32i_types::*;
     prf prf (
         .clk(clk),
         .rst(rst),
-        .regf_we('0), // not writing yet, done in write back
-        .rd_v('0),
+        .regf_we(prf_we), // not writing yet, done in write back
+        .rd_v(wb_data_out),
         .rs1_s(prs1_s), 
         .rs2_s(prs2_s), 
-        .rd_s('0),
+        .rd_s(p_addr_out_wb),
         .prs1_v(prs1_v), 
         .prs2_v(prs2_v)
     );
@@ -295,8 +303,8 @@ import rv32i_types::*;
         .inst_out(dp_is_out_mult), // output
         .valid_rdata(valid_rdata_mult), // output
         .dispatch_stall(dispatch_stall_mult), // output
-        .data_paddr('0), // input
-        .data_in('0) // input
+        .data_paddr(p_addr_out_wb), // input
+        .data_in(wb_data_out) // input
     );
 
     r_station station_int(
@@ -308,14 +316,15 @@ import rv32i_types::*;
         .inst_out(dp_is_out_int), // output
         .valid_rdata(valid_rdata_int), // output
         .dispatch_stall(dispatch_stall_int), // output
-        .data_paddr('0), // input
-        .data_in('0) // input
+        .data_paddr(p_addr_out_wb), // input
+        .data_in(wb_data_out) // input
     );
 
     multiply_divide_unit funct_mult(
         .clk(clk),
         .rst(rst),
         .rs_out(dp_is_out_mult),
+        .pre_wb_mult_stall(mult_wb_stall),
         //.rs1_v(),
         //.rs2_v(),
         .funct_unit_busy(funct_mult_busy),
@@ -324,10 +333,73 @@ import rv32i_types::*;
 
     integer_unit funct_int(
         .id_ex(dp_is_out_int),
+        .pre_wb_int_stall(int_wb_stall),
         //.rs1_v(),
         //.rs2_v(),
         .funct_unit_busy(funct_int_busy),
         .ex_mem(int_to_wb)
+    );
+
+    pre_wb_q #(
+        .DEPTH      (8)
+    ) int_fu_q (
+        .clk(clk),
+        .rst(rst),
+        .enq(wb_int_enq),
+        .deq(wb_int_deq),
+        .inst_in_wb(int_to_wb),
+        .inst_out_wb(wb_int_out),
+        .valid_rdata(int_valid_rdata),
+        .wb_stall(int_wb_stall)
+    );
+    pre_wb_q #(
+        .DEPTH      (8)
+    ) mult_fu_q (
+        .clk(clk),
+        .rst(rst),
+        .enq(wb_mult_enq),
+        .deq(wb_mult_deq),
+        .inst_in_wb(mult_to_wb),
+        .inst_out_wb(wb_mult_out),
+        .valid_rdata(mult_valid_rdata),
+        .wb_stall(mult_wb_stall)
+    );
+
+    always_comb begin
+        wb_int_deq = '0;
+        wb_mult_deq = '0;
+        if (wb_int_out.valid && !wb_mult_out.valid) begin
+            wb_inst_out = wb_int_out;
+            wb_int_deq = '1;
+
+        end else if (!wb_int_out.valid && wb_mult_out.valid) begin
+            wb_inst_out = wb_mult_out;
+            wb_mult_deq = '1;
+
+        end else if (wb_int_out.valid && wb_mult_out.valid) begin
+            if (wb_int_out.rob_idx < wb_mult_out.rob_idx) begin
+                wb_inst_out = wb_int_out;
+                wb_int_deq = '1;
+
+            end else begin
+                wb_inst_out = wb_mult_out;
+                wb_mult_deq = '1;
+            end
+        end else begin
+            wb_inst_out = '0;
+        end
+    end
+
+
+    writeback wb (
+        .inst_in_wb(wb_inst_out),
+        .prf_regf_we(prf_we),
+        .ld_status(ld_status),
+        .status_out(status_n),
+        .rob_idx_ld(rob_idx_ld),
+        .p_addr_out(p_addr_out_wb),
+        .data_out(wb_data_out)
+        //.deq(wb_deq)
     );
 
 
@@ -350,9 +422,10 @@ import rv32i_types::*;
         .clk(clk),
         .rst(rst),
         .enq(rob_enq),
-        .ld_status('0),
-        .status_in(waiting), // '0
+        .ld_status(ld_status),
+        .status_in(status_n), // '0
         .ld_branch_res('0),
+        .rob_idx_ld(rob_idx_ld),
         .branch_res_in(not_taken), // '0
         .rob_in(rob_entry),
         .rob_idx_in('0),

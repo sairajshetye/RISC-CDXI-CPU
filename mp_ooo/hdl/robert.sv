@@ -13,7 +13,8 @@ import rv32i_types::*;
     input   logic                   ld_branch_res,
     input   branch_t                branch_res_in, 
     input   rob_entry_t             rob_in,
-    input   logic [PTR_SIZE-1:0]    rob_idx_in,     
+    input   logic [PTR_SIZE-1:0]    rob_idx_in,     //read idx
+    input   logic [PTR_SIZE-1:0]    rob_idx_ld,     //for ld status
     output  rob_entry_t             rob_out,
     output  logic                   valid_rdata,
     output  logic                   alloc_stall,
@@ -80,7 +81,7 @@ import rv32i_types::*;
         end
 
         if (ld_status) begin
-            rob[rob_idx_in].status <= status_in;
+            rob[rob_idx_ld].status <= status_in;
         end
 
         if (ld_branch_res) begin

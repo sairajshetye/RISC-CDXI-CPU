@@ -144,6 +144,7 @@ import rv32i_types::*;
             for (integer i = 0; i < DEPTH; i++) begin
                 station[i] <= '0;
             end
+            inst_out <= '0;
         end else if (replace) begin
             if (rs1_or_rs2) begin   //rs2 replace
                 station[idx_rep].rs2_data <= data_t;

@@ -13,6 +13,7 @@ import rv32i_types::*;
     input logic clk, 
     input logic rst,
     input dp_is_stage_reg_t rs_out,           //only use inst (change to be just that?)
+    input logic pre_wb_mult_stall,
     //input logic [RS1_DATA_SIZE-1:0] rs1_v,        //rs1 read data
     //input logic [RS2_DATA_SIZE-1:0] rs2_v,        //rs2 read data
     output logic funct_unit_busy,
@@ -282,6 +283,9 @@ import rv32i_types::*;
         if (!rst) begin
             counter <= 0;
             funct_unit_busy <= '0;
+        end
+        else if (pre_wb_mult_stall) begin
+            funct_unit_busy <= '1;
         end
         else if (counter == 2) begin
          
