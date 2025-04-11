@@ -104,11 +104,22 @@ import rv32i_types::*;
     
     end
 
-    always_comb begin
-        if (empty) begin
-            rob_out = 'x;
+    // always_comb begin
+    //     if (empty) begin
+    //         rob_out = 'x;
+    //     end else begin
+    //         rob_out = rob[rob_idx_in];
+    //     end
+    // end
+
+    always_ff @ (posedge clk) begin
+        if (rst) begin
+            rob_out <= '0;
+        end
+        else if (empty) begin
+            rob_out <= '0;
         end else begin
-            rob_out = rob[rob_idx_in];
+            rob_out <= rob[head[PTR_SIZE-1:0]];
         end
     end
 

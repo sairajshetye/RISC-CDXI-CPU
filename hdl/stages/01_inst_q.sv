@@ -19,7 +19,7 @@ import rv32i_types::*;
     logic valid_op;
     logic valid_enq;
     logic valid_deq;
-    logic in_out; // for enq and deq same time
+    logic in_out;
     logic [PTR_SIZE:0] head;
     logic [PTR_SIZE:0] tail;
 

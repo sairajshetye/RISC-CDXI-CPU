@@ -9,7 +9,7 @@ import rv32i_types::*;
     input   logic           rename_we,
     input   logic   [4:0]   rd_rename,
     input   logic   [6:0]   p_addr, // speculative (rat)
-    input   logic   [6:0]   p_addr_ret, // real (rrf)
+    input   logic   [6:0]   p_addr_ret, // (rrf)
 
     // RAT read
     input   logic   [4:0]   rat_rs1, rat_rs2,
@@ -45,7 +45,7 @@ import rv32i_types::*;
                 data[i].value <= '0;
             end
         end 
-        else if (regf_we && (rd_s != 5'd0)) begin // write data - is this done on commit? -> should be commit (real)
+        else if (regf_we && (rd_s != 5'd0)) begin // write data - is this done on commit? -> should be commit 
             //data[rd_s].renamed <= '0; // when commited, can un-rename
             //data[rd_s].p_addr <= '0; // un renames
             data[rd_s].p_addr_ret <= p_addr_ret; // allows for rolling back (later?)
