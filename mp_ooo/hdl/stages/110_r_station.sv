@@ -14,8 +14,9 @@ import rv32i_types::*;
     output  logic                   valid_rdata,
     output  logic                   dispatch_stall,
 
-    input   logic   [PTR_SIZE-1:0]  data_paddr, //from bus
-    input   logic   [WIDTH-1:0]     data_in    //from bus
+    input   logic   [PTR_SIZE-1:0]  addr_in,     //from wb
+    //input   logic   [PTR_SIZE-1:0]  data_paddr, //from wb
+    input   logic   [WIDTH-1:0]     data_in    //from wb
     //maybe add ^ seperate for rs1 & rs2, maybe port to port from funct units
 
     //output  logic                   regf_we,
@@ -59,14 +60,22 @@ import rv32i_types::*;
             if (!funct_unit_busy && station[i].valid) begin //if funct unit busy do nothing, if no inst in fu do nothing
             // need to add rs1_ready and rs2_ready fields to dispatch struct? change from if_id struct to that
             //  && station[i].rs1_ready && station[i].rs2_ready (put in first if statement once fields are created)
-                if (station[i].use_rs1 && (station[i].rs1_paddr == data_paddr)) begin    //if using rs1 check if bus_in is for rs1
+            //if (inst_in.)
+                if (station[i].use_rs1 && station[i].use_prs1 && (station[i].rs1_paddr == addr_in)) begin    //if using rs1 check if bus_in is for rs1
                         station[i].rs1_data = data_in;
-                        station[i].rs1_ready = data_in;
+                        station[i].rs1_ready = '1;
+                end else if (station[i].use_rs1 && !station[i].use_prs1 && ({2'b00, station[i].rs1_s} == addr_in)) begin
+                    station[i].rs1_data = data_in;
+                    station[i].rs1_ready = '1;
                 end
-                if (station[i].use_rs2 && (station[i].rs2_paddr == data_paddr)) begin      //if using rs2 check if bus_in is for rs2
+                if (station[i].use_rs2 && station[i].use_prs2 && (station[i].rs2_paddr == addr_in)) begin    //if using rs1 check if bus_in is for rs1
                         station[i].rs2_data = data_in;
-                        station[i].rs2_ready = data_in;
+                        station[i].rs2_ready = '1;
+                end else if (station[i].use_rs2 && !station[i].use_prs2 && ({2'b00, station[i].rs2_s} == addr_in)) begin
+                    station[i].rs2_data = data_in;
+                    station[i].rs2_ready = '1;
                 end
+                
                 
                 if ((station[i].use_rs1 && station[i].rs1_ready) && (station[i].use_rs2 && station[i].rs2_ready)) begin //use both rs1 & rs2 & both ready
                     if (station[i].rob_idx <= oldest_inst_rob_idx) begin
@@ -112,13 +121,19 @@ import rv32i_types::*;
             if (!full) begin
                 station[open_idx] <= inst_in;
                 station[open_idx].valid <= '1;
-                if (station[open_idx].use_rs1 && (station[open_idx].rs1_paddr == data_paddr)) begin    //if using rs1 check if bus_in is for rs1
-                        station[open_idx].rs1_data <= data_in;
-                        station[open_idx].rs1_ready <= data_in;
+                if (station[open_idx].use_rs1 && station[open_idx].use_prs1 && (station[open_idx].rs1_paddr == addr_in)) begin    //if using rs1 check if bus_in is for rs1
+                        station[open_idx].rs1_data = data_in;
+                        station[open_idx].rs1_ready = '1;
+                end else if (station[open_idx].use_rs1 && !station[open_idx].use_prs1 && ({2'b00, station[open_idx].rs1_s} == addr_in)) begin
+                    station[open_idx].rs1_data = data_in;
+                    station[open_idx].rs1_ready = '1;
                 end
-                if (station[open_idx].use_rs2 && (station[open_idx].rs2_paddr == data_paddr)) begin      //if using rs2 check if bus_in is for rs2
-                        station[open_idx].rs2_data <= data_in;
-                        station[open_idx].rs2_ready <= data_in;
+                if (station[open_idx].use_rs2 && station[open_idx].use_prs2 && (station[open_idx].rs2_paddr == addr_in)) begin    //if using rs1 check if bus_in is for rs1
+                        station[open_idx].rs2_data = data_in;
+                        station[open_idx].rs2_ready = '1;
+                end else if (station[open_idx].use_rs2 && !station[open_idx].use_prs2 && ({2'b00, station[open_idx].rs2_s} == addr_in)) begin
+                    station[open_idx].rs2_data = data_in;
+                    station[open_idx].rs2_ready = '1;
                 end
             end
         end
