@@ -71,7 +71,7 @@ import rv32i_types::*;
 
         dp_is.rob_idx = ra_dp.rob_idx;
         
-        dp_is.useless = '0;
+        // dp_is.useless = '0;
         if (ra_dp.use_rs1) begin
             dp_is.rs1_ready = rs1_ready;
             dp_is.rs1_data = rs1_rdata;

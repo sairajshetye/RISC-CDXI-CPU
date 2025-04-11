@@ -90,19 +90,19 @@ import rv32i_types::*;
                 if ((station[i].use_rs1 && station[i].rs1_ready) && (station[i].use_rs2 && station[i].rs2_ready)) begin //use both rs1 & rs2 & both ready
                     if (station[i].rob_idx <= oldest_inst_rob_idx) begin
                         oldest_inst_rob_idx = station[i].rob_idx;
-                        oldest_inst_station_idx = unsigned'(i);
+                        oldest_inst_station_idx = 4'(unsigned'(i));
                     end
                 end
                 else if ((station[i].use_rs1 && station[i].rs1_ready) && !(station[i].use_rs2)) begin   //only use rs1 & rs1 ready
                     if (station[i].rob_idx <= oldest_inst_rob_idx) begin
                         oldest_inst_rob_idx = station[i].rob_idx;
-                        oldest_inst_station_idx = unsigned'(i);
+                        oldest_inst_station_idx = 4'(unsigned'(i));
                     end
                 end 
                 else if ((station[i].use_rs2 && station[i].rs2_ready) && !(station[i].use_rs1)) begin   //only use rs2 & rs2 ready
                     if (station[i].rob_idx <= oldest_inst_rob_idx) begin
                         oldest_inst_rob_idx = station[i].rob_idx;
-                        oldest_inst_station_idx = unsigned'(i);
+                        oldest_inst_station_idx = 4'(unsigned'(i));
                     end
                 end
             end
@@ -116,7 +116,7 @@ import rv32i_types::*;
         open_idx = '0;
         for (integer i = 0; i < DEPTH; i++) begin
             if (!station[i].valid && !found_idx) begin
-                open_idx = unsigned'(i);
+                open_idx = 4'(unsigned'(i));
                 found_idx = '1;
             end
         end
@@ -152,31 +152,36 @@ import rv32i_types::*;
                 station[idx_rep].rs1_data <= data_t;
                 station[idx_rep].rs1_ready <= '1;
             end
-        end
-        else begin
+        end else begin
             if (!full && load_station) begin
                 station[open_idx] <= inst_tmp;
                 //station[open_idx].valid <= '1;
-                
+            end
+
+            if (empty || funct_unit_busy) begin
+                inst_out <= '0;
+            end else if (!empty && !funct_unit_busy) begin
+                inst_out <= station[oldest_inst_station_idx];
+                station[oldest_inst_station_idx].valid <= '0;
             end
         end
     end
 
     // removing instrs happens on the clock
     // check that valid_rdata is high before reading inst_out outside of this module
-    always_ff @(posedge clk) begin
-        if (empty | funct_unit_busy) begin
-            inst_out <= '0;
-        end 
-        //need in_out case b4 checking if empty?
-        else begin
-            inst_out <= station[oldest_inst_station_idx];
-            // remove from station if and only if it can be put into the funct_unit
-            if (!funct_unit_busy) begin
-                //station[oldest_inst_station_idx].valid <= '0;
-                //cannot remove this way, gives valid multiple driver error in lint
-            end
-        end
-    end
+    // always_ff @(posedge clk) begin
+    //     if (empty | funct_unit_busy) begin
+    //         inst_out <= '0;
+    //     end 
+    //     //need in_out case b4 checking if empty?
+    //     else begin
+    //         inst_out <= station[oldest_inst_station_idx];
+    //         // remove from station if and only if it can be put into the funct_unit
+    //         if (!funct_unit_busy) begin
+    //             //station[oldest_inst_station_idx].valid <= '0;
+    //             //cannot remove this way, gives valid multiple driver error in lint
+    //         end
+    //     end
+    // end
 
 endmodule : r_station

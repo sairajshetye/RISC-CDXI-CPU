@@ -10,6 +10,7 @@ import rv32i_types::*;
     input   logic           rs1_renamed, rs2_renamed,
     input   logic   [6:0]   rs1_paddr, rs2_paddr,
 
+    input   logic           res_stall,
     // output to ROB + dispatch, RAT
     //output  [4:0]   rd_s,
     output  logic           enq,
@@ -37,7 +38,7 @@ import rv32i_types::*;
     //logic           rs1_renamed, rs2_renamed;
     //logic   [6:0]   rs1_paddr, rs2_paddr;
 
-    assign deq = '0; // don't dequeue for now
+    // assign deq = '0; // don't dequeue for now
 
     always_comb begin
         rat_rs1 = id_ex.rs1_s;
@@ -106,7 +107,16 @@ import rv32i_types::*;
         ra_dp.rs2_paddr = rs2_renamed ? rs2_paddr : 7'h7E;
         ra_dp.rs2_ready = '0;
         ra_dp.rd_paddr = prd_s;
-        // ra_dp.useless = '0;
+        ra_dp.useless = '0;
+
+        if (res_stall) begin
+            deq = '0;
+            ra_dp.deq = '0;
+        end
+        else begin
+            deq = '1;
+            ra_dp.deq = '1;
+        end
 
         enq = id_ex.deq;
     end
