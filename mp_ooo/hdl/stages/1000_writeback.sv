@@ -11,9 +11,13 @@ module writeback
     //output deq signal for pre_wb queue
 
     //output wb to prf
+    output   logic                   prf_regf_we,
 
     //output wb to robert
-    output logic     [PTR_SIZE-1:0]     rob_idx_out,   //to robert
+    output   logic                   ld_status,
+    output   status_t                status_out,
+    output   logic [PTR_SIZE-1:0]    rob_idx_ld, 
+
 
     //output wb to res stations
     output   logic   [PTR_SIZE-1:0]     p_addr_out,     //to res station + prf
@@ -22,25 +26,44 @@ module writeback
 
     output  logic                       deq         //for pre-wb queue
 );
-//need new ports to prf & robert, change reservation station port?
-//if we do a CDB need to output all info as one thing, then select parts the thing needs
-//might be better to do individual ports
-
-    logic wb_done;      //deq signal for pre_wb queue
-
-
-
-//add 00 to MSB end of addr if phys reg isnt used
 
     always_comb begin
-        deq = '0;
-        p_addr_out = inst_in_wb.rd_paddr;
-        data_out = inst_in_wb.rd_data;
-        rob_idx_out = inst_in_wb.rob_idx;
-        //prf_out?
+        if (inst_in.valid) begin
+            deq = '0;
+            prf_regf_we = '0;
 
-        //confirm wb is done? then send deq signal to pre-wb queue
-        deq = '0;
+            //res stations & prf signals out
+            p_addr_out = inst_in_wb.rd_paddr;
+            data_out = inst_in_wb.rd_data;
+            prf_regf_we = '1;
+        
+            //robert signals out
+            status_out = done;
+            ld_status = '1;
+            rob_idx_ld = inst_in_wb.rob_idx;
+        
+            //confirm wb is done? then send deq signal to pre-wb queue
+            //prf_regf_we = '0;
+            deq = '1;
+
+        end else begin
+            deq = '0;
+            prf_regf_we = '0;
+
+            //res stations & prf signals out
+            p_addr_out = '0;
+            data_out = '0;
+            prf_regf_we = '0;
+
+        
+            //robert signals out
+            status_out = waiting;
+            ld_status = '0;
+            rob_idx_ld = '0;
+
+            //prf_regf_we = '0;
+            deq = '1;
+        end
 
     end
 
