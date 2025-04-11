@@ -9,6 +9,7 @@ import rv32i_types::*;
     input   logic                   clk,
     input   logic                   rst,
     input   logic                   funct_unit_busy,
+    input   logic                   load_station,
     input   dp_is_stage_reg_t       inst_in,
     output  dp_is_stage_reg_t       inst_out,
     output  logic                   valid_rdata,
@@ -109,7 +110,7 @@ import rv32i_types::*;
                 station[i] <= '0;
             end
         end else begin
-            if (!full) begin
+            if (!full && load_station) begin
                 station[open_idx] <= inst_in;
                 station[open_idx].valid <= '1;
                 if (station[open_idx].use_rs1 && (station[open_idx].rs1_paddr == data_paddr)) begin    //if using rs1 check if bus_in is for rs1

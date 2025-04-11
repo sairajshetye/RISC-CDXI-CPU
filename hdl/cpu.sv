@@ -24,7 +24,7 @@ import rv32i_types::*;
     if_id_stage_reg_t if_id_reg_next, if_id_inst_out;
     id_ex_stage_reg_t id_ex_reg_next, id_ex_inst_out;
     ra_dp_stage_reg_t ra_dp_reg_next, ra_dp_inst_out;
-    dp_is_stage_reg_t dp_is_inst_out;
+    dp_is_stage_reg_t dp_is_inst_out, dp_is_out_mult, dp_is_out_int;
 
     rob_entry_t rob_entry, rob_out;
 
@@ -39,6 +39,7 @@ import rv32i_types::*;
 
     //logic [31:0] rs1_v, rs2_v;
     logic [4:0] rs1_s, rs2_s;
+    logic [6:0] prs1_s, prs2_s;
 
     logic [6:0] p_addr_in, p_addr_out; // free list
 
@@ -48,9 +49,12 @@ import rv32i_types::*;
     logic [4:0] rat_rs1, rat_rs2;
 
     arf_reg_t ars1_v, ars2_v;
+    prf_t     prs1_v, prs2_v;
 
-    logic rs1_renamed, rs2_renamed;
+    logic       rs1_renamed, rs2_renamed;
     logic       rename_we;
+    logic       rs1_ready, rs2_ready;
+
 
     //logic big_valid;
 
@@ -77,6 +81,11 @@ import rv32i_types::*;
 
     assign ufp_wdata = '0;
     assign ufp_wmask = '0;
+
+    assign rs1_s = ra_dp_reg_next.rs1_s;
+    assign rs2_s = ra_dp_reg_next.rs2_s;
+    assign prs1_s = ra_dp_reg_next.rs1_paddr;
+    assign prs2_s = ra_dp_reg_next.rs2_paddr;
     
 
     // always_ff @ (posedge clk) begin
@@ -89,7 +98,7 @@ import rv32i_types::*;
 
     logic dispatch_stall_mult, dispatch_stall_int;
 
-    logic load_funct_mult, load_funct_int;
+    logic load_station_mult, load_station_int;
     logic funct_mult_busy, funct_int_busy;
 
     logic [31:0] rs1_rdata, rs2_rdata;
@@ -166,8 +175,8 @@ import rv32i_types::*;
         .rq_stall(rq_stall),
         .enq(dq_enq),
         .deq(dq_deq),
-        .rs1_s(rs1_s),
-        .rs2_s(rs2_s),
+        // .rs1_s(rs1_s),
+        // .rs2_s(rs2_s),
         .id_ex(id_ex_reg_next)
     );
 
@@ -229,6 +238,18 @@ import rv32i_types::*;
         .ars2_v(ars2_v)
     );
 
+    prf prf (
+        .clk(clk),
+        .rst(rst),
+        .regf_we('0), // not writing yet, done in write back
+        .rd_v('0),
+        .rs1_s(prs1_s), 
+        .rs2_s(prs2_s), 
+        .rd_s('0),
+        .prs1_v(prs1_v), 
+        .prs2_v(prs2_v)
+    );
+
     rename_q #(
         .DEPTH      (8)
     ) rename_q(
@@ -248,40 +269,44 @@ import rv32i_types::*;
         .dispatch_stall_mult('0), // input
         .dispatch_stall_int('0), // input
 
-        .load_funct_mult(load_funct_mult), // output
-        .load_funct_int(load_funct_int), // output
+        .load_station_mult(load_station_mult), // output
+        .load_station_int(load_station_int), // output
 
-        .rs1_rdata('0), // input from the register file
-        .rs2_rdata('0), // input from the register file
+        .rs1_rdata(rs1_rdata), // input from the register file arbiter
+        .rs2_rdata(rs2_rdata), // input from the register file arbiter
+        .rs1_ready(rs1_ready),
+        .rs2_ready(rs2_ready),
 
         .dp_is(dp_is_inst_out), // output
         .valid_output_mult(valid_output_mult), // output
         .valid_output_int(valid_output_int) // output
     );
 
-    // r_station station_mult(
-    //     .clk(clk), // input
-    //     .rst(rst), // input
-    //     .funct_unit_busy(funct_mult_busy), // input
-    //     .inst_in(), // input
-    //     .inst_out(), // output
-    //     .valid_rdata(), // output
-    //     .dispatch_stall(dispatch_stall_mult), // output
-    //     .data_paddr(), // input
-    //     .data_in() // input
-    // );
+    r_station station_mult(
+        .clk(clk), // input
+        .rst(rst), // input
+        .funct_unit_busy(funct_mult_busy), // input
+        .load_station(load_station_mult),
+        .inst_in(dp_is_inst_out), // input
+        .inst_out(dp_is_out_mult), // output
+        .valid_rdata(valid_rdata_mult), // output
+        .dispatch_stall(dispatch_stall_mult), // output
+        .data_paddr('0), // input
+        .data_in('0) // input
+    );
 
-    // r_station station_int(
-    //     .clk(clk), // input
-    //     .rst(rst), // input
-    //     .funct_unit_busy(funct_int_busy), // input
-    //     .inst_in(), // input
-    //     .inst_out(), // output
-    //     .valid_rdata(), // output
-    //     .dispatch_stall(dispatch_stall_int), // output
-    //     .data_paddr(), // input
-    //     .data_in() // input
-    // );
+    r_station station_int(
+        .clk(clk), // input
+        .rst(rst), // input
+        .funct_unit_busy(funct_int_busy), // input
+        .load_station(load_station_int),
+        .inst_in(dp_is_inst_out), // input
+        .inst_out(dp_is_out_int), // output
+        .valid_rdata(valid_rdata_int), // output
+        .dispatch_stall(dispatch_stall_int), // output
+        .data_paddr('0), // input
+        .data_in('0) // input
+    );
 
     // multiply_divide_unit funct_mult(
     //     .clk(clk),
@@ -334,17 +359,47 @@ import rv32i_types::*;
         .rob_tail_idx(rob_tail_idx)
     );
     
+    always_comb begin
 
+        // queued a read in rename allocate
+        // rs1, rs2
 
+        // check both arf and prf -> which one
+        if (ra_dp_inst_out.use_prs1 && prs1_v.valid) begin // using phys address and already there
+            rs1_rdata = prs1_v.value;
+            rs1_ready = '1;
+        end
+        else if (ra_dp_inst_out.use_prs1 && !prs1_v.valid) begin // using phys address and not there
+            rs1_rdata = '0;
+            rs1_ready = '0;
+        end
+        else if (!ra_dp_inst_out.use_prs1 && ra_dp_inst_out.use_rs1) begin // ROB? JUST TAKE ARCH
+            rs1_rdata = ars1_v.value;
+            rs1_ready = '1;
+        end
+        else begin // WHAT IS THIS
+            rs1_rdata = '0;
+            rs1_ready = '0;
+        end
 
+        if (ra_dp_inst_out.use_prs2 && prs2_v.valid) begin // using phys address and already there
+            rs2_rdata = prs2_v.value;
+            rs2_ready = '1;
+        end
+        else if (ra_dp_inst_out.use_prs2 && !prs2_v.valid) begin // using phys address and not there
+            rs2_rdata = '0;
+            rs2_ready = '0;
+        end
+        else if (!ra_dp_inst_out.use_prs2 && ra_dp_inst_out.use_rs2) begin // ROB? JUST TAKE ARCH
+            rs2_rdata = ars2_v.value;
+            rs2_ready = '1;
+        end
+        else begin // WHAT IS THIS
+            rs2_rdata = '0;
+            rs2_ready = '0;
+        end
 
-
-
-
-
-
-
-
+    end
 
     arbiter arbiter(
         .clk(clk), // input
@@ -390,6 +445,9 @@ import rv32i_types::*;
         .dfp_wdata(dfp_wdata),
         .dfp_resp(dfp_resp) // input
     );
+
+
+
 
 
     /*

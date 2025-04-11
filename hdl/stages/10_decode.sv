@@ -7,8 +7,8 @@ import rv32i_types::*;
     //input   logic [31:0]  rs2_v,
     output  logic         enq,
     output  logic         deq,
-    output  logic [4:0]   rs1_s,
-    output  logic [4:0]   rs2_s,
+    // output  logic [4:0]   rs1_s,
+    // output  logic [4:0]   rs2_s,
     //input   logic         global_stall,
     output id_ex_stage_reg_t id_ex
 );
@@ -25,6 +25,8 @@ import rv32i_types::*;
     logic   [31:0]  rd_v;
     logic           regf_we;
     logic           use_rs1, use_rs2, use_rd, is_store;
+    logic   [4:0]   rs1_s;
+    logic   [4:0]   rs2_s;
 
     assign funct3 = if_id.inst[14:12];
     assign funct7 = if_id.inst[31:25];
