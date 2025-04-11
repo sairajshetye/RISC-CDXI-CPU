@@ -24,7 +24,7 @@ import rv32i_types::*;
     if_id_stage_reg_t if_id_reg_next, if_id_inst_out;
     id_ex_stage_reg_t id_ex_reg_next, id_ex_inst_out;
     ra_dp_stage_reg_t ra_dp_reg_next, ra_dp_inst_out;
-    dp_is_stage_reg_t dp_is_reg_next, dp
+    dp_is_stage_reg_t dp_is_inst_out;
 
     rob_entry_t rob_entry, rob_out;
 
@@ -90,10 +90,11 @@ import rv32i_types::*;
     logic dispatch_stall_mult, dispatch_stall_int;
 
     logic load_funct_mult, load_funct_int;
+    logic funct_mult_busy, funct_int_busy;
 
     logic [31:0] rs1_rdata, rs2_rdata;
 
-    logic 
+    logic valid_output_mult, valid_output_int;
 
 
     always_comb begin
@@ -244,18 +245,62 @@ import rv32i_types::*;
     dispatch dispatch(
         .ra_dp(ra_dp_inst_out), // comes from rename queue, input
 
-        .dispatch_stall_mult(), // input
-        .dispatch_stall_int(), // input
+        .dispatch_stall_mult('0), // input
+        .dispatch_stall_int('0), // input
 
-        .load_funct_mult(), // output
-        .load_funct_int(), // output
+        .load_funct_mult(load_funct_mult), // output
+        .load_funct_int(load_funct_int), // output
 
-        .rs1_rdata(), // input
-        .rs2_rdata(), // input
+        .rs1_rdata('0), // input from the register file
+        .rs2_rdata('0), // input from the register file
 
-        .dp_is(), // output
-        .valid_output() // output
+        .dp_is(dp_is_inst_out), // output
+        .valid_output_mult(valid_output_mult), // output
+        .valid_output_int(valid_output_int) // output
     );
+
+    // r_station station_mult(
+    //     .clk(clk), // input
+    //     .rst(rst), // input
+    //     .funct_unit_busy(funct_mult_busy), // input
+    //     .inst_in(), // input
+    //     .inst_out(), // output
+    //     .valid_rdata(), // output
+    //     .dispatch_stall(dispatch_stall_mult), // output
+    //     .data_paddr(), // input
+    //     .data_in() // input
+    // );
+
+    // r_station station_int(
+    //     .clk(clk), // input
+    //     .rst(rst), // input
+    //     .funct_unit_busy(funct_int_busy), // input
+    //     .inst_in(), // input
+    //     .inst_out(), // output
+    //     .valid_rdata(), // output
+    //     .dispatch_stall(dispatch_stall_int), // output
+    //     .data_paddr(), // input
+    //     .data_in() // input
+    // );
+
+    // multiply_divide_unit funct_mult(
+    //     .clk(clk),
+    //     .rst(rst),
+    //     .rs_out(),
+    //     .rs1_v(),
+    //     .rs2_v(),
+    //     .funct_unit_busy(funct_mult_busy),
+    //     .out()
+    // );
+
+    // integer_unit funct_int(
+    //     .id_ex(),
+    //     .rs1_v(),
+    //     .rs2_v(),
+    //     .funct_unit_busy(funct_int_busy),
+    //     .ex_mem()
+    // );
+
 
     free_list #(
         .DEPTH      (128)

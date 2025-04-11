@@ -166,13 +166,15 @@ package rv32i_types;
         logic           use_rd;
         // what else? - 391 bits
         // logic             rs1_data
-        logic    [3:0]  rob_idx;
         logic           use_prs1;
         logic    [6:0]  rs1_paddr;
         logic           rs1_ready;
+
         logic           use_prs2;
         logic    [6:0]  rs2_paddr;
         logic           rs2_ready;
+
+        logic    [3:0]  rob_idx;
 
         logic    [6:0]  rd_paddr;
 
@@ -210,16 +212,20 @@ package rv32i_types;
         logic           use_rd;
         // what else? - 391 bits
         // logic             rs1_data
+        logic           use_prs1;
         logic    [6:0]  rs1_paddr;
         logic           rs1_ready;
         logic    [31:0] rs1_data;
 
+        logic           use_prs2;
         logic    [6:0]  rs2_paddr;
         logic           rs2_ready;
         logic    [31:0] rs2_data;
 
         logic    [6:0]  rd_paddr;
         logic    [31:0] rd_data;
+
+        logic    [3:0]  rob_idx;
 
         logic           useless;
     } dp_is_stage_reg_t;

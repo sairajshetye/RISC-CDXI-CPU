@@ -19,7 +19,8 @@ import rv32i_types::*;
     input logic [31:0]   rs2_rdata,
 
     output dp_is_stage_reg_t dp_is,
-    output logic             valid_output
+    output logic             valid_output_mult,
+    output logic             valid_output_int
 );
 
 
@@ -27,9 +28,49 @@ import rv32i_types::*;
     // 2. choose which rs to go to -> set the load/enq to RS
 
     // in cpu choose where arf and prf goes to
-
     // set ready and data bits, since get data from register file in this stage
     always_comb begin
+        dp_is.inst = ra_dp.inst;
+        dp_is.pc = ra_dp.pc;
+        dp_is.order = ra_dp.order;
+        dp_is.pc_next = ra_dp.pc_next;
+        dp_is.valid = ra_dp.valid;
+        dp_is.stall = ra_dp.stall;
+        
+        dp_is.funct3 = ra_dp.funct3;
+        dp_is.funct7 = ra_dp.funct7;
+        dp_is.opcode = ra_dp.opcode;
+        dp_is.i_imm = ra_dp.i_imm;
+        dp_is.s_imm = ra_dp.s_imm;
+        dp_is.b_imm = ra_dp.b_imm;
+        dp_is.u_imm = ra_dp.u_imm;
+        dp_is.j_imm = ra_dp.j_imm;
+        dp_is.rs1_s = ra_dp.rs1_s;
+        dp_is.use_rs1 = ra_dp.use_rs1;
+        dp_is.rs2_s = ra_dp.rs2_s;
+        dp_is.use_rs2 = ra_dp.use_rs2;
+        dp_is.rd_s = ra_dp.rd_s;
+
+        dp_is.regf_we = ra_dp.regf_we;
+        dp_is.is_store = ra_dp.is_store;
+        dp_is.use_rd = ra_dp.use_rd;
+
+        dp_is.use_prs1 = ra_dp.use_prs1;
+        dp_is.rs1_paddr = ra_dp.rs1_paddr;
+        dp_is.rs1_ready = ra_dp.rs1_ready;
+        dp_is.rs1_data = '0;
+
+        dp_is.use_prs2 = ra_dp.use_prs2;
+        dp_is.rs2_paddr = ra_dp.rs2_paddr;
+        dp_is.rs2_ready = ra_dp.rs2_ready;
+        dp_is.rs2_data = '0;
+
+        dp_is.rd_paddr = ra_dp.rd_paddr;
+        dp_is.rd_data = '0;
+
+        dp_is.rob_idx = ra_dp.rob_idx;
+        
+        dp_is.useless = '0;
         if (ra_dp.use_rs1) begin
             dp_is.rs1_ready = '1;
             dp_is.rs1_data = rs1_rdata;
@@ -39,11 +80,18 @@ import rv32i_types::*;
             dp_is.rs2_data = rs2_rdata;
         end
  
-        if (dispatch_stall_mult || dispatch_stall_int) begin 
-            valid_output = '0;
+        if (dispatch_stall_mult) begin 
+            valid_output_mult = '0;
         end else begin
-            valid_output = '1;
+            valid_output_mult = '1;
         end
+
+        if (dispatch_stall_int) begin 
+            valid_output_int = '0;
+        end else begin
+            valid_output_int = '1;
+        end
+
     end
 
     // choose which reservation station to load with the 
@@ -92,6 +140,10 @@ import rv32i_types::*;
                         load_funct_mult = '0;
                         load_funct_int = '1;
                     end
+                end
+                default     : begin
+                    load_funct_mult = '0;
+                    load_funct_int = '0;
                 end
         endcase
     end
