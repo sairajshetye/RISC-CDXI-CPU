@@ -136,6 +136,21 @@ interface mem_itf_banked(
         input               rvalid
     );
 
+    // modport mem (
+    //     input               clk,
+    //     input               rst,
+    //     input               addr,
+    //     input               rmask, read
+    //     input               wmask, write
+    //     input               wdata,
+                                     // ready
+    //     output              rdata,
+                                    // raddr
+    //     output              resp, rvalid?
+    //     output              error
+    // );
+
+
     modport mem (
         input               clk,
         input               rst,
@@ -144,10 +159,10 @@ interface mem_itf_banked(
         input               write,
         input               wdata,
         output              ready,
-        output              rdata,
-        output              raddr,
-        output              rvalid,
-        output              error
+        output              rdata, // have set
+        output              raddr, // have set
+        output              rvalid, // have set
+        output              error // have set
     );
 
     modport mon (

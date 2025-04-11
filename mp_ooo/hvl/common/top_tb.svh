@@ -4,7 +4,12 @@
     end
 
     mem_itf_banked mem_itf(.*);
+
+    // use for normal cpu testing
     dram_w_burst_frfcfs_controller mem(.itf(mem_itf));
+
+    // use for random testing
+    // random_tb mem(.itf(mem_itf));
 
     mon_itf #(.CHANNELS(8)) mon_itf(.*);
     monitor #(.CHANNELS(8)) monitor(.itf(mon_itf));

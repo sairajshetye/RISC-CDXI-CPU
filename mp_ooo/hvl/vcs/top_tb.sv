@@ -1,4 +1,4 @@
-module top_tb;
+module top_tb; // actual_top_tb
 
     timeunit 1ps;
     timeprecision 1ps;
