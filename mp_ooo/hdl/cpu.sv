@@ -106,6 +106,8 @@ import rv32i_types::*;
 
     logic valid_output_mult, valid_output_int;
 
+    logic valid_rdata_mult, valid_rdata_int;
+
 
     always_comb begin
         if (|ufp_rmask && ufp_resp) begin

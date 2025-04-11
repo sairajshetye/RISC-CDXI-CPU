@@ -90,19 +90,19 @@ import rv32i_types::*;
                 if ((station[i].use_rs1 && station[i].rs1_ready) && (station[i].use_rs2 && station[i].rs2_ready)) begin //use both rs1 & rs2 & both ready
                     if (station[i].rob_idx <= oldest_inst_rob_idx) begin
                         oldest_inst_rob_idx = station[i].rob_idx;
-                        oldest_inst_station_idx = i;
+                        oldest_inst_station_idx = unsigned'(i);
                     end
                 end
                 else if ((station[i].use_rs1 && station[i].rs1_ready) && !(station[i].use_rs2)) begin   //only use rs1 & rs1 ready
                     if (station[i].rob_idx <= oldest_inst_rob_idx) begin
                         oldest_inst_rob_idx = station[i].rob_idx;
-                        oldest_inst_station_idx = i;
+                        oldest_inst_station_idx = unsigned'(i);
                     end
                 end 
                 else if ((station[i].use_rs2 && station[i].rs2_ready) && !(station[i].use_rs1)) begin   //only use rs2 & rs2 ready
                     if (station[i].rob_idx <= oldest_inst_rob_idx) begin
                         oldest_inst_rob_idx = station[i].rob_idx;
-                        oldest_inst_station_idx = i;
+                        oldest_inst_station_idx = unsigned'(i);
                     end
                 end
             end
@@ -116,7 +116,7 @@ import rv32i_types::*;
         open_idx = '0;
         for (integer i = 0; i < DEPTH; i++) begin
             if (!station[i].valid && !found_idx) begin
-                open_idx = i;
+                open_idx = unsigned'(i);
                 found_idx = '1;
             end
         end
@@ -137,6 +137,7 @@ import rv32i_types::*;
             inst_tmp.valid = '1;
         end
     end
+
     // adding instrs happens on the clock
     always_ff @(posedge clk) begin
         if (rst) begin
