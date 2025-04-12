@@ -62,13 +62,17 @@ import rv32i_types::*;
 
         dp_is.use_prs1 = ra_dp.use_prs1;
         dp_is.rs1_paddr = ra_dp.rs1_paddr;
-        dp_is.rs1_ready = '0;
-        dp_is.rs1_data = '0;
+        // dp_is.rs1_ready = '0;
+        dp_is.rs1_ready = ra_dp.rs1_ready;
+        // dp_is.rs1_data = '0;
+        dp_is.rs1_data = ra_dp.rs1_data;
 
         dp_is.use_prs2 = ra_dp.use_prs2;
         dp_is.rs2_paddr = ra_dp.rs2_paddr;
-        dp_is.rs2_ready = '0;
-        dp_is.rs2_data = '0;
+        // dp_is.rs2_ready = '0;
+        dp_is.rs2_ready = ra_dp.rs2_ready;
+        // dp_is.rs2_data = '0;
+        dp_is.rs2_data = ra_dp.rs2_data;
 
         dp_is.rd_paddr = ra_dp.rd_paddr;
         dp_is.rd_data = '0;
@@ -77,22 +81,22 @@ import rv32i_types::*;
         dp_is.rob_overflow = ra_dp.rob_overflow;
         
         // dp_is.useless = '0;
-        if (ra_dp.use_rs1) begin
+        if (ra_dp.use_rs1 && !ra_dp.rs1_ready) begin
             dp_is.rs1_ready = rs1_ready;
             dp_is.rs1_data = rs1_rdata;
         end
-        if (ra_dp.use_rs2) begin
+        if (ra_dp.use_rs2 && !ra_dp.rs2_ready) begin
             dp_is.rs2_ready = rs2_ready;
             dp_is.rs2_data = rs2_rdata;
         end
 
         // FORWARDING
-        if (ra_dp.use_rs1 && ra_dp.rs1_paddr == data_paddr) begin
+        if (!dp_is.rs1_ready && ra_dp.use_rs1 && ra_dp.rs1_paddr == data_paddr) begin
             dp_is.rs1_ready = '1;
             dp_is.rs1_data = data_in;
         end
 
-        if (ra_dp.use_rs2 && ra_dp.rs2_paddr == data_paddr) begin
+        if (!dp_is.rs2_ready && ra_dp.use_rs2 && ra_dp.rs2_paddr == data_paddr) begin
             dp_is.rs2_ready = '1;
             dp_is.rs2_data = data_in;
         end

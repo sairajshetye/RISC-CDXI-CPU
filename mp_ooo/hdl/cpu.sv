@@ -226,6 +226,11 @@ import rv32i_types::*;
         .rs2_paddr(rs2_paddr),
         .res_stall(dispatch_stall_mult || dispatch_stall_int),
         .rob_stall(rob_stall),
+
+        //FORWARDING
+        .data_paddr(p_addr_out_wb),
+        .data_in(wb_data_out),
+        
         // output to ROB + dispatch, RAT
         .enq(rq_enq),
         .deq(rq_deq),

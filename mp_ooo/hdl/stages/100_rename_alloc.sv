@@ -15,6 +15,11 @@ import rv32i_types::*;
     input   logic           rob_stall,
     // output to ROB + dispatch, RAT
     //output  [4:0]   rd_s,
+
+    // FORWARD FROM THE BUS
+    input logic [6:0]    data_paddr,
+    input logic [31:0]   data_in,
+
     output  logic           enq,
     output  logic           deq,
     output  logic           rename_we,
@@ -116,6 +121,22 @@ import rv32i_types::*;
         ra_dp.rs2_ready = '0;
         ra_dp.rd_paddr = prd_s;
         ra_dp.useless = '0;
+
+        ra_dp.rs1_data = '0;
+        ra_dp.rs2_data = '0;
+
+        // FORWARDING
+
+        // if (ra_dp.use_rs1 && ra_dp.rs1_paddr == data_paddr) begin
+        //     ra_dp.rs1_ready = '1;
+        //     ra_dp.rs1_data = data_in;
+        // end
+
+        // if (ra_dp.use_rs2 && ra_dp.rs2_paddr == data_paddr) begin
+        //     ra_dp.rs2_ready = '1;
+        //     ra_dp.rs2_data = data_in;
+        // end
+
 
         if (res_stall) begin
             deq = '0;
