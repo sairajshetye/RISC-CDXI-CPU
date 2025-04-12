@@ -16,6 +16,9 @@ import rv32i_types::*;
     output  logic           rs1_renamed, rs2_renamed,
     output  logic   [6:0]   rs1_paddr, rs2_paddr,
 
+    output  logic           fl_enq,
+    output  logic   [6:0]   fl_data_in,
+
     //input   logic   [4:0]   rs1_s_ex, rs2_s_ex,
     //output  logic   [31:0]  rs1_v, rs2_v,
     //input   logic           load_stall,
@@ -44,10 +47,24 @@ import rv32i_types::*;
                 data[i].p_addr_ret <= '0;
                 data[i].value <= '0;
             end
+            fl_enq <= '0;
+            fl_data_in <= '0;
         end else begin
+            fl_enq <= '0;
+            fl_data_in <= '0;
             if (regf_we && (rd_s != 5'd0)) begin // write data - is this done on commit? -> should be commit 
                 //data[rd_s].renamed <= '0; // when commited, can un-rename
                 //data[rd_s].p_addr <= '0; // un renames
+                // sent to free list
+                if ((data[rd_s].p_addr_ret != p_addr_ret) && (data[rd_s].p_addr_ret != '0)) begin // if old != new
+                    fl_enq <= '1;
+                    fl_data_in <= data[rd_s].p_addr_ret;
+                end
+                else begin
+                    fl_enq <= '0;
+                    fl_data_in <= '0;
+                end
+
                 data[rd_s].p_addr_ret <= p_addr_ret; // allows for rolling back (later?)
                 data[rd_s].value <= rd_v;
             end

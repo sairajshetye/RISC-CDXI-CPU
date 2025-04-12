@@ -18,7 +18,7 @@ import rv32i_types::*;
     logic [31:0] pc;
     logic [31:0] pc_next;
 
-    logic iq_enq, dq_enq, rq_enq, fl_enq, rob_enq, wb_int_enq, wb_mult_enq;
+    logic iq_enq, dq_enq, rq_enq, fl_enq, rob_enq, wb_int_enq, wb_mult_enq, fl_enq_rob;
     logic iq_deq, dq_deq, rq_deq, fl_deq, wb_int_deq, wb_mult_deq;
 
     if_id_stage_reg_t if_id_reg_next, if_id_inst_out;
@@ -42,7 +42,7 @@ import rv32i_types::*;
     logic [4:0] rs1_s, rs2_s;
     logic [6:0] prs1_s, prs2_s;
 
-    logic [6:0] p_addr_in, p_addr_out; // free list
+    logic [6:0] fl_data_in, p_addr_out; // free list
 
     logic [3:0] rob_tail_idx;
     logic [6:0] rs1_paddr, rs2_paddr;
@@ -257,6 +257,8 @@ import rv32i_types::*;
         .rs2_renamed(rs2_renamed),
         .rs1_paddr(rs1_paddr), 
         .rs2_paddr(rs2_paddr),
+        .fl_enq(fl_enq),
+        .fl_data_in(fl_data_in),
         .ars1_v(ars1_v), 
         .ars2_v(ars2_v)
     );
@@ -272,6 +274,8 @@ import rv32i_types::*;
         .commit_rs(p_addr_ret),
         .prs1_v(prs1_v), 
         .prs2_v(prs2_v),
+        .free_we(fl_enq),
+        .rd_s_free(fl_data_in),
         .commit_prs(commit_prs)
     );
 
@@ -425,7 +429,7 @@ import rv32i_types::*;
         .rst(rst),
         .enq(fl_enq),
         .deq(fl_deq),
-        .p_addr_in(rob_out.rd_paddr),
+        .p_addr_in(fl_data_in), // rob_out.rd_paddr
         .p_addr_out(p_addr_out),
         .valid_rdata(fl_valid_rdata),
         .rename_stall(fl_stall)
@@ -448,7 +452,7 @@ import rv32i_types::*;
         .rob_out(rob_out),
         .valid_rdata(rob_valid_rdata),
         .alloc_stall(rob_stall),
-        .deq(fl_enq),
+        .deq(fl_enq_rob),
         .rob_tail_idx(rob_tail_idx),
         .rob_overflow(rob_overflow),
         .aregf_we(aregf_we),
