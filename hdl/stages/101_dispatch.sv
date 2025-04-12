@@ -87,12 +87,12 @@ import rv32i_types::*;
         end
 
         // FORWARDING
-        if (ra_dp.use_rs1 && ra_dp.rs1_paddr == data_paddr) begin
+        if (!dp_is.rs1_ready && ra_dp.use_rs1 && ra_dp.rs1_paddr == data_paddr) begin
             dp_is.rs1_ready = '1;
             dp_is.rs1_data = data_in;
         end
 
-        if (ra_dp.use_rs2 && ra_dp.rs2_paddr == data_paddr) begin
+        if (!dp_is.rs2_ready && ra_dp.use_rs2 && ra_dp.rs2_paddr == data_paddr) begin
             dp_is.rs2_ready = '1;
             dp_is.rs2_data = data_in;
         end

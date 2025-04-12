@@ -503,6 +503,11 @@ import rv32i_types::*;
             rs1_rdata = '0;
             rs1_ready = '0;
         end
+        // changes nothing!
+        // else if (ra_dp_inst_out.use_prs1 && !prs1_v.valid && (p_addr_out_wb == ra_dp_inst_out.rs1_paddr) ) begin // using phys address and not there
+        //     rs1_rdata = wb_data_out;
+        //     rs1_ready = '1;
+        // end
         else if (!ra_dp_inst_out.use_prs1 && ra_dp_inst_out.use_rs1) begin // ROB? JUST TAKE ARCH
             rs1_rdata = ars1_v.value;
             rs1_ready = '1;
@@ -520,6 +525,10 @@ import rv32i_types::*;
             rs2_rdata = '0;
             rs2_ready = '0;
         end
+        // else if (ra_dp_inst_out.use_prs2 && !prs2_v.valid && (p_addr_out_wb == ra_dp_inst_out.rs2_paddr) ) begin // using phys address and not there
+        //     rs2_rdata = wb_data_out;
+        //     rs2_ready = '1;
+        // end
         else if (!ra_dp_inst_out.use_prs2 && ra_dp_inst_out.use_rs2) begin // ROB? JUST TAKE ARCH
             rs2_rdata = ars2_v.value;
             rs2_ready = '1;
