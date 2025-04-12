@@ -88,16 +88,16 @@ import rv32i_types::*;
             end
         end
 
-        aregf_we <= '0;
-        ard_s <= '0;
-        p_addr_ret <= '0;
+        // aregf_we <= '0;
+        // ard_s <= '0;
+        // p_addr_ret <= '0;
         if (ld_status) begin
             rob[rob_idx_ld].status <= status_in;
             //rob[rob_idx_ld].valid <= '0;
             if (status_in == done) begin
-                aregf_we <= '1;
-                ard_s <= rob[rob_idx_ld].rd_addr;
-                p_addr_ret <= rob[rob_idx_ld].rd_paddr;
+                //aregf_we <= '1;
+                //ard_s <= rob[rob_idx_ld].rd_addr;
+                //p_addr_ret <= rob[rob_idx_ld].rd_paddr;
                 rob[rob_idx_ld].rfvi_monitor_vals <= rfvi_monitor_vals;
             end
         end
@@ -120,10 +120,26 @@ import rv32i_types::*;
     always_ff @ (posedge clk) begin
         if (rst) begin
             rob_out <= '0;
+            aregf_we <= '0;
+            ard_s <= '0;
+            p_addr_ret <= '0;
         end
         else if (empty) begin
             rob_out <= '0;
+            aregf_we <= '0;
+            ard_s <= '0;
+            p_addr_ret <= '0;
         end else begin
+            if (rob[head[PTR_SIZE-1:0]].status == done) begin
+                aregf_we <= '1;
+                ard_s <= rob[head[PTR_SIZE-1:0]].rd_addr;
+                p_addr_ret <= rob[head[PTR_SIZE-1:0]].rd_paddr;
+            end
+            else begin
+                aregf_we <= '0;
+                ard_s <= '0;
+                p_addr_ret <= '0;
+            end
             rob_out <= rob[head[PTR_SIZE-1:0]];
         end
     end
