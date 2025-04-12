@@ -24,7 +24,7 @@ import rv32i_types::*;
     prf_t     data [DEPTH];
     logic     transparent_1, transparent_2;
 
-    assign transparent_1 = regf_we && (rd_s == rs1_s); //  && (rs1_s != 5'd0)
+    assign transparent_1 = regf_we && (rd_s == rs1_s); //  && (rs1_s != 5'd0) help
     assign transparent_2 = regf_we && (rd_s == rs2_s); //  && (rs2_s != 5'd0)
 
     always_ff @(posedge clk) begin
