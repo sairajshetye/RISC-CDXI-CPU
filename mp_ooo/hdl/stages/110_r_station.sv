@@ -40,8 +40,8 @@ import rv32i_types::*;
     logic       oldest_inst_rob_overflow;
 
     logic   [WIDTH-1:0]     data_t;
-    integer idx_rep; 
-    logic rs1_rep, rs2_rep;   //0 for rs1, 2 for rs2
+    logic   [DEPTH-1:0]     idx_rep; 
+    logic   [DEPTH-1:0]     rs1_rep, rs2_rep;   //0 for rs1, 2 for rs2
     logic replace;      //0 for no replace, 1 for yes replace
     dp_is_stage_reg_t inst_tmp;
 
@@ -78,16 +78,16 @@ import rv32i_types::*;
             //  && station[i].rs1_ready && station[i].rs2_ready (put in first if statement once fields are created)
                 if (!station[i].rs1_ready && station[i].use_prs1 && (station[i].rs1_paddr == data_paddr)) begin    //if using rs1 check if bus_in is for rs1
                         data_t = data_in;
-                        idx_rep = i;
-                        rs1_rep = '1;    //rs1
-                        replace = '1;
+                        idx_rep[i] = '1;
+                        rs1_rep[i] = '1;    //rs1
+                        //replace = '1;
                         //station[i].rs1_ready = data_in;
                 end
                 if (!station[i].rs2_ready && station[i].use_prs2 && (station[i].rs2_paddr == data_paddr)) begin      //if using rs2 check if bus_in is for rs2
                         data_t = data_in;
-                        idx_rep = i;
-                        rs2_rep = '1;
-                        replace = '1;
+                        idx_rep[i] = '1;
+                        rs2_rep[i] = '1;
+                        //replace = '1;
                         //station[i].rs2_data = data_in;
                        // station[i].rs2_ready = data_in;
                 end
@@ -107,6 +107,12 @@ import rv32i_types::*;
                     end
                 end 
                 else if ((station[i].use_rs2 && station[i].rs2_ready) && !(station[i].use_rs1)) begin   //only use rs2 & rs2 ready
+                    if (station[i].rob_idx <= oldest_inst_rob_idx) begin
+                        oldest_inst_rob_idx = station[i].rob_idx;
+                        oldest_inst_station_idx = 4'(unsigned'(i));
+                        remove = '1;
+                    end
+                end else if ((station[i].use_rd && !(station[i].use_rs1) && !(station[i].use_rs2))) begin
                     if (station[i].rob_idx <= oldest_inst_rob_idx) begin
                         oldest_inst_rob_idx = station[i].rob_idx;
                         oldest_inst_station_idx = 4'(unsigned'(i));
@@ -154,16 +160,28 @@ import rv32i_types::*;
             end
             inst_out <= '0;
         end else begin
-            if (replace) begin
-                if (rs2_rep) begin   //rs2 replace
-                    station[idx_rep].rs2_data <= data_t;
-                    station[idx_rep].rs2_ready <= '1;
+            // if (replace) begin
+            //     if (rs2_rep) begin   //rs2 replace
+            //         station[idx_rep].rs2_data <= data_t;
+            //         station[idx_rep].rs2_ready <= '1;
+            //     end 
+            //     if (rs1_rep) begin      //rs1 replace
+            //         station[idx_rep].rs1_data <= data_t;
+            //         station[idx_rep].rs1_ready <= '1;
+            //     end
+            // end 
+            for (integer i = 0; i < DEPTH; i++) begin
+                if (idx_rep[i]) begin
+                    if (rs2_rep[i]) begin   //rs2 replace
+                        station[i].rs2_data <= data_t;
+                        station[i].rs2_ready <= '1;
+                    end 
+                    if (rs1_rep[i]) begin      //rs1 replace
+                        station[i].rs1_data <= data_t;
+                        station[i].rs1_ready <= '1;
+                    end
                 end 
-                if (rs1_rep) begin      //rs1 replace
-                    station[idx_rep].rs1_data <= data_t;
-                    station[idx_rep].rs1_ready <= '1;
-                end
-            end 
+            end
             
             if (!full && load_station) begin
                 station[open_idx] <= inst_tmp;
@@ -172,8 +190,12 @@ import rv32i_types::*;
 
             if (!empty && !funct_unit_busy && remove) begin
                 inst_out <= station[oldest_inst_station_idx];
-                station[oldest_inst_station_idx].valid <= '0;
+                station[oldest_inst_station_idx] <= '0;
             end
+            else if ((!inst_in.use_rs2) && (!inst_in.use_rs1) && !funct_unit_busy && load_station) begin
+                inst_out <= inst_in;
+                station[open_idx] <= '0;
+            end 
             else if ((inst_in.use_rs1 && inst_in.rs1_ready) && (inst_in.use_rs2 && inst_in.rs2_ready) && !funct_unit_busy && load_station) begin
                 inst_out <= inst_in;
                 station[open_idx] <= '0;
