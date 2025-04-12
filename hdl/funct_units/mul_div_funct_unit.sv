@@ -39,7 +39,7 @@ import rv32i_types::*;
     logic [RS1_DATA_SIZE-1:0] rs1_v, rs2_v;
     logic [RS1_DATA_SIZE-1:0] out;
 
-    logic done;
+    logic new_inst, overflow;
 
     dp_is_stage_reg_t rs_reg;
     /* out_select
@@ -60,12 +60,29 @@ import rv32i_types::*;
             rs1_v <= '0;
             rs2_v <= '0;
             rs_reg <= '0;
-        end else if (rs_out.valid && !funct_mult_done) begin
+            new_inst <= '1;
+            
+            
+        end else if (rs_out.valid && !funct_mult_done && (rs_reg != rs_out)) begin
             funct3 <= rs_out.funct3;
             rs1_v <= rs_out.rs1_data;
             rs2_v <= rs_out.rs2_data;
             rs_reg <= rs_out;
-        end 
+            new_inst <= '0;
+            
+        end else if (funct_mult_done) begin
+            new_inst <= '1;
+        end
+    end
+
+    always_comb begin
+        if (rs_out.valid && !funct_mult_done && (rs_reg != rs_out)) begin
+            funct_unit_busy <= '1;
+        end else if (funct_mult_done || new_inst) begin
+            funct_unit_busy <= '0;
+        end else begin
+            funct_unit_busy <= '1;
+        end
     end
 
     always_comb begin
@@ -75,7 +92,9 @@ import rv32i_types::*;
             div_en = '0;
             div_tc = '0;
             out_select = 3'b000;
+            overflow = '0;
         end else begin 
+            overflow = '0;
         unique case (funct3)
             md_MUL : begin      //MUL, signed x signed
                 mult_en = '1;
@@ -106,12 +125,13 @@ import rv32i_types::*;
                 out_select = 3'b010;
             end
             md_DIV : begin      //DIV
-                if ((signed'(rs2_v) == signed'(-32'b1)) && (signed'(rs1_v) == signed'('hFFFFFFFF))) begin //signed overflow
+                if ((signed'(rs2_v) == signed'(-32'b1)) && (signed'(rs1_v) == signed'(-'d2147483648))) begin //signed overflow
                     mult_en = '0;
                     mult_tc = '0;
                     div_en = '0;
-                    div_tc = '0;
-                    out_select = 3'b011;
+                    div_tc = '1;
+                    out_select = 3'b100;
+                    overflow = '1;
                 
                 end else begin
                     mult_en = '0;
@@ -129,12 +149,13 @@ import rv32i_types::*;
                 out_select = 3'b101;
             end
             md_REM : begin      //Remainder
-                if ((signed'(rs2_v) == signed'(-32'b1)) && (signed'(rs1_v) == signed'('hFFFFFFFF))) begin //signed overflow
+                if ((signed'(rs2_v) == signed'(-32'b1)) && (signed'(rs1_v) == signed'(-'d2147483648))) begin //signed overflow
                     mult_en = '0;
                     mult_tc = '0;
                     div_en = '0;
-                    div_tc = '0;
-                    out_select = 3'b011;
+                    div_tc = '1;
+                    out_select = 3'b110;
+                    overflow = '1;
                 end else begin
                     mult_en = '0;
                     mult_tc = '0;
@@ -245,9 +266,13 @@ import rv32i_types::*;
                 end
             end
             3'b100 : begin  //div signed
-                if (!div0_tc && (rs2_v != '0)) begin
+                if (!div0_tc && !overflow) begin
                     out = quotient_tc;
-                end else begin  //divide by 0, quoteint = -1 (s)
+                end else if (overflow) begin
+                    out = rs1_v;      //quoteint = dividend
+                end
+                
+                else begin  //divide by 0, quoteint = -1 (s)
                     out = 'hFFFFFFFF;
                 end
             end
@@ -259,15 +284,17 @@ import rv32i_types::*;
                 end
             end
             3'b110 : begin //rem of div signed
-                if (!div0_tc && (rs2_v != '0)) begin
+                if (overflow) begin
+                        out = '0;   //rem is 0
+                    end
+                else if (!div0_tc) begin
                     if (rs1_v[RS1_DATA_SIZE-1] == 1) begin
                         if (remainder_tc[RS1_DATA_SIZE-1] != 1) begin
                             out = {1'b1, remainder_tc[RS1_DATA_SIZE-2:0]};
                         end else begin
                             out = remainder_tc;
                         end
-                    end
-                    else begin
+                    end else begin
                         out = remainder_tc;
                     end
                 end else begin //div by 0, rem = dividend
@@ -288,53 +315,69 @@ import rv32i_types::*;
         endcase
     end
 
-    always_comb begin
-        out_inst = rs_reg;
-        out_inst.rfvi_monitor_vals = rs_reg.rfvi_monitor_vals;
+     always_comb begin
+        if (!rst) begin
+            out_inst = '0;
+            out_inst.rfvi_monitor_vals = '0;
 
-        //if (counter == 1) begin
+        end else if (rs_reg.valid && (funct_mult_done) ) begin
+            out_inst = rs_reg;
+            out_inst.rfvi_monitor_vals = rs_reg.rfvi_monitor_vals;
             out_inst.rd_data = out;
             out_inst.rfvi_monitor_vals.monitor_rd_wdata = out;
-        //end
-        //out_inst.rfvi_monitor_vals = rs_out.rfvi_monitor_vals;
+            out_inst.rfvi_monitor_vals.monitor_rs1_rdata = rs1_v;
+            out_inst.rfvi_monitor_vals.monitor_rs2_rdata = rs2_v;
+            out_inst.rfvi_monitor_vals.monitor_regf_we = '1;
 
-        out_inst.rfvi_monitor_vals.monitor_rs1_rdata = rs1_v;
-        out_inst.rfvi_monitor_vals.monitor_rs2_rdata = rs2_v;
-        out_inst.rfvi_monitor_vals.monitor_regf_we = '1;
-        //out_inst.rfvi_monitor_vals.monitor_rd_wdata = out;
-    end
+        end else begin
+            out_inst = '0;
+            out_inst.rfvi_monitor_vals = '0;
+        end
+
+    end 
 
 
     always_ff @(posedge clk) begin
         //funct_mult_done = '0;
         if (!rst) begin
             counter <= 0;
-            funct_unit_busy <= '0;
-            done <= '0;
+            //funct_unit_busy <= '0;
+            //done <= '0;
             funct_mult_done <= '0;
             
+            //out_inst <= '0;
+            //out_inst.rfvi_monitor_vals <= '0;
         end
         else begin
         //if (rs_out.valid && !done) begin
-
+        //if (new_inst) begin
+        //    funct_unit_busy <= '1;
+        //end
+        //out_inst <= '0;
+        //out_inst.rfvi_monitor_vals <= '0;
         //end
         if (pre_wb_mult_stall) begin
-            funct_unit_busy <= '1;
+            //funct_unit_busy <= '1;
             funct_mult_done <= '0;
         end
-        else if (counter == 5) begin
+        else if ((counter == NUM_STAGES)) begin
          
             counter <= 0;
-            funct_unit_busy <= '0;
+            //funct_unit_busy <= '0;
             funct_mult_done <= '1;
+
+           
         
         end 
         else if (mult_en | div_en | div_tc) begin
             counter <= counter + 1;
-            funct_unit_busy <= '1;
-            //funct_mult_done <= '1;
+            //funct_unit_busy <= '1;
+            funct_mult_done <= '0;
+
+            
             
         end
+        //if ()
         //else if (rs_out.valid) begin
         //    counter <= counter + 1;
         //    funct_unit_busy <= '1;
