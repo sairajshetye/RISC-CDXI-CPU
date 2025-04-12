@@ -306,6 +306,9 @@ import rv32i_types::*;
         .rs1_ready(rs1_ready),
         .rs2_ready(rs2_ready),
 
+        .data_paddr(p_addr_out_wb),
+        .data_in(wb_data_out),
+
         .dp_is(dp_is_inst_out), // output
         .valid_output_mult(valid_output_mult), // output
         .valid_output_int(valid_output_int) // output
@@ -336,6 +339,32 @@ import rv32i_types::*;
         .data_paddr(p_addr_out_wb), // input
         .data_in(wb_data_out) // input
     );
+
+    // r_station_new station_mult(
+    //     .clk(clk), // input
+    //     .rst(rst), // input
+    //     .funct_unit_busy(funct_mult_busy), // input
+    //     .load_station(load_station_mult),
+    //     .inst_in(dp_is_inst_out), // input
+    //     .inst_out(dp_is_out_mult), // output
+    //     .valid_rdata(valid_rdata_mult), // output
+    //     .rename_q_stall(dispatch_stall_mult), // output
+    //     .data_paddr(p_addr_out_wb), // input
+    //     .data_in(wb_data_out) // input
+    // );
+
+    // r_station_new station_int(
+    //     .clk(clk), // input
+    //     .rst(rst), // input
+    //     .funct_unit_busy(funct_int_busy), // input
+    //     .load_station(load_station_int),
+    //     .inst_in(dp_is_inst_out), // input
+    //     .inst_out(dp_is_out_int), // output
+    //     .valid_rdata(valid_rdata_int), // output
+    //     .rename_q_stall(dispatch_stall_int), // output
+    //     .data_paddr(p_addr_out_wb), // input
+    //     .data_in(wb_data_out) // input
+    // );
 
     multiply_divide_unit funct_mult(
         .clk(clk),
