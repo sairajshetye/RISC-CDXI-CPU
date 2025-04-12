@@ -6,7 +6,7 @@ import rv32i_types::*;
     // inputs from RAT, FL, stalls?
     input   logic   [6:0]   p_addr,
     input   logic   [3:0]   rob_idx,
-    input   logic           rob_overflow,
+    //input   logic           rob_overflow,
     // from RAT
     input   logic           rs1_renamed, rs2_renamed,
     input   logic   [6:0]   rs1_paddr, rs2_paddr,
@@ -107,7 +107,7 @@ import rv32i_types::*;
 
         // new
         ra_dp.rob_idx = rob_idx;
-        ra_dp.rob_overflow = rob_overflow;
+        //ra_dp.rob_overflow = rob_overflow;
         ra_dp.use_prs1 = rs1_renamed; // inputs from RAT
         ra_dp.rs1_paddr = rs1_renamed ? rs1_paddr : 7'h7E;
         ra_dp.rs1_ready = '0; // not ready
