@@ -12,6 +12,8 @@ import rv32i_types::*;
     input   logic   [WIDTH-1:0]       rd_v,
     input   logic   [PTR_SIZE-1:0]    rs1_s, rs2_s, rd_s,
     input   logic   [PTR_SIZE-1:0]    commit_rs,
+    input   logic                     free_we,
+    input   logic   [PTR_SIZE-1:0]    rd_s_free,
     output  prf_t                     prs1_v, prs2_v, commit_prs
     //input   logic           load_stall,
     //input   logic           global_stall
@@ -31,9 +33,16 @@ import rv32i_types::*;
                 data[i].valid <= '0;
                 data[i].value <= '0;
             end
-        end else if (regf_we) begin // write to PRF     && (rd_s != 5'd0)
-            data[rd_s].valid <= '1;
-            data[rd_s].value <= rd_v;
+        end else begin
+            if (regf_we) begin // write to PRF     && (rd_s != 5'd0)
+                data[rd_s].valid <= '1;
+                data[rd_s].value <= rd_v;
+            end
+
+            if (free_we) begin
+                data[rd_s_free].valid <= '0;
+                data[rd_s_free].value <= '0;
+            end
         end
     end
 

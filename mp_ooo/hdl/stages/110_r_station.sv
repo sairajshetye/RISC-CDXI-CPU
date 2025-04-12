@@ -169,11 +169,38 @@ import rv32i_types::*;
 
             if ((inst_in.use_rs1 && inst_in.rs1_ready) && (inst_in.use_rs2 && inst_in.rs2_ready) && !funct_unit_busy && load_station) begin
                 inst_out <= inst_in;
+                station[open_idx] <= '0;
             end else if ((inst_in.use_rs1 && inst_in.rs1_ready) && (!inst_in.use_rs2) && !funct_unit_busy && load_station) begin
                 inst_out <= inst_in;
+                station[open_idx] <= '0;
             end else if ((inst_in.use_rs2 && inst_in.rs2_ready) && (!inst_in.use_rs1) && !funct_unit_busy && load_station) begin
                 inst_out <= inst_in;
-            end else if (empty && !funct_unit_busy) begin
+                station[open_idx] <= '0;
+
+
+            end else if ((inst_in.use_rs2 && data_paddr == inst_in.rs2_paddr) && (!inst_in.use_rs1) && !funct_unit_busy && load_station) begin
+                inst_out <= inst_in;
+                inst_out.rs2_ready <= '1;
+                inst_out.rs2_data <= data_in;
+                station[open_idx] <= '0;
+            end 
+            else if ((inst_in.use_rs1 && data_paddr == inst_in.rs1_paddr) && (!inst_in.use_rs2) && !funct_unit_busy && load_station) begin
+                inst_out <= inst_in;
+                inst_out.rs1_ready <= '1;
+                inst_out.rs1_data <= data_in;
+                station[open_idx] <= '0;
+            end
+            else if ((inst_in.use_rs1 && data_paddr == inst_in.rs1_paddr) && (inst_in.use_rs2 && data_paddr == inst_in.rs2_paddr)&& !funct_unit_busy && load_station) begin
+                inst_out <= inst_in;
+                inst_out.rs2_ready <= '1;
+                inst_out.rs2_data <= data_in;
+                inst_out.rs1_ready <= '1;
+                inst_out.rs1_data <= data_in;
+                station[open_idx] <= '0;
+            end
+            
+            
+            else if (empty && !funct_unit_busy) begin
                 inst_out <= '0;
             end else if (!empty && !funct_unit_busy && remove) begin
                 inst_out <= station[oldest_inst_station_idx];

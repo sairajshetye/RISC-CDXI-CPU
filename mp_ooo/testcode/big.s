@@ -138,6 +138,7 @@ _start:
     slti x23, x8, -1945
     and x15, x11, x12
     ori x5, x10, 1594
+    nop
     sub x2, x21, x5
     andi x19, x15, 1332
     sub x8, x8, x23
