@@ -13,7 +13,7 @@ import rv32i_types::*;
     input   dp_is_stage_reg_t       inst_in,
     output  dp_is_stage_reg_t       inst_out,
     output  logic                   valid_rdata,
-    output  logic                   dispatch_stall,
+    output  logic                   dispatch_stall, // rename queue stall, no deq
 
     input   logic   [6:0]  data_paddr, //from bus
     input   logic   [31:0]     data_in    //from bus
@@ -153,21 +153,26 @@ import rv32i_types::*;
             end
             inst_out <= '0;
         end else begin
-        if (replace) begin
-            if (rs1_or_rs2) begin   //rs2 replace
-                station[idx_rep].rs2_data <= data_t;
-                station[idx_rep].rs2_ready <= '1;
-            end else begin      //rs1 replace
-                station[idx_rep].rs1_data <= data_t;
-                station[idx_rep].rs1_ready <= '1;
-            end
-        end 
+            if (replace) begin
+                if (rs1_or_rs2) begin   //rs2 replace
+                    station[idx_rep].rs2_data <= data_t;
+                    station[idx_rep].rs2_ready <= '1;
+                end else begin      //rs1 replace
+                    station[idx_rep].rs1_data <= data_t;
+                    station[idx_rep].rs1_ready <= '1;
+                end
+            end 
+            
             if (!full && load_station) begin
                 station[open_idx] <= inst_tmp;
                 station[open_idx].valid <= '1;
             end
 
-            if ((inst_in.use_rs1 && inst_in.rs1_ready) && (inst_in.use_rs2 && inst_in.rs2_ready) && !funct_unit_busy && load_station) begin
+            if (!empty && !funct_unit_busy && remove) begin
+                inst_out <= station[oldest_inst_station_idx];
+                station[oldest_inst_station_idx].valid <= '0;
+            end
+            else if ((inst_in.use_rs1 && inst_in.rs1_ready) && (inst_in.use_rs2 && inst_in.rs2_ready) && !funct_unit_busy && load_station) begin
                 inst_out <= inst_in;
                 station[open_idx] <= '0;
             end else if ((inst_in.use_rs1 && inst_in.rs1_ready) && (!inst_in.use_rs2) && !funct_unit_busy && load_station) begin
@@ -202,9 +207,6 @@ import rv32i_types::*;
             
             else if (empty && !funct_unit_busy) begin
                 inst_out <= '0;
-            end else if (!empty && !funct_unit_busy && remove) begin
-                inst_out <= station[oldest_inst_station_idx];
-                station[oldest_inst_station_idx].valid <= '0;
             end
         
         end
