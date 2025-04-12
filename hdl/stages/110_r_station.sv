@@ -41,7 +41,7 @@ import rv32i_types::*;
 
     logic   [WIDTH-1:0]     data_t;
     integer idx_rep; 
-    logic rs1_or_rs2;   //0 for rs1, 2 for rs2
+    logic rs1_rep, rs2_rep;   //0 for rs1, 2 for rs2
     logic replace;      //0 for no replace, 1 for yes replace
     dp_is_stage_reg_t inst_tmp;
 
@@ -67,7 +67,8 @@ import rv32i_types::*;
         oldest_inst_rob_overflow = '0;
         data_t = '0;
         idx_rep = '0;
-        rs1_or_rs2 = '0;
+        rs1_rep = '0;
+        rs2_rep = '0;
         replace = '0;
         oldest_inst_station_idx = '0;   //???? to get rid of latch
         remove = '0;
@@ -75,17 +76,17 @@ import rv32i_types::*;
             if (!funct_unit_busy && station[i].valid) begin //if funct unit busy do nothing, if no inst in fu do nothing
             // need to add rs1_ready and rs2_ready fields to dispatch struct? change from if_id struct to that
             //  && station[i].rs1_ready && station[i].rs2_ready (put in first if statement once fields are created)
-                if (!station[i].rs1_ready && station[i].use_rs1 && (station[i].rs1_paddr == data_paddr)) begin    //if using rs1 check if bus_in is for rs1
+                if (!station[i].rs1_ready && station[i].use_prs1 && (station[i].rs1_paddr == data_paddr)) begin    //if using rs1 check if bus_in is for rs1
                         data_t = data_in;
                         idx_rep = i;
-                        rs1_or_rs2 = '0;    //rs1
+                        rs1_rep = '1;    //rs1
                         replace = '1;
                         //station[i].rs1_ready = data_in;
                 end
-                if (!station[i].rs2_ready && station[i].use_rs2 && (station[i].rs2_paddr == data_paddr)) begin      //if using rs2 check if bus_in is for rs2
+                if (!station[i].rs2_ready && station[i].use_prs2 && (station[i].rs2_paddr == data_paddr)) begin      //if using rs2 check if bus_in is for rs2
                         data_t = data_in;
                         idx_rep = i;
-                        rs1_or_rs2 = '1;
+                        rs2_rep = '1;
                         replace = '1;
                         //station[i].rs2_data = data_in;
                        // station[i].rs2_ready = data_in;
@@ -154,10 +155,11 @@ import rv32i_types::*;
             inst_out <= '0;
         end else begin
             if (replace) begin
-                if (rs1_or_rs2) begin   //rs2 replace
+                if (rs2_rep) begin   //rs2 replace
                     station[idx_rep].rs2_data <= data_t;
                     station[idx_rep].rs2_ready <= '1;
-                end else begin      //rs1 replace
+                end 
+                if (rs1_rep) begin      //rs1 replace
                     station[idx_rep].rs1_data <= data_t;
                     station[idx_rep].rs1_ready <= '1;
                 end
