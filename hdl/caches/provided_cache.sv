@@ -1,4 +1,4 @@
-module provided_cache (
+/* module provided_cache (
     input   logic               clk,
     input   logic               rst,
 
@@ -126,3 +126,4 @@ module provided_cache (
     end
 
 endmodule
+ */
