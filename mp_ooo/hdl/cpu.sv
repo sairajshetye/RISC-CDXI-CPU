@@ -320,7 +320,7 @@ import rv32i_types::*;
         .data_in(wb_data_out) // input
     );
 
-    r_station station_int(
+    r_station_int station_int(
         .clk(clk), // input
         .rst(rst), // input
         .funct_unit_busy(funct_int_busy), // input
