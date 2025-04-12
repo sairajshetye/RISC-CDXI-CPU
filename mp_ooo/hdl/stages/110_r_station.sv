@@ -112,6 +112,12 @@ import rv32i_types::*;
                         oldest_inst_station_idx = 4'(unsigned'(i));
                         remove = '1;
                     end
+                end else if ((station[i].use_rd && !(station[i].use_rs1) && !(station[i].use_rs2))) begin
+                    if (station[i].rob_idx <= oldest_inst_rob_idx) begin
+                        oldest_inst_rob_idx = station[i].rob_idx;
+                        oldest_inst_station_idx = 4'(unsigned'(i));
+                        remove = '1;
+                    end
                 end
             end
         end
@@ -174,6 +180,10 @@ import rv32i_types::*;
                 inst_out <= station[oldest_inst_station_idx];
                 station[oldest_inst_station_idx].valid <= '0;
             end
+            else if ((!inst_in.use_rs2) && (!inst_in.use_rs1) && !funct_unit_busy && load_station) begin
+                inst_out <= inst_in;
+                station[open_idx] <= '0;
+            end 
             else if ((inst_in.use_rs1 && inst_in.rs1_ready) && (inst_in.use_rs2 && inst_in.rs2_ready) && !funct_unit_busy && load_station) begin
                 inst_out <= inst_in;
                 station[open_idx] <= '0;
