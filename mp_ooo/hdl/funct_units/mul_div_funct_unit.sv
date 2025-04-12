@@ -41,6 +41,7 @@ import rv32i_types::*;
 
     logic done;
 
+    dp_is_stage_reg_t rs_reg;
     /* out_select
     3'b000 : '0 
     3'b001 : mult low bits
@@ -53,14 +54,22 @@ import rv32i_types::*;
     */
     
 
-    always_comb begin
-        funct3 = rs_out.funct3;
-        rs1_v = rs_out.rs1_data;
-        rs2_v = rs_out.rs2_data;
+    always_ff @(posedge clk) begin
+        if (!rst) begin
+            funct3 <= '0;
+            rs1_v <= '0;
+            rs2_v <= '0;
+            rs_reg <= '0;
+        end else if (rs_out.valid && !funct_mult_done) begin
+            funct3 <= rs_out.funct3;
+            rs1_v <= rs_out.rs1_data;
+            rs2_v <= rs_out.rs2_data;
+            rs_reg <= rs_out;
+        end 
     end
 
     always_comb begin
-        if (!rs_out.valid) begin
+        if (!rs_reg.valid) begin
             mult_en = '0;
             mult_tc = '0;
             div_en = '0;
@@ -280,8 +289,8 @@ import rv32i_types::*;
     end
 
     always_comb begin
-        out_inst = rs_out;
-        out_inst.rfvi_monitor_vals = rs_out.rfvi_monitor_vals;
+        out_inst = rs_reg;
+        out_inst.rfvi_monitor_vals = rs_reg.rfvi_monitor_vals;
 
         //if (counter == 1) begin
             out_inst.rd_data = out;
