@@ -130,7 +130,7 @@ import rv32i_types::*;
         if (|ufp_rmask && ufp_resp) begin
             cache_rdata = ufp_rdata;
         end else begin
-            cache_rdata = 'x;
+            cache_rdata = '0;
         end
 
         for (integer unsigned i = 0; i < 4; i++) begin
@@ -163,15 +163,12 @@ import rv32i_types::*;
         .dq_stall(dq_stall),
         .enq(iq_enq),
         .deq(iq_deq),
-
         .imem_addr(ufp_addr),
         .imem_rmask(ufp_rmask),
         .imem_rdata(cache_rdata_32),
         .imem_resp(ufp_resp),
-
         .pc(pc),
         .pc_next(pc_next),
-
         .if_id(if_id_reg_next)
     );
 
@@ -393,7 +390,7 @@ import rv32i_types::*;
         .clk(clk),
         .rst(rst),
         .enq(wb_int_enq),
-        .deq(wb_int_deq),
+        .ready_deq(wb_int_deq),
         .inst_in_wb(int_to_wb),
         .inst_out_wb(wb_int_out),
         .valid_rdata(int_valid_rdata),
@@ -405,7 +402,7 @@ import rv32i_types::*;
         .clk(clk),
         .rst(rst),
         .enq(wb_mult_enq),
-        .deq(wb_mult_deq),
+        .ready_deq(wb_mult_deq),
         .inst_in_wb(mult_to_wb),
         .inst_out_wb(wb_mult_out),
         .valid_rdata(mult_valid_rdata),
@@ -413,8 +410,29 @@ import rv32i_types::*;
     );
 
     always_comb begin
-        wb_int_deq = '1;
-        wb_mult_deq = '1;
+        wb_int_deq = '0;
+        wb_mult_deq = '0;
+
+        if (wb_int_enq && wb_mult_enq) begin // both same
+            if (int_to_wb.rob_idx < mult_to_wb.rob_idx) begin
+                wb_int_deq = '1;
+                wb_mult_deq = '0;
+            end 
+            else begin
+                wb_int_deq = '0;
+                wb_mult_deq = '1;
+            end
+        end
+        else if (wb_int_enq && !wb_mult_enq) begin
+            wb_int_deq = '1;
+            wb_mult_deq = '0;
+        end
+        else if (wb_mult_enq && !wb_int_enq) begin
+            wb_int_deq = '0;
+            wb_mult_deq = '1;
+        end
+        
+
         if (wb_int_out.valid && !wb_mult_out.valid) begin
             wb_inst_out = wb_int_out;
             //wb_int_deq = '1;
@@ -423,19 +441,33 @@ import rv32i_types::*;
             wb_inst_out = wb_mult_out;
             //wb_mult_deq = '1;
 
-        end else if (wb_int_out.valid && wb_mult_out.valid) begin
-            if (wb_int_out.rob_idx < wb_mult_out.rob_idx) begin
-                wb_inst_out = wb_int_out;
-                //wb_int_deq = '1;
+        end 
+        // else if (wb_int_out.valid && wb_mult_out.valid) begin
+        //     if (wb_int_out.rob_idx > wb_mult_out.rob_idx) begin
+        //         wb_inst_out = wb_int_out;
+        //         //wb_int_deq = '1;
 
-            end else begin
-                wb_inst_out = wb_mult_out;
-                //wb_mult_deq = '1;
-            end
-        end else begin
+        //     end else begin
+        //         wb_inst_out = wb_mult_out;
+        //         //wb_mult_deq = '1;
+        //     end
+        else begin
             wb_inst_out = '0;
         end
     end
+
+    // pre_wb_q #(
+    //     .DEPTH      (8)
+    // ) combine_wb_q (
+    //     .clk(clk),
+    //     .rst(rst),
+    //     .enq(wb_int_enq),
+    //     .ready_deq(wb_int_deq),
+    //     .inst_in_wb(int_to_wb),
+    //     .inst_out_wb(wb_int_out),
+    //     .valid_rdata(int_valid_rdata),
+    //     .wb_stall(int_wb_stall)
+    // );
 
 
     writeback wb (

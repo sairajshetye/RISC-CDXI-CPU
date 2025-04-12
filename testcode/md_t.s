@@ -64,8 +64,16 @@ slli x24, x23, 5
 
 nop
 nop
-nop
-nop
+# nop
+# nop
+# nop
+# nop
+# nop
+# nop
+# nop
+# nop
+# nop
+# nop
 
 halt:
     slti x0, x0, -256
