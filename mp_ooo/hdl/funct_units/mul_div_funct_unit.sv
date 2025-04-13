@@ -25,6 +25,7 @@ import rv32i_types::*;
 );  
     logic [2:0] funct3;
     logic [RS1_DATA_SIZE+RS2_DATA_SIZE-1:0] product;
+    logic [65:0] product_mulhsu;
     logic div_en, mult_en, div_tc, mult_tc;
     
     logic div0, div0_tc;
@@ -37,6 +38,8 @@ import rv32i_types::*;
     integer counter;
 
     logic [RS1_DATA_SIZE-1:0] rs1_v, rs2_v;
+    logic [32:0] rs1_v_extended;
+    logic [32:0] rs2_v_extended;
     logic signed [RS1_DATA_SIZE-1:0] rs1_vi, rs2_vi;
     logic [RS1_DATA_SIZE-1:0] out;
 
@@ -91,6 +94,8 @@ import rv32i_types::*;
     end
 
     always_comb begin
+        rs1_v_extended = '0;
+        rs2_v_extended = '0;
         if (!rs_reg.valid) begin
             mult_en = '0;
             mult_tc = '0;
@@ -98,6 +103,9 @@ import rv32i_types::*;
             div_tc = '0;
             out_select = 3'b000;
             overflow = '0;
+
+            rs1_v = '0;
+            rs2_v = '0;
         end else begin 
             overflow = '0;
             rs1_v = unsigned'(rs1_vi);
@@ -123,12 +131,12 @@ import rv32i_types::*;
             end
             md_MULHSU : begin      //MUL High (S)(U), signed x unsigned
                 mult_en = '1;
-                mult_tc = '0;   //?
+                mult_tc = '1;   //?
                 div_en = '0;
                 div_tc = '0;
                 out_select = 3'b010;
-                rs1_v = signed'(rs1_vi);
-            
+                rs1_v_extended = {rs1_v[31], rs1_v};
+                rs2_v_extended = {1'b0, rs2_v};
             end
             md_MULHU : begin      //MUL High (U), unsigned x unisgned
                 mult_en = '1;
@@ -216,6 +224,22 @@ import rv32i_types::*;
 
     );
 
+    DW_mult_pipe #(
+        .a_width(33), 
+        .b_width(33), 
+        .num_stages(NUM_STAGES),
+        .rst_mode(RESET_MODE)
+    ) mult_mulhsu (
+        .clk(clk), 
+        .rst_n(rst), //active low
+        .en(mult_en),    //enable
+        .tc(mult_tc),   //two's complement 
+        .a(rs1_v_extended),
+        .b(rs2_v_extended), 
+        .product(product_mulhsu) 
+
+    );
+
     DW_div_pipe #(
         .a_width(RS1_DATA_SIZE), 
         .b_width(RS2_DATA_SIZE), 
@@ -273,16 +297,7 @@ import rv32i_types::*;
             end
             3'b010 : begin  //mult high bits
             if (funct3 == md_MULHSU) begin
-                if (rs1_v[RS1_DATA_SIZE-1] == 1) begin
-                    if (product[RS1_DATA_SIZE+RS2_DATA_SIZE-1] != 1) begin
-                        //out = {1'b1, product[RS1_DATA_SIZE+RS2_DATA_SIZE-2:32]};
-                        out = product[63:32];
-                    end else begin
-                        out = product[63:32];
-                    end
-                end else begin
-                    out = product[63:32];
-                end 
+                out = product_mulhsu[63:32];
             end
             else begin
                 out = product[63:32];
@@ -351,13 +366,16 @@ import rv32i_types::*;
         if (!rst) begin
             out_inst = '0;
             out_inst.rfvi_monitor_vals = '0;
-
         end else if (rs_reg.valid && (funct_mult_done) ) begin
             out_inst = rs_reg;
             out_inst.rfvi_monitor_vals = rs_reg.rfvi_monitor_vals;
+
             out_inst.rd_data = out;
+
             out_inst.rfvi_monitor_vals.monitor_rd_wdata = out;
+            
             out_inst.rfvi_monitor_vals.monitor_rs1_rdata = rs1_v;
+
             out_inst.rfvi_monitor_vals.monitor_rs2_rdata = rs2_v;
             out_inst.rfvi_monitor_vals.monitor_regf_we = '1;
 
