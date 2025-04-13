@@ -11035,7 +11035,7 @@
     lui x12, 185550
     sltiu x3, x22, 979
     lui x30, 202467
-    slti x0, x0, -256
+    # slti x0, x0, -256
     lui x25, 468010
     or x19, x3, x14
     mul x18, x20, x23
@@ -12360,7 +12360,7 @@
     sra x13, x17, x12
     addi x8, x3, -814
     remu x6, x31, x5
-    slti x0, x0, -256
+    # slti x0, x0, -256
     lui x3, 886144
     lui x19, 117675
     and x18, x0, x0
@@ -12992,3 +12992,4 @@
     addi x7, x7, 15
     lui x20, 851797
     xori x11, x16, 193
+    slti x0, x0, -256

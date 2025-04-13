@@ -37,6 +37,7 @@ import rv32i_types::*;
     integer counter;
 
     logic [RS1_DATA_SIZE-1:0] rs1_v, rs2_v;
+    logic signed [RS1_DATA_SIZE-1:0] rs1_vi, rs2_vi;
     logic [RS1_DATA_SIZE-1:0] out;
 
     logic new_inst, overflow;
@@ -57,23 +58,23 @@ import rv32i_types::*;
     always_ff @(posedge clk) begin
         if (!rst) begin
             funct3 <= '0;
-            rs1_v <= '0;
-            rs2_v <= '0;
+            rs1_vi <= '0;
+            rs2_vi <= '0;
             rs_reg <= '0;
             new_inst <= '1;
             
             
         end else if (rs_out.valid && !funct_mult_done && (rs_reg != rs_out)) begin
             funct3 <= rs_out.funct3;
-            rs1_v <= rs_out.rs1_data;
-            rs2_v <= rs_out.rs2_data;
+            rs1_vi <= rs_out.rs1_data;
+            rs2_vi <= rs_out.rs2_data;
             rs_reg <= rs_out;
             new_inst <= '0;
             
         end else if (funct_mult_done) begin
             funct3 <= '0;
-            rs1_v <= '0;
-            rs2_v <= '0;
+            rs1_vi <= '0;
+            rs2_vi <= '0;
             rs_reg <= '0;
             new_inst <= '1;
         end
@@ -99,6 +100,8 @@ import rv32i_types::*;
             overflow = '0;
         end else begin 
             overflow = '0;
+            rs1_v = unsigned'(rs1_vi);
+            rs2_v = unsigned'(rs2_vi);
         unique case (funct3)
             md_MUL : begin      //MUL, signed x signed
                 mult_en = '1;
@@ -106,6 +109,8 @@ import rv32i_types::*;
                 div_en = '0;
                 div_tc = '0;
                 out_select = 3'b001;
+                rs1_v = signed'(rs1_vi);
+                rs2_v = signed'(rs2_vi);
             end
             md_MULH : begin      //MUL High, signed x signed
                 mult_en = '1;
@@ -113,13 +118,17 @@ import rv32i_types::*;
                 div_en = '0;
                 div_tc = '0;
                 out_select = 3'b010;
+                rs1_v = signed'(rs1_vi);
+                rs2_v = signed'(rs2_vi);
             end
             md_MULHSU : begin      //MUL High (S)(U), signed x unsigned
                 mult_en = '1;
-                mult_tc = '1;   //?
+                mult_tc = '0;   //?
                 div_en = '0;
                 div_tc = '0;
                 out_select = 3'b010;
+                rs1_v = signed'(rs1_vi);
+            
             end
             md_MULHU : begin      //MUL High (U), unsigned x unisgned
                 mult_en = '1;
@@ -129,6 +138,8 @@ import rv32i_types::*;
                 out_select = 3'b010;
             end
             md_DIV : begin      //DIV
+                rs1_v = signed'(rs1_vi);
+                rs2_v = signed'(rs2_vi);
                 if ((signed'(rs2_v) == signed'(-32'b1)) && (signed'(rs1_v) == signed'(-'d2147483648))) begin //signed overflow
                     mult_en = '0;
                     mult_tc = '0;
@@ -136,6 +147,7 @@ import rv32i_types::*;
                     div_tc = '1;
                     out_select = 3'b100;
                     overflow = '1;
+                    
                 
                 end else begin
                     mult_en = '0;
@@ -153,6 +165,8 @@ import rv32i_types::*;
                 out_select = 3'b101;
             end
             md_REM : begin      //Remainder
+                rs1_v = signed'(rs1_vi);
+                rs2_v = signed'(rs2_vi);
                 if ((signed'(rs2_v) == signed'(-32'b1)) && (signed'(rs1_v) == signed'(-'d2147483648))) begin //signed overflow
                     mult_en = '0;
                     mult_tc = '0;
@@ -258,7 +272,21 @@ import rv32i_types::*;
                 out = product[31:0];
             end
             3'b010 : begin  //mult high bits
+            if (funct3 == md_MULHSU) begin
+                if (rs1_v[RS1_DATA_SIZE-1] == 1) begin
+                    if (product[RS1_DATA_SIZE+RS2_DATA_SIZE-1] != 1) begin
+                        //out = {1'b1, product[RS1_DATA_SIZE+RS2_DATA_SIZE-2:32]};
+                        out = product[63:32];
+                    end else begin
+                        out = product[63:32];
+                    end
+                end else begin
+                    out = product[63:32];
+                end 
+            end
+            else begin
                 out = product[63:32];
+            end
             end
             3'b011 : begin //signed divison overflow
                 if (funct3 == md_REM) begin   //
@@ -294,7 +322,7 @@ import rv32i_types::*;
                 else if (!div0_tc) begin
                     if (rs1_v[RS1_DATA_SIZE-1] == 1) begin
                         if (remainder_tc[RS1_DATA_SIZE-1] != 1) begin
-                            out = {1'b1, remainder_tc[RS1_DATA_SIZE-2:0]};
+                            out = {1'b0, remainder_tc[RS1_DATA_SIZE-2:0]};
                         end else begin
                             out = remainder_tc;
                         end
