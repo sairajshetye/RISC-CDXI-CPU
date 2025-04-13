@@ -1,7 +1,7 @@
 module robert
 import rv32i_types::*;
  #(
-            parameter               DEPTH     = 20,
+            parameter               DEPTH     = 16,
             parameter               PTR_SIZE  = $clog2(DEPTH)
 
 )(
@@ -44,7 +44,7 @@ import rv32i_types::*;
     logic empty;
     //logic deq;
 
-    rob_entry_t rob_in_reg;
+    // rob_entry_t rob_in_reg;
 
     always_comb begin
 
@@ -57,17 +57,17 @@ import rv32i_types::*;
         rob_tail_idx = tail[PTR_SIZE-1:0]; // in rename and allocate, set inst rob idx field to this tail
         rob_overflow = tail[PTR_SIZE];
 
-        deq = (rob[head[PTR_SIZE-1:0]].status == done && rob[head[PTR_SIZE-1:0]].valid &&!empty);
+        deq = (rob[head[PTR_SIZE-1:0]].status == done && rob[head[PTR_SIZE-1:0]].valid && !empty);
 
     end
 
-    always_ff @(posedge clk) begin // NOT BEING USED, CAN DELETE LATER?
-        if (rst) begin
-            rob_in_reg  <= 'x;
-        end else begin
-            rob_in_reg  <= rob_in;
-        end
-    end
+    // always_ff @(posedge clk) begin // NOT BEING USED, CAN DELETE LATER?
+    //     if (rst) begin
+    //         rob_in_reg  <= 'x;
+    //     end else begin
+    //         rob_in_reg  <= rob_in;
+    //     end
+    // end
 
 
     always_ff @(posedge clk) begin
@@ -79,15 +79,21 @@ import rv32i_types::*;
             head <= '0;
         end else begin
             if (enq && deq) begin
-                rob[tail[PTR_SIZE-1:0]] <= rob_in;
-                rob[head[PTR_SIZE-1:0]].valid <= '0;
+                if (full) begin
+                    rob[tail[PTR_SIZE-1:0]] <= rob_in;
+                end
+                else begin
+                    rob[tail[PTR_SIZE-1:0]] <= rob_in;
+                    rob[head[PTR_SIZE-1:0]] <= '0;
+                end
+                // rob[head[PTR_SIZE-1:0]].valid <= '0;
                 tail <= (tail + 4'b0001);
                 head <= (head + 4'b0001);
             end else if (enq && !full) begin
                 rob[tail[PTR_SIZE-1:0]] <= rob_in; 
                 tail <= (tail + 4'b0001);
             end else if (deq && !empty) begin
-                rob[head[PTR_SIZE-1:0]].valid <= '0;
+                rob[head[PTR_SIZE-1:0]] <= '0;
                 head <= (head + 4'b0001);
             end
         end
