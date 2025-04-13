@@ -85,7 +85,15 @@ import rv32i_types::*;
             if (inst_in_r.valid) begin
                 if (enq && deq) begin
                     // internal_array_r[tail[PTR_SIZE-1:0]] <= inst_in_r;
-                    inst_out_r <= inst_in_r;
+                    if (empty) begin
+                        inst_out_r <= inst_in_r;
+                    end else if (full) begin
+                        inst_out_r <= internal_array_r[head[PTR_SIZE-1:0]];
+                        internal_array_r[tail[PTR_SIZE-1:0]] <= inst_in_r; 
+                    end else begin
+                        inst_out_r <= internal_array_r[head[PTR_SIZE-1:0]];
+                        internal_array_r[tail[PTR_SIZE-1:0]] <= inst_in_r; 
+                    end
                     tail <= (tail + 4'b0001);
                     head <= (head + 4'b0001);
                 end else if (enq && !full) begin
