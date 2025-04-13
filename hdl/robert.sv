@@ -23,6 +23,7 @@ import rv32i_types::*;
     output  rob_entry_t             rob_out,
     output  logic                   valid_rdata,
     output  logic                   alloc_stall,
+    output  logic                   decode_stall,
     output  logic                   deq,
     output  logic [PTR_SIZE-1:0]    rob_tail_idx,
     output  logic                   rob_overflow,
@@ -37,21 +38,25 @@ import rv32i_types::*;
     logic valid_deq;
     logic [PTR_SIZE:0] head;
     logic [PTR_SIZE:0] tail;
+    logic [PTR_SIZE:0] tail_full;
 
     rob_entry_t rob[DEPTH];
 
-    logic full;
+    logic full, full_next;
     logic empty;
     //logic deq;
 
     // rob_entry_t rob_in_reg;
+    assign tail_full = tail + 1'b1;
 
     always_comb begin
 
-        full = (head[PTR_SIZE] != tail[PTR_SIZE] && head[PTR_SIZE-1:0] == tail[PTR_SIZE-1:0]); 
+        full_next = (head[PTR_SIZE] != tail_full[PTR_SIZE] && head[PTR_SIZE-1:0] == (tail_full[PTR_SIZE-1:0])); 
+        full = (head[PTR_SIZE] != tail[PTR_SIZE] && head[PTR_SIZE-1:0] == (tail[PTR_SIZE-1:0])); 
         empty = (head == tail);
 
         alloc_stall = full;
+        decode_stall = full_next;
         valid_rdata = ~empty;
 
         rob_tail_idx = tail[PTR_SIZE-1:0]; // in rename and allocate, set inst rob idx field to this tail
