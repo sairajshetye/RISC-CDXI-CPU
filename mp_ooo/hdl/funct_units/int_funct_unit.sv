@@ -248,6 +248,8 @@ import rv32i_types::*;
 
         ex_mem.rob_idx = id_ex.rob_idx;
 
+        ex_mem.rob_overflow = id_ex.rob_overflow;
+
         // ex_mem.useless = id_ex.useless;
 
 
