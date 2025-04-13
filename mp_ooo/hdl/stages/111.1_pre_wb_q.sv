@@ -102,7 +102,7 @@ import rv32i_types::*;
         if (rst) begin
             inst_out_wb <= '0;
         end
-        else if (in_out) begin
+        else if (in_out && empty) begin
             inst_out_wb <= inst_in_wb;
             //inst_out_wb.valid <= '0;
         end

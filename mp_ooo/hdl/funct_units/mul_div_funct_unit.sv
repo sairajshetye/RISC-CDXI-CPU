@@ -71,6 +71,10 @@ import rv32i_types::*;
             new_inst <= '0;
             
         end else if (funct_mult_done) begin
+            funct3 <= '0;
+            rs1_v <= '0;
+            rs2_v <= '0;
+            rs_reg <= '0;
             new_inst <= '1;
         end
     end

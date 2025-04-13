@@ -413,24 +413,24 @@ import rv32i_types::*;
     );
 
     always_comb begin
-        wb_int_deq = '1;
-        wb_mult_deq = '1;
+        wb_int_deq = '1 & !wb_mult_out.valid;
+        wb_mult_deq = '0;
         if (wb_int_out.valid && !wb_mult_out.valid) begin
             wb_inst_out = wb_int_out;
-            //wb_int_deq = '1;
+            wb_int_deq = '1;
 
         end else if (!wb_int_out.valid && wb_mult_out.valid) begin
             wb_inst_out = wb_mult_out;
-            //wb_mult_deq = '1;
+            wb_mult_deq = '1;
 
         end else if (wb_int_out.valid && wb_mult_out.valid) begin
             if (wb_int_out.rob_idx < wb_mult_out.rob_idx) begin
                 wb_inst_out = wb_int_out;
-                //wb_int_deq = '1;
+                wb_int_deq = '1;
 
             end else begin
                 wb_inst_out = wb_mult_out;
-                //wb_mult_deq = '1;
+                wb_mult_deq = '1;
             end
         end else begin
             wb_inst_out = '0;
