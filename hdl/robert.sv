@@ -1,7 +1,7 @@
 module robert
 import rv32i_types::*;
  #(
-            parameter               DEPTH     = 16,
+            parameter               DEPTH     = 20,
             parameter               PTR_SIZE  = $clog2(DEPTH)
 
 )(
