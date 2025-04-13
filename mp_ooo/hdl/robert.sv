@@ -8,14 +8,18 @@ import rv32i_types::*;
     input   logic                   clk,
     input   logic                   rst,
     input   logic                   enq,
-    input   logic                   ld_status,
-    input   status_t                status_in,
+    input   logic                   ld_status_0,
+    input   logic                   ld_status_1,
+    input   status_t                status_in_0,
+    input   status_t                status_in_1,
     input   logic                   ld_branch_res,
     input   branch_t                branch_res_in, 
     input   rob_entry_t             rob_in,
     input   logic [PTR_SIZE-1:0]    rob_idx_in,     //read idx
-    input   logic [PTR_SIZE-1:0]    rob_idx_ld,     //for ld status
-    input   rfvi_packet_t           rfvi_monitor_vals,
+    input   logic [PTR_SIZE-1:0]    rob_idx_ld_0,     //for ld status
+    input   logic [PTR_SIZE-1:0]    rob_idx_ld_1,     //for ld status
+    input   rfvi_packet_t           rfvi_monitor_vals_0,
+    input   rfvi_packet_t           rfvi_monitor_vals_1,
     output  rob_entry_t             rob_out,
     output  logic                   valid_rdata,
     output  logic                   alloc_stall,
@@ -91,14 +95,25 @@ import rv32i_types::*;
         // aregf_we <= '0;
         // ard_s <= '0;
         // p_addr_ret <= '0;
-        if (ld_status) begin
-            rob[rob_idx_ld].status <= status_in;
+        if (ld_status_0) begin
+            rob[rob_idx_ld_0].status <= status_in_0;
             //rob[rob_idx_ld].valid <= '0;
-            if (status_in == done) begin
+            if (status_in_0 == done) begin
                 //aregf_we <= '1;
                 //ard_s <= rob[rob_idx_ld].rd_addr;
                 //p_addr_ret <= rob[rob_idx_ld].rd_paddr;
-                rob[rob_idx_ld].rfvi_monitor_vals <= rfvi_monitor_vals;
+                rob[rob_idx_ld_0].rfvi_monitor_vals <= rfvi_monitor_vals_0;
+            end
+        end
+
+        if (ld_status_1) begin
+            rob[rob_idx_ld_1].status <= status_in_1;
+            //rob[rob_idx_ld].valid <= '0;
+            if (status_in_1 == done) begin
+                //aregf_we <= '1;
+                //ard_s <= rob[rob_idx_ld].rd_addr;
+                //p_addr_ret <= rob[rob_idx_ld].rd_paddr;
+                rob[rob_idx_ld_1].rfvi_monitor_vals <= rfvi_monitor_vals_1;
             end
         end
 

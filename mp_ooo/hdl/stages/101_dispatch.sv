@@ -20,8 +20,10 @@ import rv32i_types::*;
     input logic          rs1_ready, rs2_ready,
 
     // FORWARD FROM THE BUS
-    input logic [6:0]    data_paddr,
-    input logic [31:0]   data_in,
+    input logic [6:0]    data_paddr_0,
+    input logic [31:0]   data_in_0,
+    input logic [6:0]    data_paddr_1,
+    input logic [31:0]   data_in_1,
 
     output dp_is_stage_reg_t dp_is,
     output logic             valid_output_mult,
@@ -87,15 +89,24 @@ import rv32i_types::*;
         end
 
         // FORWARDING
-        if (!dp_is.rs1_ready && ra_dp.use_rs1 && ra_dp.rs1_paddr == data_paddr) begin
+        if (!dp_is.rs1_ready && ra_dp.use_rs1 && ra_dp.rs1_paddr == data_paddr_0) begin
             dp_is.rs1_ready = '1;
-            dp_is.rs1_data = data_in;
+            dp_is.rs1_data = data_in_0;
+        end 
+        else if (!dp_is.rs1_ready && ra_dp.use_rs1 && ra_dp.rs1_paddr == data_paddr_1) begin
+            dp_is.rs1_ready = '1;
+            dp_is.rs1_data = data_in_1;
         end
 
-        if (!dp_is.rs2_ready && ra_dp.use_rs2 && ra_dp.rs2_paddr == data_paddr) begin
+        if (!dp_is.rs2_ready && ra_dp.use_rs2 && ra_dp.rs2_paddr == data_paddr_0) begin
             dp_is.rs2_ready = '1;
-            dp_is.rs2_data = data_in;
+            dp_is.rs2_data = data_in_0;
         end
+        else if (!dp_is.rs2_ready && ra_dp.use_rs2 && ra_dp.rs2_paddr == data_paddr_1) begin
+            dp_is.rs2_ready = '1;
+            dp_is.rs2_data = data_in_1;
+        end
+        
  
         if (dispatch_stall_mult) begin 
             valid_output_mult = '0;
