@@ -211,7 +211,7 @@ import rv32i_types::*;
         .clk(clk),
         .rst(rst),
         .enq(dq_enq),
-        .deq(dq_deq),
+        .deq(dq_deq && !rob_stall),
         .inst_in_d(id_ex_reg_next),
         .inst_out_d(id_ex_inst_out),
         .valid_rdata(dq_valid_rdata),
@@ -224,6 +224,7 @@ import rv32i_types::*;
         .p_addr(p_addr_out), // FL
         .rob_idx(rob_tail_idx),
         .rob_overflow(rob_overflow),
+        
         // from RAT
         .rs1_renamed(rs1_renamed), 
         .rs2_renamed(rs2_renamed),
