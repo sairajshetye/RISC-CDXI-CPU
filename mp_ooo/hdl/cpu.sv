@@ -18,7 +18,7 @@ import rv32i_types::*;
     logic [31:0] pc;
     logic [31:0] pc_next;
 
-    logic iq_enq, dq_enq, rq_enq, fl_enq, rob_enq, wb_int_enq, wb_mult_enq, fl_enq_rob;
+    logic iq_enq, dq_enq, rq_enq, fl_enq, rob_enq, wb_int_enq, wb_mult_enq, fl_enq_rob, decode_stall;
     logic iq_deq, dq_deq, rq_deq, fl_deq, wb_int_deq, wb_mult_deq;
 
     if_id_stage_reg_t if_id_reg_next, if_id_inst_out;
@@ -211,7 +211,7 @@ import rv32i_types::*;
         .clk(clk),
         .rst(rst),
         .enq(dq_enq),
-        .deq(dq_deq && !rob_stall),
+        .deq(dq_deq && !(decode_stall | rob_stall)),
         .inst_in_d(id_ex_reg_next),
         .inst_out_d(id_ex_inst_out),
         .valid_rdata(dq_valid_rdata),
@@ -547,6 +547,7 @@ import rv32i_types::*;
         .rob_out(rob_out),
         .valid_rdata(rob_valid_rdata),
         .alloc_stall(rob_stall),
+        .decode_stall(decode_stall),
         .deq(fl_enq_rob),
         .rob_tail_idx(rob_tail_idx),
         .rob_overflow(rob_overflow),

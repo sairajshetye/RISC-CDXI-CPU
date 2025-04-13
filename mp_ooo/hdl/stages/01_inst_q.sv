@@ -82,7 +82,7 @@ import rv32i_types::*;
             head <= '0;
         end else begin
             inst_out <= '0;
-            if (inst_in.valid) begin
+            //if (inst_in.valid) begin
                 if (enq && deq) begin
                     //internal_array[tail[PTR_SIZE-1:0]] <= inst_in;
                     if (empty) begin
@@ -105,7 +105,7 @@ import rv32i_types::*;
                     internal_array[head[PTR_SIZE-1:0]] <= '0;
                     head <= (head + 4'b0001);
                 end
-            end
+            //end
         end
     
     end

@@ -1,6 +1,19 @@
 .section .text
 .globl _start
 _start:
+li x1, -10
+li x2, -20
+li x5, 50
+li x6, 61
+li x8, -11
+li x9, 3
+li x11, 8
+li x12, 4
+li x14, 3
+li x15, 1
+li x16, 2
+li x21, -1
+li x22, -2048
     divu x17, x2, x8
     mulh x15, x21, x22
     rem x18, x16, x7
