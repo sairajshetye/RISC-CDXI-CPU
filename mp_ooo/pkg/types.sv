@@ -228,12 +228,12 @@ package rv32i_types;
         logic   [31:0]  s_imm;
         logic   [31:0]  b_imm;
         logic   [31:0]  u_imm;
-        logic   [31:0]  j_imm;
+        logic   [31:0]  j_imm; 
         logic   [4:0]   rs1_s;
-        logic           use_rs1;
+        logic           use_rs1; 
         logic   [4:0]   rs2_s;
         logic           use_rs2;
-        logic   [4:0]   rd_s;
+        logic   [4:0]   rd_s;   
         // logic   [31:0]  rs1_v;
         // logic   [31:0]  rs2_v;
         //logic   [31:0]  rd_v;
@@ -244,7 +244,7 @@ package rv32i_types;
         // logic             rs1_data
         logic           use_prs1;
         logic    [6:0]  rs1_paddr;
-        logic           rs1_ready;
+        logic           rs1_ready; 
         logic    [31:0] rs1_data;
 
         logic           use_prs2;

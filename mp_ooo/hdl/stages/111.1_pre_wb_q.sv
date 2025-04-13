@@ -28,6 +28,7 @@ import rv32i_types::*;
 
     logic full;
     logic empty;
+    logic idk;
 
     //logic [WIDTH-1:0] inst_in_reg;
 
@@ -54,6 +55,7 @@ import rv32i_types::*;
         // 4:
         // the fifo is empty
         // deq by itself should not be allowed since empty
+        
 
         full = (head[PTR_SIZE] != tail[PTR_SIZE] && head[PTR_SIZE-1:0] == tail[PTR_SIZE-1:0]); 
         empty = (head == tail);
