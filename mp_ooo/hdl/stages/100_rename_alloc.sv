@@ -117,7 +117,7 @@ import rv32i_types::*;
         ra_dp.rd_paddr = prd_s;
         ra_dp.useless = '0;
 
-        if (res_stall) begin
+        if (res_stall ) begin
             deq = '0;
             ra_dp.deq = '0;
         end

@@ -75,7 +75,7 @@ import rv32i_types::*;
         oldest_inst_station_idx = '0;   //???? to get rid of latch
         remove = '0;
         for (integer i = 0; i < DEPTH; i++) begin
-            if (!funct_unit_busy && station[i].valid) begin //if funct unit busy do nothing, if no inst in fu do nothing
+            if (station[i].valid) begin //if funct unit busy do nothing, if no inst in fu do nothing
             // need to add rs1_ready and rs2_ready fields to dispatch struct? change from if_id struct to that
             //  && station[i].rs1_ready && station[i].rs2_ready (put in first if statement once fields are created)
                 if (!station[i].rs1_ready && station[i].use_prs1 && (station[i].rs1_paddr == data_paddr_0)) begin    //if using rs1 check if bus_in is for rs1
@@ -108,6 +108,8 @@ import rv32i_types::*;
                         //station[i].rs2_data = data_in;
                        // station[i].rs2_ready = data_in;
                 end
+            end 
+            if (!funct_unit_busy && station[i].valid) begin
                 
                 if ((station[i].use_rs1 && station[i].rs1_ready) && (station[i].use_rs2 && station[i].rs2_ready)) begin //use both rs1 & rs2 & both ready
                     if (station[i].rob_idx <= oldest_inst_rob_idx) begin
@@ -214,7 +216,11 @@ import rv32i_types::*;
                 station[open_idx].valid <= '1;
             end
 
-            if (!empty && !funct_unit_busy && remove) begin
+            if (funct_unit_busy)begin
+                inst_out <= '0;
+            end
+
+            else if (!empty && !funct_unit_busy && remove) begin
                 inst_out <= station[oldest_inst_station_idx];
                 station[oldest_inst_station_idx] <= '0;
             end
