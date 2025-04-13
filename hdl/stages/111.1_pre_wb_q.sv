@@ -85,22 +85,27 @@ import rv32i_types::*;
 
     always_ff @(posedge clk) begin
         if (rst) begin
+            inst_out_wb <= '0;
             for (integer i = 0; i < DEPTH; i++) begin
                 internal_array_wb[i] <= '0;
             end
             tail <= '0;
             head <= '0;
         end else begin
+            inst_out_wb <= '0;
             if (inst_in_wb.valid) begin
                 if (enq && deq) begin
                     //internal_array_wb[tail[PTR_SIZE-1:0]] <= inst_in_wb;
                     //internal_array_wb[head[PTR_SIZE-1:0]].valid <= '0;
+                    inst_out_wb <= inst_in_wb;
                     tail <= (tail + 4'b0001);
                     head <= (head + 4'b0001);
                 end else if (enq && !full) begin
+                    inst_out_wb <= '0;
                     internal_array_wb[tail[PTR_SIZE-1:0]] <= inst_in_wb; 
                     tail <= (tail + 4'b0001);
                 end else if (deq && !empty) begin
+                    inst_out_wb <= internal_array_wb[head[PTR_SIZE-1:0]];
                     internal_array_wb[head[PTR_SIZE-1:0]] <= '0;
                     head <= (head + 4'b0001);
                 end
@@ -109,20 +114,20 @@ import rv32i_types::*;
     
     end
 
-    always_ff @ (posedge clk) begin
-        if (rst) begin
-            inst_out_wb <= '0;
-        end
-        else if (in_out) begin
-            inst_out_wb <= inst_in_wb;
-            //inst_out_wb.valid <= '0;
-        end
-        else if (empty) begin
-            inst_out_wb <= '0;
-        end 
-        else begin
-            inst_out_wb <= internal_array_wb[head[PTR_SIZE-1:0]];
-        end
-    end
+    // always_ff @ (posedge clk) begin
+    //     if (rst) begin
+    //         inst_out_wb <= '0;
+    //     end
+    //     else if (in_out) begin
+    //         inst_out_wb <= inst_in_wb;
+    //         //inst_out_wb.valid <= '0;
+    //     end
+    //     else if (empty) begin
+    //         inst_out_wb <= '0;
+    //     end 
+    //     else begin
+    //         inst_out_wb <= internal_array_wb[head[PTR_SIZE-1:0]];
+    //     end
+    // end
 
 endmodule : pre_wb_q
