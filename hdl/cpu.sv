@@ -25,7 +25,18 @@ import rv32i_types::*;
     id_ex_stage_reg_t id_ex_reg_next, id_ex_inst_out;
     ra_dp_stage_reg_t ra_dp_reg_next, ra_dp_inst_out;
     dp_is_stage_reg_t dp_is_inst_out, dp_is_out_mult, dp_is_out_int;
-    dp_is_stage_reg_t int_to_wb, mult_to_wb, wb_reg_next, wb_int_out, wb_mult_out, wb_inst_out;
+    dp_is_stage_reg_t int_to_wb, mult_to_wb, wb_reg_next, wb_int_out, wb_mult_out;
+
+
+    // WRITE BACKS
+    dp_is_stage_reg_t   wb_inst_out         [2];
+    logic               prf_we              [2]; 
+    logic               ld_status           [2];
+    status_t            status_n            [2];
+    logic   [3:0]       rob_idx_ld          [2];
+    logic   [6:0]       p_addr_out_wb       [2];
+    logic   [31:0]      wb_data_out         [2];
+    rfvi_packet_t       rfvi_monitor_vals   [2];
 
     rob_entry_t rob_entry, rob_out;
 
@@ -55,13 +66,10 @@ import rv32i_types::*;
     logic       rs1_renamed, rs2_renamed;
     logic       rename_we;
     logic       rs1_ready, rs2_ready;
-    logic [3:0]    rob_idx_ld;
+    
     logic           rob_overflow;
-    logic [6:0]    p_addr_out_wb;
+   
 
-    logic prf_we, ld_status;
-    status_t status_n;
-    logic [31:0] wb_data_out;
 
     //logic big_valid;
 
@@ -93,7 +101,7 @@ import rv32i_types::*;
     //logic [6:0]     commit_rs;
     prf_t           commit_prs;
 
-    rfvi_packet_t       rfvi_monitor_vals;
+    
 
     // always_ff @ (posedge clk) begin
     //     if (rst) begin
@@ -263,11 +271,14 @@ import rv32i_types::*;
     prf prf (
         .clk(clk),
         .rst(rst),
-        .regf_we(prf_we), // not writing yet, done in write back
-        .rd_v(wb_data_out),
+        .regf_we_0(prf_we[0]),
+        .regf_we_1(prf_we[1]),
+        .rd_v_0(wb_data_out[0]),
+        .rd_v_1(wb_data_out[1]),
         .rs1_s(prs1_s), 
         .rs2_s(prs2_s), 
-        .rd_s(p_addr_out_wb),
+        .rd_s_0(p_addr_out_wb[0]),
+        .rd_s_1(p_addr_out_wb[1]),
         .commit_rs(p_addr_ret),
         .prs1_v(prs1_v), 
         .prs2_v(prs2_v),
@@ -303,8 +314,10 @@ import rv32i_types::*;
         .rs1_ready(rs1_ready),
         .rs2_ready(rs2_ready),
 
-        .data_paddr(p_addr_out_wb),
-        .data_in(wb_data_out),
+        .data_paddr_0(p_addr_out_wb[0]),
+        .data_paddr_1(p_addr_out_wb[1]),
+        .data_in_0(wb_data_out[0]),
+        .data_in_1(wb_data_out[1]),
 
         .dp_is(dp_is_inst_out), // output
         .valid_output_mult(valid_output_mult), // output
@@ -320,8 +333,10 @@ import rv32i_types::*;
         .inst_out(dp_is_out_mult), // output
         .valid_rdata(valid_rdata_mult), // output
         .dispatch_stall(dispatch_stall_mult), // output
-        .data_paddr(p_addr_out_wb), // input
-        .data_in(wb_data_out) // input
+        .data_paddr_0(p_addr_out_wb[0]), // input
+        .data_paddr_1(p_addr_out_wb[1]), // input
+        .data_in_0(wb_data_out[0]), // input
+        .data_in_1(wb_data_out[1]) // input
     );
 
     r_station station_int(
@@ -333,8 +348,10 @@ import rv32i_types::*;
         .inst_out(dp_is_out_int), // output
         .valid_rdata(valid_rdata_int), // output
         .dispatch_stall(dispatch_stall_int), // output
-        .data_paddr(p_addr_out_wb), // input
-        .data_in(wb_data_out) // input
+        .data_paddr_0(p_addr_out_wb[0]), // input
+        .data_paddr_1(p_addr_out_wb[1]), // input
+        .data_in_0(wb_data_out[0]), // input
+        .data_in_1(wb_data_out[1]) // input
     );
 
     // r_station_new station_mult(
@@ -392,7 +409,7 @@ import rv32i_types::*;
         .enq(wb_int_enq),
         .ready_deq(wb_int_deq),
         .inst_in_wb(int_to_wb),
-        .inst_out_wb(wb_int_out),
+        .inst_out_wb(wb_inst_out[0]),
         .valid_rdata(int_valid_rdata),
         .wb_stall(int_wb_stall)
     );
@@ -404,56 +421,56 @@ import rv32i_types::*;
         .enq(wb_mult_enq),
         .ready_deq(wb_mult_deq),
         .inst_in_wb(mult_to_wb),
-        .inst_out_wb(wb_mult_out),
+        .inst_out_wb(wb_inst_out[1]),
         .valid_rdata(mult_valid_rdata),
         .wb_stall(mult_wb_stall)
     );
 
     always_comb begin
-        wb_int_deq = '0;
-        wb_mult_deq = '0;
+        wb_int_deq = '1;
+        wb_mult_deq = '1;
 
-        if (wb_int_enq && wb_mult_enq) begin // both same
-            if (int_to_wb.rob_idx < mult_to_wb.rob_idx) begin
-                wb_int_deq = '1;
-                wb_mult_deq = '0;
-            end 
-            else begin
-                wb_int_deq = '0;
-                wb_mult_deq = '1;
-            end
-        end
-        else if (wb_int_enq && !wb_mult_enq) begin
-            wb_int_deq = '1;
-            wb_mult_deq = '0;
-        end
-        else if (wb_mult_enq && !wb_int_enq) begin
-            wb_int_deq = '0;
-            wb_mult_deq = '1;
-        end
+        // if (wb_int_enq && wb_mult_enq) begin // both same
+        //     if (int_to_wb.rob_idx < mult_to_wb.rob_idx) begin
+        //         wb_int_deq = '1;
+        //         wb_mult_deq = '0;
+        //     end 
+        //     else begin
+        //         wb_int_deq = '0;
+        //         wb_mult_deq = '1;
+        //     end
+        // end
+        // else if (wb_int_enq && !wb_mult_enq) begin
+        //     wb_int_deq = '1;
+        //     wb_mult_deq = '0;
+        // end
+        // else if (wb_mult_enq && !wb_int_enq) begin
+        //     wb_int_deq = '0;
+        //     wb_mult_deq = '1;
+        // end
         
 
-        if (wb_int_out.valid && !wb_mult_out.valid) begin
-            wb_inst_out = wb_int_out;
-            //wb_int_deq = '1;
+        // if (wb_int_out.valid && !wb_mult_out.valid) begin
+        //     wb_inst_out = wb_int_out;
+        //     //wb_int_deq = '1;
 
-        end else if (!wb_int_out.valid && wb_mult_out.valid) begin
-            wb_inst_out = wb_mult_out;
-            //wb_mult_deq = '1;
+        // end else if (!wb_int_out.valid && wb_mult_out.valid) begin
+        //     wb_inst_out = wb_mult_out;
+        //     //wb_mult_deq = '1;
 
-        end 
-        // else if (wb_int_out.valid && wb_mult_out.valid) begin
-        //     if (wb_int_out.rob_idx > wb_mult_out.rob_idx) begin
-        //         wb_inst_out = wb_int_out;
-        //         //wb_int_deq = '1;
+        // end 
+        // // else if (wb_int_out.valid && wb_mult_out.valid) begin
+        // //     if (wb_int_out.rob_idx > wb_mult_out.rob_idx) begin
+        // //         wb_inst_out = wb_int_out;
+        // //         //wb_int_deq = '1;
 
-        //     end else begin
-        //         wb_inst_out = wb_mult_out;
-        //         //wb_mult_deq = '1;
-        //     end
-        else begin
-            wb_inst_out = '0;
-        end
+        // //     end else begin
+        // //         wb_inst_out = wb_mult_out;
+        // //         //wb_mult_deq = '1;
+        // //     end
+        // else begin
+        //     wb_inst_out = '0;
+       // end
     end
 
     // pre_wb_q #(
@@ -470,15 +487,27 @@ import rv32i_types::*;
     // );
 
 
-    writeback wb (
-        .inst_in_wb(wb_inst_out),
-        .prf_regf_we(prf_we),
-        .ld_status(ld_status),
-        .status_out(status_n),
-        .rob_idx_ld(rob_idx_ld),
-        .p_addr_out(p_addr_out_wb),
-        .data_out(wb_data_out),
-        .rfvi_monitor_vals(rfvi_monitor_vals)
+    writeback wb_int (
+        .inst_in_wb(wb_inst_out[0]), // in
+        .prf_regf_we(prf_we[0]), // out
+        .ld_status(ld_status[0]), // out
+        .status_out(status_n[0]), // out
+        .rob_idx_ld(rob_idx_ld[0]), // out
+        .p_addr_out(p_addr_out_wb[0]), // out
+        .data_out(wb_data_out[0]), // out
+        .rfvi_monitor_vals(rfvi_monitor_vals[0]) // out
+        //.deq(wb_deq)
+    );
+
+    writeback wb_mult (
+        .inst_in_wb(wb_inst_out[1]), // d
+        .prf_regf_we(prf_we[1]), // d
+        .ld_status(ld_status[1]), // d
+        .status_out(status_n[1]), // d
+        .rob_idx_ld(rob_idx_ld[1]), // d
+        .p_addr_out(p_addr_out_wb[1]),
+        .data_out(wb_data_out[1]),
+        .rfvi_monitor_vals(rfvi_monitor_vals[1])
         //.deq(wb_deq)
     );
 
@@ -502,11 +531,15 @@ import rv32i_types::*;
         .clk(clk),
         .rst(rst),
         .enq(rob_enq),
-        .ld_status(ld_status),
-        .status_in(status_n), // '0
+        .ld_status_0(ld_status[0]),
+        .ld_status_1(ld_status[1]),
+        .status_in_0(status_n[0]), // '0
+        .status_in_1(status_n[1]),
         .ld_branch_res('0),
-        .rob_idx_ld(rob_idx_ld),
-        .rfvi_monitor_vals(rfvi_monitor_vals),
+        .rob_idx_ld_0(rob_idx_ld[0]),
+        .rob_idx_ld_1(rob_idx_ld[1]),
+        .rfvi_monitor_vals_0(rfvi_monitor_vals[0]),
+        .rfvi_monitor_vals_1(rfvi_monitor_vals[1]),
         .branch_res_in(not_taken), // '0
         .rob_in(rob_entry),
         .rob_idx_in('0),

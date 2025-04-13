@@ -64,7 +64,7 @@ slli x24, x23, 5
 
 nop
 nop
-# nop
+nop
 # nop
 # nop
 # nop
