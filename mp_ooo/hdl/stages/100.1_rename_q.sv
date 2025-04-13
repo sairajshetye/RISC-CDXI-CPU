@@ -74,21 +74,27 @@ import rv32i_types::*;
 
     always_ff @(posedge clk) begin
         if (rst) begin
+            inst_out_r <= '0;
             for (integer i = 0; i < DEPTH; i++) begin
                 internal_array_r[i] <= '0;
             end
             tail <= '0;
             head <= '0;
         end else begin
+            inst_out_r <= '0;
             if (inst_in_r.valid) begin
                 if (enq && deq) begin
-                    internal_array_r[tail[PTR_SIZE-1:0]] <= inst_in_r;
+                    // internal_array_r[tail[PTR_SIZE-1:0]] <= inst_in_r;
+                    inst_out_r <= inst_in_r;
                     tail <= (tail + 4'b0001);
                     head <= (head + 4'b0001);
                 end else if (enq && !full) begin
+                    inst_out_r <= '0;
                     internal_array_r[tail[PTR_SIZE-1:0]] <= inst_in_r; 
                     tail <= (tail + 4'b0001);
                 end else if (deq && !empty) begin
+                    inst_out_r <= internal_array_r[head[PTR_SIZE-1:0]];
+                    internal_array_r[head[PTR_SIZE-1:0]] <= '0;
                     head <= (head + 4'b0001);
                 end
             end
@@ -96,19 +102,19 @@ import rv32i_types::*;
     
     end
 
-    always_ff @ (posedge clk) begin
-        if (rst) begin
-            inst_out_r <= '0;
-        end
-        else if (in_out) begin
-            inst_out_r <= inst_in_r;
-        end
-        else if (empty) begin
-            inst_out_r <= '0;
-        end 
-        else begin
-            inst_out_r <= internal_array_r[head[PTR_SIZE-1:0]];
-        end
-    end
+    // always_ff @ (posedge clk) begin
+    //     if (rst) begin
+    //         inst_out_r <= '0;
+    //     end
+    //     else if (in_out) begin
+    //         inst_out_r <= inst_in_r;
+    //     end
+    //     else if (empty) begin
+    //         inst_out_r <= '0;
+    //     end 
+    //     else begin
+    //         inst_out_r <= internal_array_r[head[PTR_SIZE-1:0]];
+    //     end
+    // end
 
 endmodule : rename_q

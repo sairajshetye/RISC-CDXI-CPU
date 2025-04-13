@@ -65,8 +65,7 @@ import rv32i_types::*;
             rs2_vi <= '0;
             rs_reg <= '0;
             new_inst <= '1;
-            
-            
+        
         end else if (rs_out.valid && !funct_mult_done && (rs_reg != rs_out)) begin
             funct3 <= rs_out.funct3;
             rs1_vi <= rs_out.rs1_data;
