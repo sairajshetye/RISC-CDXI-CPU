@@ -4,9 +4,9 @@ import rv32i_types::*;
     input   logic           clk,
     input   logic           rst,
     input   logic           iq_stall,
-    input   logic           dq_stall,
+    // input   logic           dq_stall,
     output  logic           enq,
-    output  logic           deq,
+    // output  logic           deq,
 
     output  logic   [31:0]  imem_addr,
     output  logic   [3:0]   imem_rmask,
@@ -51,14 +51,14 @@ import rv32i_types::*;
             if_id.rfvi_monitor_vals.monitor_pc_rdata = pc;
             if_id.rfvi_monitor_vals.monitor_pc_wdata = pc_next;
 
-            if (dq_stall) begin
-                deq = '0;
-                if_id.deq = '0;
-            end
-            else begin
-                deq = '1;
-                if_id.deq = '1;
-            end
+            // if (dq_stall || iq_stall) begin
+            //     deq = '0;
+            //     if_id.deq = '0;
+            // end
+            // else begin
+            //     deq = '1;
+            //     if_id.deq = '1;
+            // end
 
             if (imem_resp) begin
                 if_id.rfvi_monitor_vals.monitor_inst = imem_rdata;
@@ -67,15 +67,19 @@ import rv32i_types::*;
                 if_id.inst = imem_rdata;
                 if_id.fetch_stall = '0;
                 if_id.valid = '1;
-                enq = '1;
-                if (dq_stall) begin
-                    deq = '0;
-                    if_id.deq = '0;
+
+                if (!iq_stall) begin
+                     enq = '1;
                 end
-                else begin
-                    deq = '1;
-                    if_id.deq = '1;
-                end
+
+                // if (dq_stall) begin
+                //     deq = '0;
+                //     if_id.deq = '0;
+                // end
+                // else begin
+                //     deq = '1;
+                //     if_id.deq = '1;
+                // end
             end
     end
 

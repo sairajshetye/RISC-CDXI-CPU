@@ -11,14 +11,15 @@ import rv32i_types::*;
     input   logic           rs1_renamed, rs2_renamed,
     input   logic   [6:0]   rs1_paddr, rs2_paddr,
 
-    input   logic           res_stall,
-    input   logic           rob_stall,
+    // input   logic           res_stall,
+    // input   logic           rob_stall,
+    input   logic           rq_stall,
     // output to ROB + dispatch, RAT
     //output  [4:0]   rd_s,
     output  logic           enq,
-    output  logic           deq,
+    // output  logic           deq,
     output  logic           rename_we,
-    output  logic           fl_deq,
+    // output  logic           fl_deq,
     output  logic           rob_enq,
 
     // to RAT
@@ -49,12 +50,12 @@ import rv32i_types::*;
         if (id_ex.use_rd && rd_s != 5'd0) begin // only rename if rd != 0 and being used
             prd_s = p_addr;
             rename_we = '1;
-            fl_deq = '1;
+            // fl_deq = '1;
         end
         else begin
             prd_s = '0;
             rename_we = '0;
-            fl_deq = '0;
+            // fl_deq = '0;
         end
     end
 
@@ -62,7 +63,13 @@ import rv32i_types::*;
     // enqueue into the rob
     // - set rob idx in the ra_dp 
     always_comb begin
-        if (id_ex.valid && !rob_stall) begin
+        // if (id_ex.valid && !rob_stall) begin
+        //     rob_enq = '1;
+        // end
+        // else begin
+        //     rob_enq = '0;
+        // end
+        if (id_ex.valid) begin
             rob_enq = '1;
         end
         else begin
@@ -117,16 +124,22 @@ import rv32i_types::*;
         ra_dp.rd_paddr = prd_s;
         ra_dp.useless = '0;
 
-        if (res_stall) begin
-            deq = '0;
-            ra_dp.deq = '0;
-        end
-        else begin
-            deq = '1;
-            ra_dp.deq = '1;
+        // if (res_stall) begin
+        //     deq = '0;
+        //     ra_dp.deq = '0;
+        // end
+        // else begin
+        //     deq = '1;
+        //     ra_dp.deq = '1;
+        // end
+
+        if (!rq_stall && id_ex.valid) begin
+            enq = '1;
+        end else begin
+            enq = '0;
         end
 
-        enq = id_ex.deq;
+        // enq = id_ex.deq;
 
         ra_dp.rfvi_monitor_vals = id_ex.rfvi_monitor_vals;
     end
