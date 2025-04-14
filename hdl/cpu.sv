@@ -239,7 +239,7 @@ import rv32i_types::*;
         .enq(rq_enq),
         // .deq(rq_deq),
         .rename_we(rename_we),
-        // .fl_deq(fl_deq),
+        .fl_deq(fl_deq),
         .rob_enq(rob_enq),
         // to RAT
         .rat_rs1(rat_rs1),
@@ -511,7 +511,7 @@ import rv32i_types::*;
         .clk(clk),
         .rst(rst),
         .enq(fl_enq),
-        .deq(!rq_stall && !rob_stall),
+        .deq(fl_deq),//!rq_stall && !rob_stall
         .p_addr_in(fl_data_in), // rob_out.rd_paddr
         .p_addr_out(p_addr_out),
         .valid_rdata(fl_valid_rdata),
