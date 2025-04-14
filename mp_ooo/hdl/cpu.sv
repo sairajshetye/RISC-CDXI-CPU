@@ -18,7 +18,7 @@ import rv32i_types::*;
     logic [31:0] pc;
     logic [31:0] pc_next;
 
-    logic iq_enq, dq_enq, rq_enq, fl_enq, rob_enq, wb_int_enq, wb_mult_enq, fl_enq_rob, decode_stall;
+    logic iq_enq, dq_enq, rq_enq, fl_enq, rob_enq, wb_int_enq, wb_mult_enq, fl_enq_rob, decode_stall, dq_stall_full;
     logic iq_deq, dq_deq, rq_deq, fl_deq, wb_int_deq, wb_mult_deq;
 
     if_id_stage_reg_t if_id_reg_next, if_id_inst_out;
@@ -168,7 +168,7 @@ import rv32i_types::*;
         .clk(clk),
         .rst(rst),
         .iq_stall(iq_stall),
-        .dq_stall(dq_stall),
+        .dq_stall(dq_stall|dq_stall_full),
         .enq(iq_enq),
         .deq(iq_deq),
         .imem_addr(ufp_addr),
@@ -215,7 +215,8 @@ import rv32i_types::*;
         .inst_in_d(id_ex_reg_next),
         .inst_out_d(id_ex_inst_out),
         .valid_rdata(dq_valid_rdata),
-        .dq_stall(dq_stall)
+        .dq_stall(dq_stall),
+        .dq_stall_full(dq_stall_full)
     );
 
     rename_alloc rename_alloc_1 (
