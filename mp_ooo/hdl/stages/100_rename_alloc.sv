@@ -19,7 +19,7 @@ import rv32i_types::*;
     output  logic           enq,
     // output  logic           deq,
     output  logic           rename_we,
-    // output  logic           fl_deq,
+    output  logic           fl_deq,
     output  logic           rob_enq,
 
     // to RAT
@@ -47,15 +47,15 @@ import rv32i_types::*;
         rat_rs1 = id_ex.rs1_s;
         rat_rs2 = id_ex.rs2_s;
         rd_s = id_ex.rd_s;
-        if (id_ex.use_rd && rd_s != 5'd0) begin // only rename if rd != 0 and being used
+        if (id_ex.valid && id_ex.use_rd && rd_s != 5'd0) begin // only rename if rd != 0 and being used
             prd_s = p_addr;
             rename_we = '1;
-            // fl_deq = '1;
+            fl_deq = '1;
         end
         else begin
             prd_s = '0;
             rename_we = '0;
-            // fl_deq = '0;
+            fl_deq = '0;
         end
     end
 

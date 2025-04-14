@@ -32,6 +32,8 @@ import rv32i_types::*;
     logic empty;
     logic in_out;
     logic remove;
+
+    logic [PTR_SIZE-1:0] full_counter;
     //logic valid_rdata;  //indicates there is something in res station
 
     logic found_idx;
@@ -57,6 +59,20 @@ import rv32i_types::*;
 
         dispatch_stall = full;
         valid_rdata = ~empty;
+    end
+
+    always_ff @ (posedge clk) begin
+        if (rst) begin
+            full_counter <= '0;
+        end
+        else begin
+            if ((load_station & !remove) & !full) begin
+                full_counter <= full_counter + 1'b1;
+            end
+            else if ((!load_station & remove) & !empty) begin
+                full_counter <= full_counter - 1'b1;
+            end
+        end
     end
 
     // check all instructions currently in res station
