@@ -21,6 +21,8 @@ import rv32i_types::*;
     logic iq_enq, dq_enq, rq_enq, fl_enq, rob_enq, wb_int_enq, wb_mult_enq, fl_enq_rob, decode_stall;
     logic iq_deq, dq_deq, rq_deq, fl_deq, wb_int_deq, wb_mult_deq;
 
+    logic almost_full_int, almost_full_mult;
+
     if_id_stage_reg_t if_id_reg_next, if_id_inst_out;
     id_ex_stage_reg_t id_ex_reg_next, id_ex_inst_out;
     ra_dp_stage_reg_t ra_dp_reg_next, ra_dp_inst_out;
@@ -255,7 +257,7 @@ import rv32i_types::*;
         .rst(rst),
         .enq(rq_enq),
         // .deq(rq_deq),
-        .deq(!dispatch_stall_mult && !dispatch_stall_int),
+        .deq(!dispatch_stall_mult && !dispatch_stall_int && !almost_full_int && !almost_full_mult),
         .inst_in_r(ra_dp_reg_next),
         .inst_out_r(ra_dp_inst_out),
         .valid_rdata(rq_valid_rdata),
@@ -296,6 +298,7 @@ import rv32i_types::*;
         .inst_out(dp_is_out_mult), // output
         .valid_rdata(valid_rdata_mult), // output
         .dispatch_stall(dispatch_stall_mult), // output
+        .almost_full(almost_full_mult),
         .data_paddr_0(p_addr_out_wb[0]), // input
         .data_paddr_1(p_addr_out_wb[1]), // input
         .data_in_0(wb_data_out[0]), // input
@@ -311,6 +314,7 @@ import rv32i_types::*;
         .inst_out(dp_is_out_int), // output
         .valid_rdata(valid_rdata_int), // output
         .dispatch_stall(dispatch_stall_int), // output
+        .almost_full(almost_full_int),
         .data_paddr_0(p_addr_out_wb[0]), // input
         .data_paddr_1(p_addr_out_wb[1]), // input
         .data_in_0(wb_data_out[0]), // input

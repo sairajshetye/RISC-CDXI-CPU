@@ -12,6 +12,7 @@ import rv32i_types::*;
     input   logic                   load_station,
     input   dp_is_stage_reg_t       inst_in,
     output  dp_is_stage_reg_t       inst_out,
+    output logic almost_full,
     output  logic                   valid_rdata,
     output  logic                   dispatch_stall, // rename queue stall, no deq
 
@@ -29,6 +30,7 @@ import rv32i_types::*;
     dp_is_stage_reg_t station [DEPTH];
 
     logic full;
+    // logic [3:0] almost_full;
     logic empty;
     logic in_out;
     logic remove;
@@ -52,28 +54,38 @@ import rv32i_types::*;
     always_comb begin
         full = '1;
         empty = '1;
+        full_counter = '0;
         for (integer i = 0; i < DEPTH; i++) begin
             full &= station[i].valid;
+            if (station[i].valid) begin
+                full_counter++;
+            end
             empty &= ~(station[i].valid);
+        end
+
+        if (full_counter == 15 && load_station) begin
+            almost_full = '1;
+        end else begin
+            almost_full = '0;
         end
 
         dispatch_stall = full;
         valid_rdata = ~empty;
     end
 
-    always_ff @ (posedge clk) begin
-        if (rst) begin
-            full_counter <= '0;
-        end
-        else begin
-            if ((load_station & !remove) & !full) begin
-                full_counter <= full_counter + 1'b1;
-            end
-            else if ((!load_station & remove) & !empty) begin
-                full_counter <= full_counter - 1'b1;
-            end
-        end
-    end
+    // always_ff @ (posedge clk) begin
+    //     if (rst) begin
+    //         full_counter <= '0;
+    //     end
+    //     else begin
+    //         if ((load_station & !remove) & !full) begin
+    //             full_counter <= full_counter + 1'b1;
+    //         end
+    //         else if ((!load_station & remove) & !empty) begin
+    //             full_counter <= full_counter - 1'b1;
+    //         end
+    //     end
+    // end
 
     // check all instructions currently in res station
     // if valid and ready, 
