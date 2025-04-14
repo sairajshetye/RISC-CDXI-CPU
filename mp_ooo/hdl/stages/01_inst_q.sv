@@ -7,8 +7,8 @@ import rv32i_types::*;
 )(
     input   logic                   clk,
     input   logic                   rst,
-    input   logic                   enq,
-    input   logic                   deq,
+    input   logic                   enq, // comb fetch
+    input   logic                   deq, // decode q is not full
     input   if_id_stage_reg_t     inst_in,
     output  if_id_stage_reg_t     inst_out,
     output  logic                   valid_rdata,

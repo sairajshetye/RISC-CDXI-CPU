@@ -2,11 +2,12 @@ module id_stage
 import rv32i_types::*;
 (
     input if_id_stage_reg_t if_id,
-    input   logic         rq_stall,
+    // input   logic         rq_stall,
+    input   logic        dq_stall,
    //input   logic [31:0]  rs1_v,
     //input   logic [31:0]  rs2_v,
     output  logic         enq,
-    output  logic         deq,
+    // output  logic         deq,
     // output  logic [4:0]   rs1_s,
     // output  logic [4:0]   rs2_s,
     //input   logic         global_stall,
@@ -118,15 +119,21 @@ import rv32i_types::*;
         id_ex.is_store = is_store;
         id_ex.use_rd = use_rd;
         //id_ex.useless = '0;
-        if (rq_stall) begin
-            deq = '0;
-            id_ex.deq = '0;
+        // if (rq_stall) begin
+        //     deq = '0;
+        //     id_ex.deq = '0;
+        // end
+        // else begin
+        //     deq = '1;
+        //     id_ex.deq = '1;
+        // end
+        // enq = if_id.deq;
+
+        if (!dq_stall && if_id.valid) begin
+            enq = '1;
+        end else begin
+            enq = '0;
         end
-        else begin
-            deq = '1;
-            id_ex.deq = '1;
-        end
-        enq = if_id.deq;
 
 
         id_ex.rfvi_monitor_vals = if_id.rfvi_monitor_vals;

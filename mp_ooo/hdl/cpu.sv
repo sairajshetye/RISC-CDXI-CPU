@@ -168,9 +168,9 @@ import rv32i_types::*;
         .clk(clk),
         .rst(rst),
         .iq_stall(iq_stall),
-        .dq_stall(dq_stall),
+        // .dq_stall(dq_stall),
         .enq(iq_enq),
-        .deq(iq_deq),
+        // .deq(iq_deq),
         .imem_addr(ufp_addr),
         .imem_rmask(ufp_rmask),
         .imem_rdata(cache_rdata_32),
@@ -186,7 +186,7 @@ import rv32i_types::*;
         .clk(clk),
         .rst(rst),
         .enq(iq_enq),
-        .deq(iq_deq),
+        .deq(!dq_stall),
         .inst_in(if_id_reg_next),
         .inst_out(if_id_inst_out),
         .valid_rdata(iq_valid_rdata),
@@ -197,9 +197,10 @@ import rv32i_types::*;
         .if_id(if_id_inst_out),
         //.rs1_v(rs1_v),
         //.rs2_v(rs2_v),
-        .rq_stall(rq_stall),
+        // .rq_stall(rq_stall),
+        .dq_stall(dq_stall),
         .enq(dq_enq),
-        .deq(dq_deq),
+        // .deq(dq_deq),
         // .rs1_s(rs1_s),
         // .rs2_s(rs2_s),
         .id_ex(id_ex_reg_next)
@@ -211,7 +212,8 @@ import rv32i_types::*;
         .clk(clk),
         .rst(rst),
         .enq(dq_enq),
-        .deq(dq_deq && !(decode_stall | rob_stall)),
+        // .deq(dq_deq && !(decode_stall | rob_stall)),
+        .deq(!rq_stall && !rob_stall),
         .inst_in_d(id_ex_reg_next),
         .inst_out_d(id_ex_inst_out),
         .valid_rdata(dq_valid_rdata),
@@ -230,13 +232,14 @@ import rv32i_types::*;
         .rs2_renamed(rs2_renamed),
         .rs1_paddr(rs1_paddr), 
         .rs2_paddr(rs2_paddr),
-        .res_stall(dispatch_stall_mult || dispatch_stall_int),
-        .rob_stall(rob_stall),
+        // .res_stall(dispatch_stall_mult || dispatch_stall_int),
+        // .rob_stall(rob_stall),
+        .rq_stall(rq_stall),
         // output to ROB + dispatch, RAT
         .enq(rq_enq),
-        .deq(rq_deq),
+        // .deq(rq_deq),
         .rename_we(rename_we),
-        .fl_deq(fl_deq),
+        // .fl_deq(fl_deq),
         .rob_enq(rob_enq),
         // to RAT
         .rat_rs1(rat_rs1),
@@ -245,61 +248,20 @@ import rv32i_types::*;
         .ra_dp(ra_dp_reg_next)
     );
 
-    rat_arf rat_arf_1 (
-        .clk(clk),
-        .rst(rst),
-        .regf_we(aregf_we),
-        .rd_v(commit_prs.value),
-        .rs1_s(rs1_s), 
-        .rs2_s(rs2_s), 
-        .rd_s(ard_s),
-        .rename_we(rename_we),
-        .rd_rename(ra_dp_reg_next.rd_s),
-        .p_addr(ra_dp_reg_next.rd_paddr), // speculative (rat)
-        .p_addr_ret(p_addr_ret), // rrf
-        .rat_rs1(rat_rs1), 
-        .rat_rs2(rat_rs2),
-        .rs1_renamed(rs1_renamed), 
-        .rs2_renamed(rs2_renamed),
-        .rs1_paddr(rs1_paddr), 
-        .rs2_paddr(rs2_paddr),
-        .fl_enq(fl_enq),
-        .fl_data_in(fl_data_in),
-        .ars1_v(ars1_v), 
-        .ars2_v(ars2_v)
-    );
-
-    prf prf (
-        .clk(clk),
-        .rst(rst),
-        .regf_we_0(prf_we[0]),
-        .regf_we_1(prf_we[1]),
-        .rd_v_0(wb_data_out[0]),
-        .rd_v_1(wb_data_out[1]),
-        .rs1_s(prs1_s), 
-        .rs2_s(prs2_s), 
-        .rd_s_0(p_addr_out_wb[0]),
-        .rd_s_1(p_addr_out_wb[1]),
-        .commit_rs(p_addr_ret),
-        .prs1_v(prs1_v), 
-        .prs2_v(prs2_v),
-        .free_we(fl_enq),
-        .rd_s_free(fl_data_in),
-        .commit_prs(commit_prs)
-    );
-
     rename_q #(
         .DEPTH      (8)
     ) rename_q(
         .clk(clk),
         .rst(rst),
         .enq(rq_enq),
-        .deq(rq_deq),
+        // .deq(rq_deq),
+        .deq(!dispatch_stall_mult && !dispatch_stall_int),
         .inst_in_r(ra_dp_reg_next),
         .inst_out_r(ra_dp_inst_out),
         .valid_rdata(rq_valid_rdata),
         .rq_stall(rq_stall)
     );
+
 
     dispatch dispatch(
         .ra_dp(ra_dp_inst_out), // comes from rename queue, input
@@ -512,21 +474,7 @@ import rv32i_types::*;
         //.deq(wb_deq)
     );
 
-
-    free_list #(
-        .DEPTH      (128)
-    ) free_list(
-        .clk(clk),
-        .rst(rst),
-        .enq(fl_enq),
-        .deq(fl_deq),
-        .p_addr_in(fl_data_in), // rob_out.rd_paddr
-        .p_addr_out(p_addr_out),
-        .valid_rdata(fl_valid_rdata),
-        .rename_stall(fl_stall)
-    );
-
-    robert #(
+     robert #(
         .DEPTH      (16)
     ) robert(
         .clk(clk),
@@ -554,6 +502,63 @@ import rv32i_types::*;
         .aregf_we(aregf_we),
         .ard_s(ard_s),
         .p_addr_ret(p_addr_ret)
+    );
+
+
+    free_list #(
+        .DEPTH      (128)
+    ) free_list(
+        .clk(clk),
+        .rst(rst),
+        .enq(fl_enq),
+        .deq(!rq_stall && !rob_stall),
+        .p_addr_in(fl_data_in), // rob_out.rd_paddr
+        .p_addr_out(p_addr_out),
+        .valid_rdata(fl_valid_rdata),
+        .rename_stall(fl_stall)
+    );
+
+    rat_arf rat_arf_1 (
+        .clk(clk),
+        .rst(rst),
+        .regf_we(aregf_we),
+        .rd_v(commit_prs.value),
+        .rs1_s(rs1_s), 
+        .rs2_s(rs2_s), 
+        .rd_s(ard_s),
+        .rename_we(rename_we),
+        .rd_rename(ra_dp_reg_next.rd_s),
+        .p_addr(ra_dp_reg_next.rd_paddr), // speculative (rat)
+        .p_addr_ret(p_addr_ret), // rrf
+        .rat_rs1(rat_rs1), 
+        .rat_rs2(rat_rs2),
+        .rs1_renamed(rs1_renamed), 
+        .rs2_renamed(rs2_renamed),
+        .rs1_paddr(rs1_paddr), 
+        .rs2_paddr(rs2_paddr),
+        .fl_enq(fl_enq),
+        .fl_data_in(fl_data_in),
+        .ars1_v(ars1_v), 
+        .ars2_v(ars2_v)
+    );
+
+    prf prf (
+        .clk(clk),
+        .rst(rst),
+        .regf_we_0(prf_we[0]),
+        .regf_we_1(prf_we[1]),
+        .rd_v_0(wb_data_out[0]),
+        .rd_v_1(wb_data_out[1]),
+        .rs1_s(prs1_s), 
+        .rs2_s(prs2_s), 
+        .rd_s_0(p_addr_out_wb[0]),
+        .rd_s_1(p_addr_out_wb[1]),
+        .commit_rs(p_addr_ret),
+        .prs1_v(prs1_v), 
+        .prs2_v(prs2_v),
+        .free_we(fl_enq),
+        .rd_s_free(fl_data_in),
+        .commit_prs(commit_prs)
     );
     
     always_comb begin

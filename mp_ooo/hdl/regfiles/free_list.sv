@@ -73,32 +73,45 @@ import rv32i_types::*;
 
     always_ff @(posedge clk) begin
         if (rst) begin
+            p_addr_out <= '0;
             for (integer i = 0; i < DEPTH; i++) begin
                 internal_array[i] <= 7'(unsigned'(i)); 
             end
             tail <= {1'b1, {(PTR_SIZE){1'b0}}};
             head <= 8'b0001;
         end else begin
+            p_addr_out <= '0;
             if (enq && deq) begin
-                internal_array[tail[PTR_SIZE-1:0]] <= p_addr_in;
+                if (empty) begin
+                    p_addr_out <= p_addr_in;
+                end else if (full) begin
+                    p_addr_out <= internal_array[head[PTR_SIZE-1:0]];
+                    internal_array[tail[PTR_SIZE-1:0]] <= p_addr_in;
+                end else begin
+                    p_addr_out <= internal_array[head[PTR_SIZE-1:0]];
+                    internal_array[tail[PTR_SIZE-1:0]] <= p_addr_in;
+                end
                 tail <= (tail + 4'b0001);
                 head <= (head + 4'b0001);
             end else if (enq && !full) begin
+                p_addr_out <= '0;
                 internal_array[tail[PTR_SIZE-1:0]] <= p_addr_in; 
                 tail <= (tail + 4'b0001);
             end else if (deq && !empty) begin
+                p_addr_out <= internal_array[head[PTR_SIZE-1:0]];
+                internal_array[head[PTR_SIZE-1:0]] <= '0;
                 head <= (head + 4'b0001);
             end
         end
     
     end
 
-    always_comb begin
-        if (empty) begin
-            p_addr_out = 'x;
-        end else begin
-            p_addr_out = internal_array[head[PTR_SIZE-1:0]];
-        end
-    end
+    // always_comb begin
+    //     if (empty) begin
+    //         p_addr_out = 'x;
+    //     end else begin
+    //         p_addr_out = internal_array[head[PTR_SIZE-1:0]];
+    //     end
+    // end
 
 endmodule : free_list

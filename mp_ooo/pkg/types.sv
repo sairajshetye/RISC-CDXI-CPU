@@ -111,7 +111,7 @@ package rv32i_types;
         logic   [63:0]      order;
         logic               valid;
         logic               fetch_stall;
-        logic               deq;
+        // logic               deq;
         logic               useless; // zero padding
         rfvi_packet_t       rfvi_monitor_vals;
 
@@ -152,7 +152,7 @@ package rv32i_types;
         logic           is_store;
         logic           use_rd;
         // what else? - 391-32 bits
-        logic           deq;
+        // logic           deq;
         //logic           useless;
         rfvi_packet_t       rfvi_monitor_vals;
 
@@ -202,7 +202,7 @@ package rv32i_types;
 
         logic    [6:0]  rd_paddr;
 
-        logic           deq;
+        // logic           deq;
 
         logic    [2:0]  useless;
 
