@@ -20,6 +20,7 @@ import rv32i_types::*;
 
     logic iq_enq, dq_enq, rq_enq, fl_enq, rob_enq, wb_int_enq, wb_mult_enq, fl_enq_rob, decode_stall;
     logic iq_deq, dq_deq, rq_deq, fl_deq, wb_int_deq, wb_mult_deq;
+    logic really_full_int, really_full_mult;
 
     if_id_stage_reg_t if_id_reg_next, if_id_inst_out;
     id_ex_stage_reg_t id_ex_reg_next, id_ex_inst_out;
@@ -48,6 +49,7 @@ import rv32i_types::*;
 
     logic iq_valid_rdata, dq_valid_rdata, rq_valid_rdata, fl_valid_rdata, rob_valid_rdata, int_valid_rdata, mult_valid_rdata;
     logic iq_stall, dq_stall, rq_stall, fl_stall, rob_stall, int_wb_stall, mult_wb_stall;
+    logic iq_stall_next, dq_stall_next, rq_stall_next;
 
     //logic [31:0] rs1_v, rs2_v;
     logic [4:0] rs1_s, rs2_s;
@@ -186,11 +188,12 @@ import rv32i_types::*;
         .clk(clk),
         .rst(rst),
         .enq(iq_enq),
-        .deq(!dq_stall),
+        .deq(!dq_stall && !dq_stall_next),
         .inst_in(if_id_reg_next),
         .inst_out(if_id_inst_out),
         .valid_rdata(iq_valid_rdata),
-        .iq_stall(iq_stall)
+        .iq_stall(iq_stall),
+        .iq_stall_next(iq_stall_next)
     );
 
     id_stage id_stage_1 (
@@ -213,11 +216,12 @@ import rv32i_types::*;
         .rst(rst),
         .enq(dq_enq),
         // .deq(dq_deq && !(decode_stall | rob_stall)),
-        .deq(!rq_stall && !rob_stall),
+        .deq(!rq_stall && !rob_stall && !decode_stall && !rq_stall_next),
         .inst_in_d(id_ex_reg_next),
         .inst_out_d(id_ex_inst_out),
         .valid_rdata(dq_valid_rdata),
-        .dq_stall(dq_stall)
+        .dq_stall(dq_stall),
+        .dq_stall_next(dq_stall_next)
     );
 
     rename_alloc rename_alloc_1 (
@@ -255,11 +259,12 @@ import rv32i_types::*;
         .rst(rst),
         .enq(rq_enq),
         // .deq(rq_deq),
-        .deq(!dispatch_stall_mult && !dispatch_stall_int),
+        .deq(!dispatch_stall_mult && !dispatch_stall_int && !really_full_mult && !really_full_int), // && !really_full_mult && !really_full_int
         .inst_in_r(ra_dp_reg_next),
         .inst_out_r(ra_dp_inst_out),
         .valid_rdata(rq_valid_rdata),
-        .rq_stall(rq_stall)
+        .rq_stall(rq_stall),
+        .rq_stall_next(rq_stall_next)
     );
 
 
@@ -296,6 +301,7 @@ import rv32i_types::*;
         .inst_out(dp_is_out_mult), // output
         .valid_rdata(valid_rdata_mult), // output
         .dispatch_stall(dispatch_stall_mult), // output
+        .really_full(really_full_mult),
         .data_paddr_0(p_addr_out_wb[0]), // input
         .data_paddr_1(p_addr_out_wb[1]), // input
         .data_in_0(wb_data_out[0]), // input
@@ -311,6 +317,7 @@ import rv32i_types::*;
         .inst_out(dp_is_out_int), // output
         .valid_rdata(valid_rdata_int), // output
         .dispatch_stall(dispatch_stall_int), // output
+        .really_full(really_full_int),
         .data_paddr_0(p_addr_out_wb[0]), // input
         .data_paddr_1(p_addr_out_wb[1]), // input
         .data_in_0(wb_data_out[0]), // input

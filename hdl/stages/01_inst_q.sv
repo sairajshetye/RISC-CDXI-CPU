@@ -12,7 +12,8 @@ import rv32i_types::*;
     input   if_id_stage_reg_t     inst_in,
     output  if_id_stage_reg_t     inst_out,
     output  logic                   valid_rdata,
-    output  logic                   iq_stall
+    output  logic                   iq_stall,
+    output  logic                   iq_stall_next
 
 );
 
@@ -22,13 +23,15 @@ import rv32i_types::*;
     logic in_out;
     logic [PTR_SIZE:0] head;
     logic [PTR_SIZE:0] tail;
+    logic [PTR_SIZE:0] tail_full;
 
     if_id_stage_reg_t internal_array [DEPTH];
 
-    logic full;
+    logic full, full_next;
     logic empty;
 
     //if_id_stage_reg_t inst_in_reg;
+    assign tail_full = tail + 1'b1;
 
     always_comb begin
 
@@ -53,11 +56,12 @@ import rv32i_types::*;
         // 4:
         // the fifo is empty
         // deq by itself should not be allowed since empty
-
+        full_next = (head[PTR_SIZE] != tail_full[PTR_SIZE] && head[PTR_SIZE-1:0] == (tail_full[PTR_SIZE-1:0]));
         full = (head[PTR_SIZE] != tail[PTR_SIZE] && head[PTR_SIZE-1:0] == tail[PTR_SIZE-1:0]); 
         empty = (head == tail);
 
         iq_stall = full;
+        iq_stall_next = full_next;
         valid_rdata = ~empty;
         in_out = (enq && deq);
 
