@@ -123,6 +123,7 @@ import rv32i_types::*;
     logic valid_output_mult, valid_output_int;
 
     logic valid_rdata_mult, valid_rdata_int;
+    logic done, done_stall;
 
     assign ufp_wdata = '0;
     assign ufp_wmask = '0;
@@ -152,13 +153,20 @@ import rv32i_types::*;
     always_comb begin
         if (rst) begin
             pc_next = 32'hAAAAA000;
-        end else if (!iq_stall && !if_id_reg_next.fetch_stall) begin // && !if_id_reg_next.fetch_stall
+        end else if (!iq_stall && !if_id_reg_next.fetch_stall && !done_stall) begin // && !if_id_reg_next.fetch_stall
             pc_next = pc + 4;
         end else begin
             pc_next = pc;
         end
     end
 
+    always_ff @(posedge clk) begin
+        if (rst) begin
+            done_stall <= '0;
+        end else begin
+            done_stall <= done;
+        end
+    end
     pcreg pcreg(
         .clk(clk),
         .rst(rst),
@@ -179,7 +187,8 @@ import rv32i_types::*;
         .imem_resp(ufp_resp),
         .pc(pc),
         .pc_next(pc_next),
-        .if_id(if_id_reg_next)
+        .if_id(if_id_reg_next),
+        .done(done)
     );
 
     inst_q #(
@@ -358,7 +367,7 @@ import rv32i_types::*;
         //.rs1_v(),
         //.rs2_v(),
         .funct_unit_busy(funct_mult_busy),
-        .out_inst(mult_to_wb),
+        .out_inst(wb_inst_out[1]),
         .funct_mult_done(funct_mult_done)
     );
 
@@ -368,7 +377,7 @@ import rv32i_types::*;
         //.rs1_v(),
         //.rs2_v(),
         .funct_unit_busy(funct_int_busy),
-        .ex_mem(int_to_wb)
+        .ex_mem(wb_inst_out[0])
     );
 
     pre_wb_q #(
@@ -378,8 +387,8 @@ import rv32i_types::*;
         .rst(rst),
         .enq(wb_int_enq),
         .ready_deq(wb_int_deq),
-        .inst_in_wb(int_to_wb),
-        .inst_out_wb(wb_inst_out[0]),
+        .inst_in_wb(wb_inst_out[0]),
+        .inst_out_wb(int_to_wb),
         .valid_rdata(int_valid_rdata),
         .wb_stall(int_wb_stall)
     );
@@ -390,8 +399,8 @@ import rv32i_types::*;
         .rst(rst),
         .enq(wb_mult_enq),
         .ready_deq(wb_mult_deq),
-        .inst_in_wb(mult_to_wb),
-        .inst_out_wb(wb_inst_out[1]),
+        .inst_in_wb(wb_inst_out[1]),
+        .inst_out_wb(mult_to_wb),
         .valid_rdata(mult_valid_rdata),
         .wb_stall(mult_wb_stall)
     );

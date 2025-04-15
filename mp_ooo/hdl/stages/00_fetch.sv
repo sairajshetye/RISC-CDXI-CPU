@@ -16,17 +16,27 @@ import rv32i_types::*;
     input   logic   [31:0]  pc,
     input   logic   [31:0]  pc_next,
 
-    output if_id_stage_reg_t if_id
+    output if_id_stage_reg_t if_id,
+output logic done
 );
 
     logic [63:0] order_reg;
+    logic d;
+    //done;
 
     always_ff @(posedge clk) begin
+        
         if (rst) begin
             order_reg <= '0;
+            done <= '0;
         end else if (imem_resp && !iq_stall) begin
             order_reg <= order_reg + 1;
-        end 
+            if (d) begin
+                done <= '1;
+            end
+        end else if (d) begin
+            done <= '1;
+        end
     end
 
     always_comb begin
@@ -38,10 +48,15 @@ import rv32i_types::*;
             if_id.valid = '0;
             if_id.fetch_stall = '1;
             if_id.useless = '0;
+            d = '0;
 
             imem_addr = pc_next;
 
-            imem_rmask = '1;
+            if (!done && !iq_stall) begin
+                imem_rmask = '1;
+            end else begin
+                imem_rmask = '0;
+            end
 
             enq = '0;
 
@@ -62,6 +77,9 @@ import rv32i_types::*;
 
             if (imem_resp) begin
                 if_id.rfvi_monitor_vals.monitor_inst = imem_rdata;
+                if (imem_rdata == 'hf0002013) begin
+                    d = '1;
+                end
                 if_id.rfvi_monitor_vals.monitor_valid = '1;
 
                 if_id.inst = imem_rdata;
