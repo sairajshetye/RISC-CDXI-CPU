@@ -995,12 +995,14 @@ _start:
     remu x20, x27, x14
     mul x12, x19, x9
     div x28, x8, x18
-    rem x19, x31, x4
+    rem x19, x31, x4 
     div x3, x4, x1
     divu x26, x30, x16
     div x29, x6, x13
     mulhsu x12, x1, x15
     div x18, x13, x14
+
+    
     slti x0, x0, -256
     nop
     nop

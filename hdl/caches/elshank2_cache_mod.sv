@@ -220,14 +220,14 @@ module cache_mod (
             web_way_dirty[i] = '1;
         end
         lru_web = '1;
-        ufp_rdata = 'x;
+        ufp_rdata = '0;
         way_hit = '0; // or '0?
         csb_s = '0;
 
         dfp_read = '0;
         dfp_write = '0;
         dfp_addr = '0;
-        dfp_wdata = 'x;
+        dfp_wdata = '0;
 
         lb_data = '0;
         lb_addr = '0;
@@ -245,7 +245,7 @@ module cache_mod (
 
                     // CHECK TO SEE IF LINE BUFFER AND UFP ADDR MATCH (TAG TOO?) IF SO, SEND RESP AND BACK TO IDLE
                     // i use ufp_addr directly for tag and set since tag/set are a clock cycle late in register
-                    if (lb_data_reg != '0 && lb_addr_reg != '0 && lb_tag == ufp_addr_reg2[31:9] && lb_set == ufp_addr_reg2[8:5]) begin
+                    if (lb_tag == ufp_addr_reg2[31:9] && lb_set == ufp_addr_reg2[8:5]) begin
                         ufp_rdata = lb_data_reg;
                         ufp_resp = '1;
                         state_next = idle;
@@ -288,7 +288,7 @@ module cache_mod (
                         data_addr = set;
                         data_wmask[way_hit] = '0;
                         data_wmask[way_hit][offset+:4] = ufp_wmask_reg; 
-                        data_d_in[way_hit] = 'x;
+                        data_d_in[way_hit] = '0;
                         data_d_in[way_hit][offset*8+:32] = ufp_wdata_reg;
                         web_way_data[way_hit] = '0;
 
