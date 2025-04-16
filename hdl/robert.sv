@@ -10,16 +10,24 @@ import rv32i_types::*;
     input   logic                   enq,
     input   logic                   ld_status_0,
     input   logic                   ld_status_1,
+    input   logic                   ld_status_2,
+    //input   logic                   ld_status_3,
     input   status_t                status_in_0,
     input   status_t                status_in_1,
+    input   status_t                status_in_2,
+    //input   status_t                status_in_3,
     input   logic                   ld_branch_res,
     input   branch_t                branch_res_in, 
     input   rob_entry_t             rob_in,
     input   logic [PTR_SIZE-1:0]    rob_idx_in,     //read idx
     input   logic [PTR_SIZE-1:0]    rob_idx_ld_0,     //for ld status
     input   logic [PTR_SIZE-1:0]    rob_idx_ld_1,     //for ld status
+    input   logic [PTR_SIZE-1:0]    rob_idx_ld_2,     //for ld status
+    //input   logic [PTR_SIZE-1:0]    rob_idx_ld_3,     //for ld status
     input   rfvi_packet_t           rfvi_monitor_vals_0,
     input   rfvi_packet_t           rfvi_monitor_vals_1,
+    input   rfvi_packet_t           rfvi_monitor_vals_2,
+    //input   rfvi_packet_t           rfvi_monitor_vals_3,
     output  rob_entry_t             rob_out,
     output  logic                   valid_rdata,
     output  logic                   alloc_stall,
@@ -127,6 +135,28 @@ import rv32i_types::*;
                 rob[rob_idx_ld_1].rfvi_monitor_vals <= rfvi_monitor_vals_1;
             end
         end
+
+        if (ld_status_2) begin
+            rob[rob_idx_ld_2].status <= status_in_2;
+            //rob[rob_idx_ld].valid <= '0;
+            if (status_in_2 == done) begin
+                //aregf_we <= '1;
+                //ard_s <= rob[rob_idx_ld].rd_addr;
+                //p_addr_ret <= rob[rob_idx_ld].rd_paddr;
+                rob[rob_idx_ld_2].rfvi_monitor_vals <= rfvi_monitor_vals_2;
+            end
+        end
+
+        // if (ld_status_3) begin
+        //     rob[rob_idx_ld_3].status <= status_in_3;
+        //     //rob[rob_idx_ld].valid <= '0;
+        //     if (status_in_3 == done) begin
+        //         //aregf_we <= '1;
+        //         //ard_s <= rob[rob_idx_ld].rd_addr;
+        //         //p_addr_ret <= rob[rob_idx_ld].rd_paddr;
+        //         rob[rob_idx_ld_3].rfvi_monitor_vals <= rfvi_monitor_vals_3;
+        //     end
+        // end
 
         if (ld_branch_res) begin
             rob[rob_idx_in].br_result <= branch_res_in;

@@ -40,7 +40,7 @@ import rv32i_types::*;
             //res stations & prf signals out
             p_addr_out = inst_in_wb.rd_paddr;
             data_out = inst_in_wb.rd_data;
-            prf_regf_we = '1;
+            prf_regf_we = inst_in_wb.regf_we;   //we = '1 before
 
             //robert signals out
             status_out = done;

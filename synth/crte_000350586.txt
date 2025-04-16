@@ -1,0 +1,341 @@
+CRTE_SNAPSHOT_START
+
+SECTION_CRTE_VERSION
+3.0
+
+SECTION_PID
+350586
+
+SECTION_POLLING_INTERVAL
+5
+
+SECTION_DATE_TIME
+Wed Apr 16 17:18:56 CDT 2025 (1744841936)
+
+SECTION_OS_VERSION
+osname: Linux
+hostname: linux-ssh-04.ews.illinois.edu
+arch: x86_64
+release_version: 4.18.0-553.47.1.el8_10.x86_64
+
+SECTION_IPC_INFO
+
+------ Message Queues --------
+key        msqid      owner      perms      used-bytes   messages    
+
+------ Shared Memory Segments --------
+key        shmid      owner      perms      bytes      nattch     status      
+0x00000000 2          gdm        600        16384      1          dest         
+0x00000000 5          gdm        600        4259840    2          dest         
+
+------ Semaphore Arrays --------
+key        semid      owner      perms      nsems     
+
+
+SECTION_ULIMIT
+core file size          (blocks, -c) 0
+data seg size           (kbytes, -d) unlimited
+scheduling priority             (-e) 0
+file size               (blocks, -f) unlimited
+pending signals                 (-i) 94939
+max locked memory       (kbytes, -l) 64
+max memory size         (kbytes, -m) unlimited
+open files                      (-n) 262144
+pipe size            (512 bytes, -p) 8
+POSIX message queues     (bytes, -q) 819200
+real-time priority              (-r) 0
+stack size              (kbytes, -s) unlimited
+cpu time               (seconds, -t) unlimited
+max user processes              (-u) 94939
+virtual memory          (kbytes, -v) unlimited
+file locks                      (-x) unlimited
+
+SECTION_SYSCONF
+_SC_THREAD_SAFE_FUNCTIONS= 200809
+_SC_CLK_TCK= 100
+_SC_OPEN_MAX= 262144
+_SC_PAGE_SIZE= 4096
+_SC_ARG_MAX= 4611686018427387903
+_SC_CHILD_MAX= 94939
+_SC_LINE_MAX= 2048
+
+SECTION_FULL_COMMAND
+/software/Synopsys-2024_x86_64/syn/W-2024.09/linux64/syn/bin/common_shell_exec -shell dc_shell -r /software/Synopsys-2024_x86_64/syn/W-2024.09 -f synthesis.tcl
+
+SECTION_CPUINFO
+total_core: 12
+
+model_name:  Intel(R) Xeon(R) Silver 4216 CPU @ 2.10GHz
+flags:  fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon nopl xtopology tsc_reliable nonstop_tsc cpuid pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch invpcid_single ssbd ibrs ibpb stibp ibrs_enhanced fsgsbase tsc_adjust bmi1 avx2 smep bmi2 invpcid avx512f avx512dq rdseed adx smap clflushopt clwb avx512cd avx512bw avx512vl xsaveopt xsavec xsaves arat pku ospke md_clear flush_l1d arch_capabilities
+cpu_family: 6
+core_frequency_mhz: 2095
+core_per_socket: 0
+stepping: 7
+cache_size_kb: 22528
+ht: 0
+
+model_name:  Intel(R) Xeon(R) Silver 4216 CPU @ 2.10GHz
+flags:  fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon nopl xtopology tsc_reliable nonstop_tsc cpuid pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch invpcid_single ssbd ibrs ibpb stibp ibrs_enhanced fsgsbase tsc_adjust bmi1 avx2 smep bmi2 invpcid avx512f avx512dq rdseed adx smap clflushopt clwb avx512cd avx512bw avx512vl xsaveopt xsavec xsaves arat pku ospke md_clear flush_l1d arch_capabilities
+cpu_family: 6
+core_frequency_mhz: 2095
+core_per_socket: 0
+stepping: 7
+cache_size_kb: 22528
+ht: 0
+
+model_name:  Intel(R) Xeon(R) Silver 4216 CPU @ 2.10GHz
+flags:  fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon nopl xtopology tsc_reliable nonstop_tsc cpuid pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch invpcid_single ssbd ibrs ibpb stibp ibrs_enhanced fsgsbase tsc_adjust bmi1 avx2 smep bmi2 invpcid avx512f avx512dq rdseed adx smap clflushopt clwb avx512cd avx512bw avx512vl xsaveopt xsavec xsaves arat pku ospke md_clear flush_l1d arch_capabilities
+cpu_family: 6
+core_frequency_mhz: 2095
+core_per_socket: 0
+stepping: 7
+cache_size_kb: 22528
+ht: 0
+
+model_name:  Intel(R) Xeon(R) Silver 4216 CPU @ 2.10GHz
+flags:  fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon nopl xtopology tsc_reliable nonstop_tsc cpuid pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch invpcid_single ssbd ibrs ibpb stibp ibrs_enhanced fsgsbase tsc_adjust bmi1 avx2 smep bmi2 invpcid avx512f avx512dq rdseed adx smap clflushopt clwb avx512cd avx512bw avx512vl xsaveopt xsavec xsaves arat pku ospke md_clear flush_l1d arch_capabilities
+cpu_family: 6
+core_frequency_mhz: 2095
+core_per_socket: 0
+stepping: 7
+cache_size_kb: 22528
+ht: 0
+
+model_name:  Intel(R) Xeon(R) Silver 4216 CPU @ 2.10GHz
+flags:  fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon nopl xtopology tsc_reliable nonstop_tsc cpuid pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch invpcid_single ssbd ibrs ibpb stibp ibrs_enhanced fsgsbase tsc_adjust bmi1 avx2 smep bmi2 invpcid avx512f avx512dq rdseed adx smap clflushopt clwb avx512cd avx512bw avx512vl xsaveopt xsavec xsaves arat pku ospke md_clear flush_l1d arch_capabilities
+cpu_family: 6
+core_frequency_mhz: 2095
+core_per_socket: 0
+stepping: 7
+cache_size_kb: 22528
+ht: 0
+
+model_name:  Intel(R) Xeon(R) Silver 4216 CPU @ 2.10GHz
+flags:  fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon nopl xtopology tsc_reliable nonstop_tsc cpuid pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch invpcid_single ssbd ibrs ibpb stibp ibrs_enhanced fsgsbase tsc_adjust bmi1 avx2 smep bmi2 invpcid avx512f avx512dq rdseed adx smap clflushopt clwb avx512cd avx512bw avx512vl xsaveopt xsavec xsaves arat pku ospke md_clear flush_l1d arch_capabilities
+cpu_family: 6
+core_frequency_mhz: 2095
+core_per_socket: 0
+stepping: 7
+cache_size_kb: 22528
+ht: 0
+
+model_name:  Intel(R) Xeon(R) Silver 4216 CPU @ 2.10GHz
+flags:  fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon nopl xtopology tsc_reliable nonstop_tsc cpuid pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch invpcid_single ssbd ibrs ibpb stibp ibrs_enhanced fsgsbase tsc_adjust bmi1 avx2 smep bmi2 invpcid avx512f avx512dq rdseed adx smap clflushopt clwb avx512cd avx512bw avx512vl xsaveopt xsavec xsaves arat pku ospke md_clear flush_l1d arch_capabilities
+cpu_family: 6
+core_frequency_mhz: 2095
+core_per_socket: 0
+stepping: 7
+cache_size_kb: 22528
+ht: 0
+
+model_name:  Intel(R) Xeon(R) Silver 4216 CPU @ 2.10GHz
+flags:  fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon nopl xtopology tsc_reliable nonstop_tsc cpuid pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch invpcid_single ssbd ibrs ibpb stibp ibrs_enhanced fsgsbase tsc_adjust bmi1 avx2 smep bmi2 invpcid avx512f avx512dq rdseed adx smap clflushopt clwb avx512cd avx512bw avx512vl xsaveopt xsavec xsaves arat pku ospke md_clear flush_l1d arch_capabilities
+cpu_family: 6
+core_frequency_mhz: 2095
+core_per_socket: 0
+stepping: 7
+cache_size_kb: 22528
+ht: 0
+
+model_name:  Intel(R) Xeon(R) Silver 4216 CPU @ 2.10GHz
+flags:  fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon nopl xtopology tsc_reliable nonstop_tsc cpuid pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch invpcid_single ssbd ibrs ibpb stibp ibrs_enhanced fsgsbase tsc_adjust bmi1 avx2 smep bmi2 invpcid avx512f avx512dq rdseed adx smap clflushopt clwb avx512cd avx512bw avx512vl xsaveopt xsavec xsaves arat pku ospke md_clear flush_l1d arch_capabilities
+cpu_family: 6
+core_frequency_mhz: 2095
+core_per_socket: 0
+stepping: 7
+cache_size_kb: 22528
+ht: 0
+
+model_name:  Intel(R) Xeon(R) Silver 4216 CPU @ 2.10GHz
+flags:  fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon nopl xtopology tsc_reliable nonstop_tsc cpuid pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch invpcid_single ssbd ibrs ibpb stibp ibrs_enhanced fsgsbase tsc_adjust bmi1 avx2 smep bmi2 invpcid avx512f avx512dq rdseed adx smap clflushopt clwb avx512cd avx512bw avx512vl xsaveopt xsavec xsaves arat pku ospke md_clear flush_l1d arch_capabilities
+cpu_family: 6
+core_frequency_mhz: 2095
+core_per_socket: 0
+stepping: 7
+cache_size_kb: 22528
+ht: 0
+
+model_name:  Intel(R) Xeon(R) Silver 4216 CPU @ 2.10GHz
+flags:  fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon nopl xtopology tsc_reliable nonstop_tsc cpuid pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch invpcid_single ssbd ibrs ibpb stibp ibrs_enhanced fsgsbase tsc_adjust bmi1 avx2 smep bmi2 invpcid avx512f avx512dq rdseed adx smap clflushopt clwb avx512cd avx512bw avx512vl xsaveopt xsavec xsaves arat pku ospke md_clear flush_l1d arch_capabilities
+cpu_family: 6
+core_frequency_mhz: 2095
+core_per_socket: 0
+stepping: 7
+cache_size_kb: 22528
+ht: 0
+
+model_name:  Intel(R) Xeon(R) Silver 4216 CPU @ 2.10GHz
+flags:  fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon nopl xtopology tsc_reliable nonstop_tsc cpuid pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch invpcid_single ssbd ibrs ibpb stibp ibrs_enhanced fsgsbase tsc_adjust bmi1 avx2 smep bmi2 invpcid avx512f avx512dq rdseed adx smap clflushopt clwb avx512cd avx512bw avx512vl xsaveopt xsavec xsaves arat pku ospke md_clear flush_l1d arch_capabilities
+cpu_family: 6
+core_frequency_mhz: 2095
+core_per_socket: 0
+stepping: 7
+cache_size_kb: 22528
+ht: 0
+
+SECTION_OS_RELEASE_VERSION
+Red Hat Enterprise Linux release 8.10 (Ootpa)
+
+
+SECTION_SYS/VM
+/proc/sys/vm/admin_reserve_kbytes:8192
+/proc/sys/vm/block_dump:0
+/proc/sys/vm/compact_unevictable_allowed:1
+/proc/sys/vm/compaction_proactiveness:0
+/proc/sys/vm/dirty_background_bytes:0
+/proc/sys/vm/dirty_background_ratio:10
+/proc/sys/vm/dirty_bytes:0
+/proc/sys/vm/dirty_expire_centisecs:3000
+/proc/sys/vm/dirty_ratio:30
+/proc/sys/vm/dirty_writeback_centisecs:500
+/proc/sys/vm/dirtytime_expire_seconds:43200
+/proc/sys/vm/drop_caches:0
+/proc/sys/vm/extfrag_threshold:500
+/proc/sys/vm/force_cgroup_v2_swappiness:0
+/proc/sys/vm/hugetlb_shm_group:0
+/proc/sys/vm/laptop_mode:0
+/proc/sys/vm/legacy_va_layout:0
+/proc/sys/vm/legacy_willneed_readahead:0
+/proc/sys/vm/lowmem_reserve_ratio:256	256	32	0	0
+/proc/sys/vm/max_map_count:65530
+/proc/sys/vm/memory_failure_early_kill:0
+/proc/sys/vm/memory_failure_recovery:1
+/proc/sys/vm/min_free_kbytes:67584
+/proc/sys/vm/min_slab_ratio:5
+/proc/sys/vm/min_unmapped_ratio:1
+/proc/sys/vm/mmap_min_addr:4096
+/proc/sys/vm/nr_hugepages:0
+/proc/sys/vm/nr_hugepages_mempolicy:0
+/proc/sys/vm/nr_overcommit_hugepages:0
+/proc/sys/vm/numa_stat:1
+/proc/sys/vm/numa_zonelist_order:Node
+/proc/sys/vm/oom_dump_tasks:1
+/proc/sys/vm/oom_kill_allocating_task:0
+/proc/sys/vm/overcommit_kbytes:0
+/proc/sys/vm/overcommit_memory:0
+/proc/sys/vm/overcommit_ratio:50
+/proc/sys/vm/page-cluster:3
+/proc/sys/vm/page_lock_unfairness:5
+/proc/sys/vm/panic_on_oom:0
+/proc/sys/vm/percpu_pagelist_fraction:0
+/proc/sys/vm/stat_interval:1
+/proc/sys/vm/swappiness:30
+/proc/sys/vm/user_reserve_kbytes:131072
+/proc/sys/vm/vfs_cache_pressure:100
+/proc/sys/vm/watermark_boost_factor:15000
+/proc/sys/vm/watermark_scale_factor:10
+/proc/sys/vm/zone_reclaim_mode:0
+
+
+SECTION_SWAP
+swap_partition: /dev/dm-1
+size_gb: 7
+
+CRTE_SNAPSHOT_END
+
+CRTE_PERIODIC_START 1 1744841936401
+
+SECTION_MPSTAT
+total_core: 12
+
+CPU     %user   %kernel %wait   %idle   
+all   1.667512 1.573318 0.290037 96.469124
+0     1.314992 1.496980 0.273763 96.914268
+1     2.196195 1.644616 0.325732 95.833458
+2     2.491740 1.552020 0.304949 95.651291
+3     1.972017 1.596869 0.326291 96.104828
+4     2.321227 1.553927 0.305411 95.819435
+5     1.698347 1.522361 0.274940 96.504356
+6     1.352936 1.571890 0.284555 96.790619
+7     1.551002 1.631186 0.275155 96.542656
+8     1.766330 1.692613 0.260284 96.280769
+9     1.119969 1.528177 0.266189 97.085663
+10     1.015906 1.535723 0.312236 97.136131
+11     1.209849 1.553121 0.270883 96.966148
+SECTION_LOADAVG
+3.46 2.03 6.30 2/1727 359948
+
+SECTION_PID_STATUS
+name: common_shell_ex
+state: 1
+vmsize: 6792120
+vmrss: 848764
+vmdata: 5724032
+vmstk: 256
+vmexe: 430612
+vmlib: 68032
+threads: 3
+
+SECTION_PROCESS_CPU_UTIL
+pid: 350586
+cpu_total_time: 56937895
+cpu_used_time: 25345
+cpu_p: 
+
+SECTION_SYSTEM_CPU_UTIL
+sys_cpu_p: 
+
+SECTION_MEMINFO
+memtotal: 24364172
+memfree: 18692152
+cached: 1510220
+swapcached: 91860
+active: 2057476
+swaptotal: 8388604
+swapfree: 1465920
+
+SECTION_SMAPS
+shared_kb: 3108
+private_kb: 846552
+
+SECTION_DF
+Filesystem  Size  Used Avail Use%
+filesystem        31G  0G  30G    1
+
+Filesystem    Inodes   IUsed   IFree   IUse%
+filesystem          16384000  2955 16381045   4294413046
+
+SECTION_CWD
+Filesystem  Size  Used Avail Use%
+filesystem        25G  2G  22G    11
+
+Filesystem    Inodes   IUsed   IFree   IUse%
+filesystem          52428800  55421 52373379   4294950393
+
+SECTION_SWAP_RATE
+blk_read: 5718480
+blk_wrtn: 71714136
+swap_in_rate: 
+swap_out_rate: 
+swap_in_rate: 
+swap_out_rate: 
+
+SECTION_FD_SIZE
+files: 24
+total_size: 10121902
+
+SECTION_NET_INTERFACE
+total_eth_avbl: 2
+
+name net_rx_err net_rx_drp net_tx_err net_tx_drp 
+    lo:         0        0        0        0
+ens192:         0        198        0        0
+
+SECTION_NFSSTAT
+readlink: 0
+write: 0
+getattr: 0
+retrans: 0
+raw_data: 
+net 0 0 0 0
+rpc 5988411 0 5988928
+proc3 22 16 3460532 101955 331460 332133 2192 1382558 250439 21703 5652 229 0 18908 4290 1080 244 785 47716 691 118 59 3598
+proc4 67 886 2162 0 0 2820 0 431 0 422 0 1350 0 50 50 0 0 0 1976 2328 2564 444 0 0 0 0 0 906 0 0 0 2256 0 0 0 0 0 0 0 1572 393 392 494 0 393 0 0 0 0 0 0 0 0 0 392 0 0 0 0 0 0 0 0 0 0 0 0 0
+
+
+SECTION_THREAD_CPU_UTIL
+350586 : 350586 (common_shell_ex) R 350582 350441 132507 34828 350441 16384 803369 94116 2813 1240 21340 349 969 251 20 0 3 0 4716592 6955130880 212191 18446744073709551615 2097152 443040304 140737488323680 0 0 0 0 67108864 1132494591 0 0 0 17 7 0 0 426 0 0 444545152 486045472 1866190848 140737488325038 140737488325198 140737488325198 140737488351145 0
+350640 : 350640 (common_shell_ex) S 350582 350441 132507 34828 350441 16448 4 94116 1 1240 0 0 969 251 20 0 3 0 4716799 6955130880 212191 18446744073709551615 2097152 443040304 140737488323680 0 0 0 2147221247 67108864 1132494591 0 0 0 -1 5 0 0 0 0 0 444545152 486045472 1866190848 140737488325038 140737488325198 140737488325198 140737488351145 0
+350708 : 350708 (jemalloc_bg_thd) S 350582 350441 132507 34828 350441 1073758272 10 94116 1 1240 0 0 969 251 20 0 3 0 4717318 6955130880 212191 18446744073709551615 2097152 443040304 140737488323680 0 0 0 2147220735 67108864 1132494591 0 0 0 -1 5 0 0 0 0 0 444545152 486045472 1866190848 140737488325038 140737488325198 140737488325198 140737488351145 0
+
+CRTE_PERIODIC_END 1 1744841936401
