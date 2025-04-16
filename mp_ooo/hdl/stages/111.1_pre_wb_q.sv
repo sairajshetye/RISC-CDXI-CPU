@@ -1,4 +1,4 @@
-module pre_wb_q
+/* module pre_wb_q
 import rv32i_types::*;
  #(
             parameter               DEPTH     = 8,
@@ -139,4 +139,4 @@ import rv32i_types::*;
     //     end
     // end
 
-endmodule : pre_wb_q
+endmodule : pre_wb_q */

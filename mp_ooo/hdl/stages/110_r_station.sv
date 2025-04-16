@@ -16,10 +16,14 @@ import rv32i_types::*;
     output  logic                   dispatch_stall, // rename queue stall, no deq
     output  logic                   really_full,
 
-    input   logic   [6:0]  data_paddr_0, //from bus
-    input   logic   [31:0]     data_in_0,    //from bus
-    input   logic   [6:0]  data_paddr_1, //from bus
-    input   logic   [31:0]     data_in_1    //from bus
+    input   logic   [6:0]  data_paddr_0, //from intfunct 
+    input   logic   [31:0]     data_in_0,    //from intfunct  
+    input   logic   [6:0]  data_paddr_1, //from mult 
+    input   logic   [31:0]     data_in_1,    //from mult
+    input   logic   [6:0]  data_paddr_2, //from br
+    input   logic   [31:0]     data_in_2    //from br
+    // input   logic   [6:0]  data_paddr_3, //from mem
+    // input   logic   [31:0]     data_in_3    //from mem
     //maybe add ^ seperate for rs1 & rs2, maybe port to port from funct units
 
     //output  logic                   regf_we,
@@ -122,6 +126,21 @@ import rv32i_types::*;
                         //replace = '1;
                         //station[i].rs1_ready = data_in;
                 end
+                else if (!station[i].rs1_ready && station[i].use_prs1 && (station[i].rs1_paddr == data_paddr_2)) begin    //if using rs1 check if bus_in is for rs1
+                        data_t = data_in_2;
+                        idx_rep[i] = '1;
+                        rs1_rep[i] = '1;    //rs1
+                        //replace = '1;
+                        //station[i].rs1_ready = data_in;
+                end
+                // else if (!station[i].rs1_ready && station[i].use_prs1 && (station[i].rs1_paddr == data_paddr_3)) begin    //if using rs1 check if bus_in is for rs1
+                //         data_t = data_in_3;
+                //         idx_rep[i] = '1;
+                //         rs1_rep[i] = '1;    //rs1
+                //         //replace = '1;
+                //         //station[i].rs1_ready = data_in;
+                // end
+
                 if (!station[i].rs2_ready && station[i].use_prs2 && (station[i].rs2_paddr == data_paddr_0)) begin      //if using rs2 check if bus_in is for rs2
                         data_t = data_in_0;
                         idx_rep[i] = '1;
@@ -138,6 +157,22 @@ import rv32i_types::*;
                         //station[i].rs2_data = data_in;
                        // station[i].rs2_ready = data_in;
                 end
+                else if (!station[i].rs2_ready && station[i].use_prs2 && (station[i].rs2_paddr == data_paddr_2)) begin      //if using rs2 check if bus_in is for rs2
+                        data_t = data_in_2;
+                        idx_rep[i] = '1;
+                        rs2_rep[i] = '1;
+                        //replace = '1;
+                        //station[i].rs2_data = data_in;
+                       // station[i].rs2_ready = data_in;
+                end
+                // else if (!station[i].rs2_ready && station[i].use_prs2 && (station[i].rs2_paddr == data_paddr_3)) begin      //if using rs2 check if bus_in is for rs2
+                //         data_t = data_in_3;
+                //         idx_rep[i] = '1;
+                //         rs2_rep[i] = '1;
+                //         //replace = '1;
+                //         //station[i].rs2_data = data_in;
+                //        // station[i].rs2_ready = data_in;
+                // end
             end 
             if (!funct_unit_busy && station[i].valid) begin
                 
@@ -196,6 +231,14 @@ import rv32i_types::*;
             inst_tmp.rs1_data = data_in_1;
             inst_tmp.rs1_ready = '1;
         end
+        else if (station[open_idx].use_rs1 && (station[open_idx].rs1_paddr == data_paddr_2)) begin    //if using rs1 check if bus_in is for rs1
+            inst_tmp.rs1_data = data_in_2;
+            inst_tmp.rs1_ready = '1;
+        end
+        // else if (station[open_idx].use_rs1 && (station[open_idx].rs1_paddr == data_paddr_3)) begin    //if using rs1 check if bus_in is for rs1
+        //     inst_tmp.rs1_data = data_in_3;
+        //     inst_tmp.rs1_ready = '1;
+        // end
 
         if (station[open_idx].use_rs2 && (station[open_idx].rs2_paddr == data_paddr_0)) begin      //if using rs2 check if bus_in is for rs2
             inst_tmp.rs2_data = data_in_0;
@@ -205,6 +248,14 @@ import rv32i_types::*;
             inst_tmp.rs2_data = data_in_1;
             inst_tmp.rs2_ready = '1;
         end
+        else if (station[open_idx].use_rs2 && (station[open_idx].rs2_paddr == data_paddr_2)) begin      //if using rs2 check if bus_in is for rs2
+            inst_tmp.rs2_data = data_in_2;
+            inst_tmp.rs2_ready = '1;
+        end
+        // else if (station[open_idx].use_rs2 && (station[open_idx].rs2_paddr == data_paddr_3)) begin      //if using rs2 check if bus_in is for rs2
+        //     inst_tmp.rs2_data = data_in_3;
+        //     inst_tmp.rs2_ready = '1;
+        // end
 
         if (!full && load_station) begin
             inst_tmp.valid = '1;
@@ -287,6 +338,20 @@ import rv32i_types::*;
                 inst_out.rs2_data <= data_in_1;
                 station[open_idx] <= '0;
             end 
+            else if ((inst_in.use_rs2 && data_paddr_2 == inst_in.rs2_paddr) && (!inst_in.use_rs1) && !funct_unit_busy && load_station) begin
+                full_counter <= full_counter - 1'b1;
+                inst_out <= inst_in;
+                inst_out.rs2_ready <= '1;
+                inst_out.rs2_data <= data_in_2;
+                station[open_idx] <= '0;
+            end 
+            // else if ((inst_in.use_rs2 && data_paddr_3 == inst_in.rs2_paddr) && (!inst_in.use_rs1) && !funct_unit_busy && load_station) begin
+            //     full_counter <= full_counter - 1'b1;
+            //     inst_out <= inst_in;
+            //     inst_out.rs2_ready <= '1;
+            //     inst_out.rs2_data <= data_in_3;
+            //     station[open_idx] <= '0;
+            // end 
             else if ((inst_in.use_rs1 && data_paddr_0 == inst_in.rs1_paddr) && (!inst_in.use_rs2) && !funct_unit_busy && load_station) begin
                 full_counter <= full_counter - 1'b1;
                 inst_out <= inst_in;
@@ -301,7 +366,22 @@ import rv32i_types::*;
                 inst_out.rs1_data <= data_in_1;
                 station[open_idx] <= '0;
             end
+             else if ((inst_in.use_rs1 && data_paddr_2 == inst_in.rs1_paddr) && (!inst_in.use_rs2) && !funct_unit_busy && load_station) begin
+                full_counter <= full_counter - 1'b1;
+                inst_out <= inst_in;
+                inst_out.rs1_ready <= '1;
+                inst_out.rs1_data <= data_in_2;
+                station[open_idx] <= '0;
+            end
+            // else if ((inst_in.use_rs1 && data_paddr_3 == inst_in.rs1_paddr) && (!inst_in.use_rs2) && !funct_unit_busy && load_station) begin
+            //     full_counter <= full_counter - 1'b1;
+            //     inst_out <= inst_in;
+            //     inst_out.rs1_ready <= '1;
+            //     inst_out.rs1_data <= data_in_3;
+            //     station[open_idx] <= '0;
+            // end
             else if (!funct_unit_busy && load_station) begin
+                //this logic needs to be changed to include all inputs
                 if ((inst_in.use_rs1 && data_paddr_0 == inst_in.rs1_paddr) && (inst_in.use_rs2 && data_paddr_0 == inst_in.rs2_paddr)) begin
                     full_counter <= full_counter - 1'b1;
                     inst_out <= inst_in;
@@ -338,6 +418,34 @@ import rv32i_types::*;
                     inst_out.rs1_data <= data_in_1;
                     station[open_idx] <= '0;
                 end
+                else if ((inst_in.use_rs1 && data_paddr_0 == inst_in.rs1_paddr) && (inst_in.use_rs2 && data_paddr_2 == inst_in.rs2_paddr)) begin
+                    full_counter <= full_counter - 1'b1;
+                    inst_out <= inst_in;
+                    inst_out.rs2_ready <= '1;
+                    inst_out.rs2_data <= data_in_2;
+                    inst_out.rs1_ready <= '1;
+                    inst_out.rs1_data <= data_in_0;
+                    station[open_idx] <= '0;
+                end
+                else if ((inst_in.use_rs1 && data_paddr_1 == inst_in.rs1_paddr) && (inst_in.use_rs2 && data_paddr_2 == inst_in.rs2_paddr)) begin
+                    full_counter <= full_counter - 1'b1;
+                    inst_out <= inst_in;
+                    inst_out.rs2_ready <= '1;
+                    inst_out.rs2_data <= data_in_2;
+                    inst_out.rs1_ready <= '1;
+                    inst_out.rs1_data <= data_in_1;
+                    station[open_idx] <= '0;
+                end
+                else if ((inst_in.use_rs1 && data_paddr_2 == inst_in.rs1_paddr) && (inst_in.use_rs2 && data_paddr_2 == inst_in.rs2_paddr)) begin
+                    full_counter <= full_counter - 1'b1;
+                    inst_out <= inst_in;
+                    inst_out.rs2_ready <= '1;
+                    inst_out.rs2_data <= data_in_2;
+                    inst_out.rs1_ready <= '1;
+                    inst_out.rs1_data <= data_in_2;
+                    station[open_idx] <= '0;
+                end
+
             end
             
             

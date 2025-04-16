@@ -10,9 +10,11 @@ import rv32i_types::*;
     input   logic                     rst,
     input   logic                     regf_we_0,
     input   logic                     regf_we_1,
+    input   logic                     regf_we_2,
     input   logic   [WIDTH-1:0]       rd_v_0,
     input   logic   [WIDTH-1:0]       rd_v_1,
-    input   logic   [PTR_SIZE-1:0]    rs1_s, rs2_s, rd_s_0, rd_s_1,
+    input   logic   [WIDTH-1:0]       rd_v_2,
+    input   logic   [PTR_SIZE-1:0]    rs1_s, rs2_s, rd_s_0, rd_s_1, rd_s_2,
     input   logic   [PTR_SIZE-1:0]    commit_rs,
     input   logic                     free_we,
     input   logic   [PTR_SIZE-1:0]    rd_s_free,
@@ -24,12 +26,15 @@ import rv32i_types::*;
 );
 
     prf_t     data [DEPTH];
-    logic     transparent_1_0, transparent_1_1, transparent_2_0, transparent_2_1;
+    logic     transparent_1_0, transparent_1_1, transparent_1_2, transparent_2_0, transparent_2_1, transparent_2_2;
 
     assign transparent_1_0 = regf_we_0 && (rd_s_0 == rs1_s);
     assign transparent_1_1 = regf_we_1 && (rd_s_1 == rs1_s); //  && (rs1_s != 5'd0) help
+    assign transparent_1_2 = regf_we_2 && (rd_s_2 == rs1_s);
     assign transparent_2_0 = regf_we_0 && (rd_s_0 == rs2_s);
     assign transparent_2_1 = regf_we_1 && (rd_s_1 == rs2_s); //  && (rs2_s != 5'd0)
+    assign transparent_2_2 = regf_we_2 && (rd_s_2 == rs2_s);
+    
 
     always_ff @(posedge clk) begin
         if (rst) begin
@@ -48,6 +53,11 @@ import rv32i_types::*;
                 data[rd_s_1].value <= rd_v_1;
             end
 
+            if (regf_we_2) begin // write to PRF     && (rd_s != 5'd0)
+                data[rd_s_2].valid <= '1;
+                data[rd_s_2].value <= rd_v_2;
+            end
+
             if (free_we) begin
                 data[rd_s_free].valid <= '0;
                 data[rd_s_free].value <= '0;
@@ -57,8 +67,8 @@ import rv32i_types::*;
 
     always_ff @(posedge clk) begin
         if (rst) begin
-            prs1_v <= 'x;
-            prs2_v <= 'x;
+            prs1_v <= '0;
+            prs2_v <= '0;
         end 
         else begin // read from PRF
             if (transparent_1_0) begin
@@ -68,6 +78,10 @@ import rv32i_types::*;
             else if (transparent_1_1) begin
                 prs1_v.valid <= '1;
                 prs1_v.value <= rd_v_1;
+            end
+            else if (transparent_1_2) begin
+                prs1_v.valid <= '1;
+                prs1_v.value <= rd_v_2;
             end
             else begin
                 prs1_v <= data[rs1_s];
@@ -79,6 +93,10 @@ import rv32i_types::*;
             else if (transparent_2_1) begin
                 prs2_v.valid <= '1;
                 prs2_v.value <= rd_v_1;
+            end
+            else if (transparent_2_2) begin
+                prs2_v.valid <= '1;
+                prs2_v.value <= rd_v_2;
             end
             else begin
                 prs2_v <= data[rs2_s];

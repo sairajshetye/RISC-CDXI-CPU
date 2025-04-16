@@ -6,7 +6,7 @@ import rv32i_types::*;
     //input logic [31:0] rs2_v,
     //input logic [31:0] ex_mem_rd_v,
     //input logic [31:0] mem_wb_rd_v,
-    input  logic pre_wb_int_stall,
+    //input  logic pre_wb_int_stall,
     output logic funct_unit_busy,
     output dp_is_stage_reg_t ex_mem
     //input mem_wb_stage_reg_t mem_wb, wb
@@ -65,7 +65,7 @@ import rv32i_types::*;
             alu_op_srl: aluout = au >>  bu[4:0]; // changed from 3:0 made 4:0
             alu_op_or : aluout = au |   bu;
             alu_op_and: aluout = au &   bu;
-            default   : aluout = 'x;
+            default   : aluout = '0;
         endcase
     end
 
@@ -77,20 +77,20 @@ import rv32i_types::*;
             branch_f3_bge : br_en = (as >=  bs); // changed added =
             branch_f3_bltu: br_en = (au <  bu);
             branch_f3_bgeu: br_en = (au >=  bu); // changed added =
-            default       : br_en = 1'bx;
+            default       : br_en = 1'b0;
         endcase
     end
     
     always_comb
     begin
-        a          = 'x;
-        b          = 'x;
-        aluop      = 'x;
-        cmpop      = 'x;
-        dmem_addr  = 'x;
+        a          = '0;
+        b          = '0;
+        aluop      = '0;
+        cmpop      = '0;
+        dmem_addr  = '0;
         dmem_rmask = '0;
         dmem_wmask = '0;
-        dmem_wdata = 'x;
+        dmem_wdata = '0;
         dreq       = '0;
         dreq_load  = '0;
         rs2_s_real = '0;
@@ -253,7 +253,7 @@ import rv32i_types::*;
         // ex_mem.useless = id_ex.useless;
 
 
-        funct_unit_busy = pre_wb_int_stall;   //CHANGE
+        funct_unit_busy = '0;   //CHANGE
 
         ex_mem.rfvi_monitor_vals = id_ex.rfvi_monitor_vals;
         ex_mem.rfvi_monitor_vals.monitor_rs1_rdata = use_rs1 ? id_ex.rs1_data : '0;
