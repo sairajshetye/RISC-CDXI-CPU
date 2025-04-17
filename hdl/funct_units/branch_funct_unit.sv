@@ -7,8 +7,7 @@ import rv32i_types::*;
     //input logic [31:0] ex_mem_rd_v,
     //input logic [31:0] mem_wb_rd_v,
     output logic funct_unit_busy,
-    output dp_is_stage_reg_t ex_mem,
-    output logic flush
+    output dp_is_stage_reg_t ex_mem
     //input mem_wb_stage_reg_t mem_wb, wb
 );
     
@@ -38,13 +37,14 @@ import rv32i_types::*;
     logic   [31:0]  dmem_wdata;
     logic           dreq;
     logic           dreq_load;
-    logic           branch_taken;
+    branch_t        branch_taken;
 
     logic signed   [31:0] as;
     logic signed   [31:0] bs;
     logic unsigned [31:0] au;
     logic unsigned [31:0] bu;
     logic [31:0] rs1_v, rs2_v;
+    logic flush;
 
     assign as =   signed'(a);
     assign bs =   signed'(b);
@@ -102,7 +102,7 @@ import rv32i_types::*;
         use_rs2    = '0;
         rs1_temp   = rs1_v;
         pc_next    = id_ex.pc_next;
-        branch_taken = '0;
+        branch_taken = not_taken;
         flush = '0;
         unique case (id_ex.opcode)
         /*
@@ -126,7 +126,8 @@ import rv32i_types::*;
                 aluop = '0;
                 cmpop = '0;
                 pc_next = id_ex.pc + id_ex.j_imm;
-                branch_taken = '1;
+                branch_taken = taken;
+                flush = '1;     //will change based on predicted br taken or not
             end
             op_b_jalr : begin
                 // NOT NEEDED YET
@@ -139,7 +140,8 @@ import rv32i_types::*;
                 cmpop = '0;
                 pc_next = (rs1_v + id_ex.i_imm) & 32'hfffffffe;
                 use_rs1 = '1;
-                branch_taken = '1;
+                branch_taken = taken;
+                flush = '1;     //will change based on predicted br taken or not, tho for jmp & jalr should always predict taken
             end
             op_b_br   : begin
                 // NOT NEEDED YET - CP3
@@ -152,14 +154,17 @@ import rv32i_types::*;
                 cmpop = id_ex.funct3;
                 if (br_en) begin
                     pc_next = id_ex.pc + id_ex.b_imm;
-                    branch_taken = '1;
+                    branch_taken = taken;
+                    flush = '1;     //will change based on predicted br taken or not
                 end else begin
                     pc_next = id_ex.pc_next;
-                    branch_taken = '0;
+                    branch_taken = not_taken;
+                    flush = '0;    
                 end
                 use_rs1 = '1;
                 use_rs2 = '1;
                 rs2_s_real = id_ex.rs2_s;
+                //flush = '1;     //will change based on predicted
             end
         
             default   : begin
@@ -215,7 +220,8 @@ import rv32i_types::*;
        // ex_mem.dreq = dreq;
        // ex_mem.dreq_load = dreq_load;
         ex_mem.use_rd = id_ex.use_rd;
-        //ex_mem.branch_taken = branch_taken;
+        ex_mem.branch_taken = branch_taken;
+
         ex_mem.use_prs1 = id_ex.use_prs1;
         ex_mem.rs1_paddr = id_ex.rs1_paddr;
         ex_mem.rs1_ready = id_ex.rs1_ready;
@@ -241,6 +247,7 @@ import rv32i_types::*;
         ex_mem.rfvi_monitor_vals.monitor_rs2_rdata = use_rs2 ? id_ex.rs2_data : '0;
         ex_mem.rfvi_monitor_vals.monitor_regf_we = regf_we;
         ex_mem.rfvi_monitor_vals.monitor_rd_wdata = rd_v;
+        ex_mem.rfvi_monitor_vals.monitor_pc_wdata = pc_next;
     end
     
 endmodule : branch_unit

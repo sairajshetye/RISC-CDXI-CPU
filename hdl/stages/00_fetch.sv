@@ -4,6 +4,8 @@ import rv32i_types::*;
     input   logic           clk,
     input   logic           rst,
     input   logic           iq_stall,
+    input   logic           flush,
+    input   logic   [63:0]  order_br,
     // input   logic           dq_stall,
     output  logic           enq,
     // output  logic           deq,
@@ -29,6 +31,8 @@ output logic done
         if (rst) begin
             order_reg <= '0;
             done <= '0;
+        end else if (flush) begin
+            order_reg <= order_br + 1'b1;
         end else if (imem_resp && !iq_stall) begin
             order_reg <= order_reg + 1;
             if (d) begin
