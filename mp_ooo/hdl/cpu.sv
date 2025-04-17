@@ -29,6 +29,7 @@ import rv32i_types::*;
     dp_is_stage_reg_t int_to_wb, mult_to_wb, wb_reg_next, wb_int_out, wb_mult_out, wb_mem_out;
 
 
+
     // WRITE BACKS
     dp_is_stage_reg_t   wb_inst_out         [3];
     logic               prf_we              [3]; 
@@ -63,7 +64,7 @@ import rv32i_types::*;
     logic [4:0] rat_rs1, rat_rs2;
 
     arf_reg_t ars1_v, ars2_v;
-    prf_t     prs1_v, prs2_v;
+    prf_t     prs1_v, prs2_v, prs1_v_comb, prs2_v_comb;
 
     logic       rs1_renamed, rs2_renamed;
     logic       rename_we;
@@ -133,8 +134,8 @@ import rv32i_types::*;
 
     assign rs1_s = ra_dp_reg_next.rs1_s;
     assign rs2_s = ra_dp_reg_next.rs2_s;
-    assign prs1_s = ra_dp_reg_next.rs1_paddr;
-    assign prs2_s = ra_dp_reg_next.rs2_paddr;
+    assign prs1_s = ra_dp_inst_out.rs1_paddr;
+    assign prs2_s = ra_dp_inst_out.rs2_paddr;
 
     //assign wb_int_enq = int_to_wb.valid && !funct_int_busy;
     //assign wb_mult_enq = mult_to_wb.valid && funct_mult_done;
@@ -314,7 +315,9 @@ import rv32i_types::*;
 
     );
 
-    r_station station_mult(
+    r_station #(
+        .DEPTH      (4)
+    ) station_mult(
         .clk(clk), // input
         .rst(rst), // input
         .funct_unit_busy(funct_mult_busy), // input
@@ -334,7 +337,9 @@ import rv32i_types::*;
         //.data_in_3(wb_data_out[3])
     );
 
-    r_station station_int(
+    r_station #(
+        .DEPTH      (4)
+    ) station_int(
         .clk(clk), // input
         .rst(rst), // input
         .funct_unit_busy(funct_int_busy), // input
@@ -354,7 +359,9 @@ import rv32i_types::*;
         //.data_in_3(wb_data_out[3])
     );
 
-    r_station station_br(
+    r_station #(
+        .DEPTH      (4)
+    ) station_br(
         .clk(clk), // input
         .rst(rst), // input
         .funct_unit_busy(funct_br_busy), // input
@@ -566,6 +573,8 @@ import rv32i_types::*;
         .commit_rs(p_addr_ret),
         .prs1_v(prs1_v), 
         .prs2_v(prs2_v),
+        .prs1_v_comb(prs1_v_comb),
+        .prs2_v_comb(prs2_v_comb),
         .free_we(fl_enq),
         .rd_s_free(fl_data_in),
         .commit_prs(commit_prs)
@@ -577,11 +586,11 @@ import rv32i_types::*;
         // rs1, rs2
 
         // check both arf and prf -> which one
-        if (ra_dp_inst_out.use_prs1 && prs1_v.valid) begin // using phys address and already there
-            rs1_rdata = prs1_v.value;
+        if (ra_dp_inst_out.use_prs1 && prs1_v_comb.valid) begin // using phys address and already there
+            rs1_rdata = prs1_v_comb.value;
             rs1_ready = '1;
         end
-        else if (ra_dp_inst_out.use_prs1 && !prs1_v.valid) begin // using phys address and not there
+        else if (ra_dp_inst_out.use_prs1 && !prs1_v_comb.valid) begin // using phys address and not there
             rs1_rdata = '0;
             rs1_ready = '0;
         end
@@ -599,11 +608,11 @@ import rv32i_types::*;
             rs1_ready = '0;
         end
 
-        if (ra_dp_inst_out.use_prs2 && prs2_v.valid) begin // using phys address and already there
-            rs2_rdata = prs2_v.value;
+        if (ra_dp_inst_out.use_prs2 && prs2_v_comb.valid) begin // using phys address and already there
+            rs2_rdata = prs2_v_comb.value;
             rs2_ready = '1;
         end
-        else if (ra_dp_inst_out.use_prs2 && !prs2_v.valid) begin // using phys address and not there
+        else if (ra_dp_inst_out.use_prs2 && !prs2_v_comb.valid) begin // using phys address and not there
             rs2_rdata = '0;
             rs2_ready = '0;
         end
