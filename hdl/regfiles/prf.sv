@@ -18,7 +18,7 @@ import rv32i_types::*;
     input   logic   [PTR_SIZE-1:0]    commit_rs,
     input   logic                     free_we,
     input   logic   [PTR_SIZE-1:0]    rd_s_free,
-    output  prf_t                     prs1_v, prs2_v, commit_prs
+    output  prf_t                     prs1_v, prs2_v, commit_prs, prs1_v_comb, prs2_v_comb
     //input   logic           load_stall,
     //input   logic           global_stall
     //input   logic           transparent_1, transparent_2
@@ -65,41 +65,41 @@ import rv32i_types::*;
         end
     end
 
-    always_ff @(posedge clk) begin
+    always_comb begin
         if (rst) begin
-            prs1_v <= '0;
-            prs2_v <= '0;
+            prs1_v_comb = '0;
+            prs2_v_comb = '0;
         end 
         else begin // read from PRF
             if (transparent_1_0) begin
-                prs1_v.valid <= '1;
-                prs1_v.value <= rd_v_0;
+                prs1_v_comb.valid = '1;
+                prs1_v_comb.value = rd_v_0;
             end
             else if (transparent_1_1) begin
-                prs1_v.valid <= '1;
-                prs1_v.value <= rd_v_1;
+                prs1_v_comb.valid = '1;
+                prs1_v_comb.value = rd_v_1;
             end
             else if (transparent_1_2) begin
-                prs1_v.valid <= '1;
-                prs1_v.value <= rd_v_2;
+                prs1_v_comb.valid = '1;
+                prs1_v_comb.value = rd_v_2;
             end
             else begin
-                prs1_v <= data[rs1_s];
+                prs1_v_comb = data[rs1_s];
             end
             if (transparent_2_0) begin
-                prs2_v.valid <= '1;
-                prs2_v.value <= rd_v_0;
+                prs2_v_comb.valid = '1;
+                prs2_v_comb.value = rd_v_0;
             end
             else if (transparent_2_1) begin
-                prs2_v.valid <= '1;
-                prs2_v.value <= rd_v_1;
+                prs2_v_comb.valid = '1;
+                prs2_v_comb.value = rd_v_1;
             end
             else if (transparent_2_2) begin
-                prs2_v.valid <= '1;
-                prs2_v.value <= rd_v_2;
+                prs2_v_comb.valid = '1;
+                prs2_v_comb.value = rd_v_2;
             end
             else begin
-                prs2_v <= data[rs2_s];
+                prs2_v_comb = data[rs2_s];
             end
         end
         // else if (!global_stall & !load_stall) begin

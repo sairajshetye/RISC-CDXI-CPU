@@ -65,7 +65,7 @@ import rv32i_types::*;
 
         really_full = '1;
         for (integer i = 0; i < DEPTH; i++) begin
-            if ((4'(unsigned'(i))==open_idx) && load_station) begin
+            if ((PTR_SIZE'(unsigned'(i))==open_idx) && load_station) begin
                 really_full &= '1;
             end
             else begin
@@ -180,27 +180,27 @@ import rv32i_types::*;
                     
                     if (station[i].order <= oldest_inst_rob_idx) begin
                         oldest_inst_rob_idx = station[i].order;
-                        oldest_inst_station_idx = 4'(unsigned'(i));
+                        oldest_inst_station_idx = PTR_SIZE'(unsigned'(i));
                         remove = '1;
                     end
                 end
                 else if ((station[i].use_rs1 && station[i].rs1_ready) && !(station[i].use_rs2)) begin   //only use rs1 & rs1 ready
                     if (station[i].order <= oldest_inst_rob_idx) begin
                         oldest_inst_rob_idx = station[i].order;
-                        oldest_inst_station_idx = 4'(unsigned'(i));
+                        oldest_inst_station_idx = PTR_SIZE'(unsigned'(i));
                         remove = '1;
                     end
                 end 
                 else if ((station[i].use_rs2 && station[i].rs2_ready) && !(station[i].use_rs1)) begin   //only use rs2 & rs2 ready
                     if (station[i].order <= oldest_inst_rob_idx) begin
                         oldest_inst_rob_idx = station[i].order;
-                        oldest_inst_station_idx = 4'(unsigned'(i));
+                        oldest_inst_station_idx = PTR_SIZE'(unsigned'(i));
                         remove = '1;
                     end
                 end else if ((station[i].use_rd && !(station[i].use_rs1) && !(station[i].use_rs2))) begin
                     if (station[i].order <= oldest_inst_rob_idx) begin
                         oldest_inst_rob_idx = station[i].order;
-                        oldest_inst_station_idx = 4'(unsigned'(i));
+                        oldest_inst_station_idx = PTR_SIZE'(unsigned'(i));
                         remove = '1;
                     end
                 end
@@ -215,7 +215,7 @@ import rv32i_types::*;
         open_idx = '0;
         for (integer i = 0; i < DEPTH; i++) begin
             if (!station[i].valid && !found_idx) begin
-                open_idx = 4'(unsigned'(i));
+                open_idx = PTR_SIZE'(unsigned'(i));
                 found_idx = '1;
             end
         end

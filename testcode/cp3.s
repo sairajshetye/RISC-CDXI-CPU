@@ -23,7 +23,12 @@ auipc x5, 400
 
 
 #JAL
-jal x7, mixed # need to have offset label, doesn't work otherwise
+
+# need to have offset label, doesn't work otherwise
+
+jal x7, mixed 
+jal x5, halt
+
 
 #JALR
 
