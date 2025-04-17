@@ -26,7 +26,7 @@ import rv32i_types::*;
     id_ex_stage_reg_t id_ex_reg_next, id_ex_inst_out;
     ra_dp_stage_reg_t ra_dp_reg_next, ra_dp_inst_out;
     dp_is_stage_reg_t dp_is_inst_out, dp_is_out_mult, dp_is_out_int;
-    dp_is_stage_reg_t int_to_wb, mult_to_wb, wb_reg_next, wb_int_out, wb_mult_out;
+    dp_is_stage_reg_t wb_reg_next, wb_int_out, wb_mult_out;
 
 
     // WRITE BACKS
@@ -70,6 +70,8 @@ import rv32i_types::*;
     logic       rs1_ready, rs2_ready;
     
     logic           rob_overflow;
+
+    //logic       dont_care_check;
    
 
 
@@ -132,8 +134,10 @@ import rv32i_types::*;
     assign prs1_s = ra_dp_reg_next.rs1_paddr;
     assign prs2_s = ra_dp_reg_next.rs2_paddr;
 
-    assign wb_int_enq = int_to_wb.valid && !funct_int_busy;
-    assign wb_mult_enq = mult_to_wb.valid && funct_mult_done;
+    assign wb_int_enq = wb_inst_out[0].valid && !funct_int_busy;
+    assign wb_mult_enq = wb_inst_out[1].valid && funct_mult_done;
+
+    //assign dont_care_check = (cache_rdata_32 === 32'bx); 
     
 
     always_comb begin
@@ -354,51 +358,51 @@ import rv32i_types::*;
         .clk(clk),
         .rst(!rst),
         .rs_out(dp_is_out_mult),
-        .pre_wb_mult_stall(mult_wb_stall),
+        .pre_wb_mult_stall('0),
         //.rs1_v(),
         //.rs2_v(),
         .funct_unit_busy(funct_mult_busy),
-        .out_inst(mult_to_wb),
+        .out_inst(wb_inst_out[1]),
         .funct_mult_done(funct_mult_done)
     );
 
     integer_unit funct_int(
         .id_ex(dp_is_out_int),
-        .pre_wb_int_stall(int_wb_stall),
+        .pre_wb_int_stall('0),
         //.rs1_v(),
         //.rs2_v(),
         .funct_unit_busy(funct_int_busy),
-        .ex_mem(int_to_wb)
+        .ex_mem(wb_inst_out[0])
     );
 
-    pre_wb_q #(
-        .DEPTH      (8)
-    ) int_fu_q (
-        .clk(clk),
-        .rst(rst),
-        .enq(wb_int_enq),
-        .ready_deq(wb_int_deq),
-        .inst_in_wb(int_to_wb),
-        .inst_out_wb(wb_inst_out[0]),
-        .valid_rdata(int_valid_rdata),
-        .wb_stall(int_wb_stall)
-    );
-    pre_wb_q #(
-        .DEPTH      (8)
-    ) mult_fu_q (
-        .clk(clk),
-        .rst(rst),
-        .enq(wb_mult_enq),
-        .ready_deq(wb_mult_deq),
-        .inst_in_wb(mult_to_wb),
-        .inst_out_wb(wb_inst_out[1]),
-        .valid_rdata(mult_valid_rdata),
-        .wb_stall(mult_wb_stall)
-    );
+    // pre_wb_q #(
+    //     .DEPTH      (8)
+    // ) int_fu_q (
+    //     .clk(clk),
+    //     .rst(rst),
+    //     .enq(wb_int_enq),
+    //     .ready_deq(wb_int_deq),
+    //     .inst_in_wb(int_to_wb),
+    //     .inst_out_wb(wb_inst_out[0]),
+    //     .valid_rdata(int_valid_rdata),
+    //     .wb_stall(int_wb_stall)
+    // );
+    // pre_wb_q #(
+    //     .DEPTH      (8)
+    // ) mult_fu_q (
+    //     .clk(clk),
+    //     .rst(rst),
+    //     .enq(wb_mult_enq),
+    //     .ready_deq(wb_mult_deq),
+    //     .inst_in_wb(mult_to_wb),
+    //     .inst_out_wb(wb_inst_out[1]),
+    //     .valid_rdata(mult_valid_rdata),
+    //     .wb_stall(mult_wb_stall)
+    // );
 
-    always_comb begin
-        wb_int_deq = '1;
-        wb_mult_deq = '1;
+    //always_comb begin
+      //  wb_int_deq = '1;
+        //wb_mult_deq = '1;
 
         // if (wb_int_enq && wb_mult_enq) begin // both same
         //     if (int_to_wb.rob_idx < mult_to_wb.rob_idx) begin
@@ -441,7 +445,7 @@ import rv32i_types::*;
         // else begin
         //     wb_inst_out = '0;
        // end
-    end
+    //end
 
     // pre_wb_q #(
     //     .DEPTH      (8)

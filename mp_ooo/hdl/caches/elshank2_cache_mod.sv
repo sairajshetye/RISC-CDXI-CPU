@@ -245,7 +245,7 @@ module cache_mod (
 
                     // CHECK TO SEE IF LINE BUFFER AND UFP ADDR MATCH (TAG TOO?) IF SO, SEND RESP AND BACK TO IDLE
                     // i use ufp_addr directly for tag and set since tag/set are a clock cycle late in register
-                    if (lb_data_reg != '0 && lb_addr_reg != '0 && lb_tag == ufp_addr_reg2[31:9] && lb_set == ufp_addr_reg2[8:5]) begin
+                    if (lb_tag == ufp_addr_reg2[31:9] && lb_set == ufp_addr_reg2[8:5]) begin
                         ufp_rdata = lb_data_reg;
                         ufp_resp = '1;
                         state_next = idle;
