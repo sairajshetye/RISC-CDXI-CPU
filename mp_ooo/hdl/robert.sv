@@ -68,7 +68,7 @@ import rv32i_types::*;
 
         alloc_stall = full;
         decode_stall = full_next;
-        valid_rdata = ~empty;
+        //valid_rdata = ~empty;
 
         rob_tail_idx = tail[PTR_SIZE-1:0]; // in rename and allocate, set inst rob idx field to this tail
         rob_overflow = tail[PTR_SIZE];
@@ -185,6 +185,7 @@ import rv32i_types::*;
             ard_s <= '0;
             p_addr_ret <= '0;
             flush <= '0;
+            valid_rdata <= '0;
         end
         else if (empty) begin
             rob_out <= '0;
@@ -192,24 +193,28 @@ import rv32i_types::*;
             ard_s <= '0;
             p_addr_ret <= '0;
             flush <= '0;
+            valid_rdata <= '0;
         end else begin
             if (rob[head[PTR_SIZE-1:0]].status == done) begin
                 aregf_we <= '1;
                 ard_s <= rob[head[PTR_SIZE-1:0]].rd_addr;
                 p_addr_ret <= rob[head[PTR_SIZE-1:0]].rd_paddr;
+                valid_rdata <= rob[head[PTR_SIZE-1:0]].valid;
             end
             else begin
                 aregf_we <= '0;
                 ard_s <= '0;
                 p_addr_ret <= '0;
+                valid_rdata <= '0;
             end
             if (rob[head[PTR_SIZE-1:0]].br_pred != rob[head[PTR_SIZE-1:0]].br_result) begin
-
                 flush <= '1;
+                
             end else begin
                 flush <= '0; //???
             end
             rob_out <= rob[head[PTR_SIZE-1:0]];
+            
         end
     end
 
