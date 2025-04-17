@@ -56,11 +56,11 @@ output logic done
 
             imem_addr = pc_next;
 
-            if (!done && !iq_stall) begin
+            //if (!done && !iq_stall) begin
                 imem_rmask = '1;
-            end else begin
-                imem_rmask = '0;
-            end
+            //end else begin
+            //    imem_rmask = '0;
+            //end
 
             enq = '0;
 
@@ -81,9 +81,9 @@ output logic done
 
             if (imem_resp) begin
                 if_id.rfvi_monitor_vals.monitor_inst = imem_rdata;
-                if (imem_rdata == 'hf0002013) begin
-                    d = '1;
-                end
+                // if (imem_rdata == 'hf0002013) begin
+                //     d = '1;
+                // end
                 if_id.rfvi_monitor_vals.monitor_valid = '1;
 
                 if_id.inst = imem_rdata;
