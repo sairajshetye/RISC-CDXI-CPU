@@ -29,6 +29,8 @@ import rv32i_types::*;
     logic   [4:0]   rs1_s;
     logic   [4:0]   rs2_s;
 
+    logic           valid_check;
+
     assign funct3 = if_id.inst[14:12];
     assign funct7 = if_id.inst[31:25];
     assign opcode = if_id.inst[6:0];
@@ -51,36 +53,61 @@ import rv32i_types::*;
                 use_rs1 = '1;
                 use_rs2 = '0;
                 use_rd = '1;
+                valid_check = '1;
             end
             7'b0110011: begin // b_reg
                 use_rs1 = '1;
                 use_rs2 = '1;
                 use_rd = '1;
+                valid_check = '1;
             end
             7'b0000011: begin // b_load
                 use_rs1 = '1;
                 use_rs2 = '0;
                 use_rd = '1;
+                valid_check = '1;
             end
             7'b0100011: begin // b_store
                 use_rs1 = '1;
                 use_rs2 = '1;
                 use_rd = '0;
+                valid_check = '1;
             end
             7'b1100011 : begin // b_br
                 use_rs1 = '1;
                 use_rs2 = '1;
                 use_rd = '0;
+                valid_check = '1;
             end
             7'b1100111: begin // b_jalr
                 use_rs1 = '1;
                 use_rs2 = '0;
                 use_rd = '1;
+                valid_check = '1;
+            end
+            7'b1101111: begin // b_jal
+                use_rs1 = '0;
+                use_rs2 = '0;
+                use_rd = '1;
+                valid_check = '1;
+            end
+            7'b0010111: begin // b_auipc
+                use_rs1 = '0;
+                use_rs2 = '0;
+                use_rd = '1;
+                valid_check = '1;
+            end
+            7'b0110111: begin // b_lui
+                use_rs1 = '0;
+                use_rs2 = '0;
+                use_rd = '1;
+                valid_check = '1;
             end
             default: begin
                 use_rs1 = '0;
                 use_rs2 = '0;
                 use_rd = '1; // default will use rd
+                valid_check = '0;
             end
         endcase
 
@@ -96,7 +123,7 @@ import rv32i_types::*;
         id_ex.pc_next = if_id.pc_next;
         id_ex.order = if_id.order;
         //id_ex.alu_m1_sel = '0; //if_id.alu_m1_sel;
-        id_ex.valid = if_id.valid;
+        id_ex.valid = valid_check;//if_id.valid;
         id_ex.stall = if_id.fetch_stall;
 
         id_ex.funct3 = funct3;
