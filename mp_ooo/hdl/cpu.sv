@@ -165,7 +165,7 @@ import rv32i_types::*;
             pc_next = 32'hAAAAA000;
         end else if (flush) begin
             pc_next = rob_out.pc_next;
-        end else if (!iq_stall && !if_id_reg_next.fetch_stall && !done_stall) begin // && !if_id_reg_next.fetch_stall
+        end else if (!iq_stall && !if_id_reg_next.fetch_stall) begin // && !if_id_reg_next.fetch_stall
             pc_next = pc + 4;
         end else begin
             pc_next = pc;
