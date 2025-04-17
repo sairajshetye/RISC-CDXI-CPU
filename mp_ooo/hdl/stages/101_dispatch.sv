@@ -4,16 +4,16 @@ import rv32i_types::*;
     input ra_dp_stage_reg_t ra_dp, // comes from decode queue
 
     // stalls ?
-    input  logic            dispatch_stall_mult,
-    input  logic            dispatch_stall_int,
+    // input  logic            dispatch_stall_mult,
+    // input  logic            dispatch_stall_int,
+    // input logic             dispatch_stall_br,
     // input logic          dispatch_stall_mem,
-    // input logic          dispatch_stall_branch,
 
     // output enq/load to RS
     output logic            load_station_mult,
     output logic            load_station_int,
+    output logic            load_station_br,
     // output logic         load_station_mem,
-    // output logic         load_station_branch,
 
     input logic [31:0]   rs1_rdata,
     input logic [31:0]   rs2_rdata,
@@ -24,10 +24,13 @@ import rv32i_types::*;
     input logic [31:0]   data_in_0,
     input logic [6:0]    data_paddr_1,
     input logic [31:0]   data_in_1,
+    //input logic [6:0]    data_paddr_2,
+    //input logic [31:0]   data_in_2,
 
-    output dp_is_stage_reg_t dp_is,
-    output logic             valid_output_mult,
-    output logic             valid_output_int
+    output dp_is_stage_reg_t dp_is
+    // output logic             valid_output_mult,
+    // output logic             valid_output_int,
+    // output logic             valid_output_br
 );
 
 
@@ -97,6 +100,10 @@ import rv32i_types::*;
             dp_is.rs1_ready = '1;
             dp_is.rs1_data = data_in_1;
         end
+        // else if (!dp_is.rs1_ready && ra_dp.use_rs1 && ra_dp.rs1_paddr == data_paddr_2) begin
+        //     dp_is.rs1_ready = '1;
+        //     dp_is.rs1_data = data_in_2;
+        // end
 
         if (!dp_is.rs2_ready && ra_dp.use_rs2 && ra_dp.rs2_paddr == data_paddr_0) begin
             dp_is.rs2_ready = '1;
@@ -106,19 +113,29 @@ import rv32i_types::*;
             dp_is.rs2_ready = '1;
             dp_is.rs2_data = data_in_1;
         end
+        // else if (!dp_is.rs2_ready && ra_dp.use_rs2 && ra_dp.rs2_paddr == data_paddr_2) begin
+        //     dp_is.rs2_ready = '1;
+        //     dp_is.rs2_data = data_in_2;
+        // end
         
  
-        if (dispatch_stall_mult) begin 
-            valid_output_mult = '0;
-        end else begin
-            valid_output_mult = '1;
-        end
+        // if (dispatch_stall_mult) begin 
+        //     valid_output_mult = '0;
+        // end else begin
+        //     valid_output_mult = '1;
+        // end
 
-        if (dispatch_stall_int) begin 
-            valid_output_int = '0;
-        end else begin
-            valid_output_int = '1;
-        end
+        // if (dispatch_stall_int) begin 
+        //     valid_output_int = '0;
+        // end else begin
+        //     valid_output_int = '1;
+        // end
+
+        // if (dispatch_stall_br) begin 
+        //     valid_output_br = '0;
+        // end else begin
+        //     valid_output_br = '1;
+        // end
 
         dp_is.rfvi_monitor_vals = ra_dp.rfvi_monitor_vals;
 
@@ -128,6 +145,7 @@ import rv32i_types::*;
     always_comb begin
         load_station_mult = '0;
         load_station_int = '0;
+        load_station_br = '0;
         unique case (ra_dp.opcode)
                 op_b_lui    : begin
                     load_station_mult = '0;

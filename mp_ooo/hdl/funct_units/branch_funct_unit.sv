@@ -1,13 +1,13 @@
 module banch_unit
 import rv32i_types::*;
 (
-    input id_ex_stage_reg_t id_ex,
-    input logic [31:0] rs1_v,
-    input logic [31:0] rs2_v,
+    input dp_is_stage_reg_t id_ex,
+    //input logic [31:0] rs1_v,
+    //input logic [31:0] rs2_v,
     //input logic [31:0] ex_mem_rd_v,
     //input logic [31:0] mem_wb_rd_v,
     output logic funct_unit_busy,
-    output ex_mem_stage_reg_t ex_mem
+    output dp_is_stage_reg_t ex_mem
     //input mem_wb_stage_reg_t mem_wb, wb
 );
     
@@ -44,10 +44,28 @@ import rv32i_types::*;
     logic unsigned [31:0] au;
     logic unsigned [31:0] bu;
 
+    logic [31:0] rs1_v, rs2_v;
+
     assign as =   signed'(a);
     assign bs =   signed'(b);
     assign au = unsigned'(a);
     assign bu = unsigned'(b);
+    assign rs1_v = id_ex.rs1_data;
+    assign rs2_v = id_ex.rs2_data;
+
+    always_comb begin
+        unique case (aluop)
+            alu_op_add: aluout = au +   bu;
+            alu_op_sll: aluout = au <<  bu[4:0]; // changed from 3:0 made 4:0
+            alu_op_sra: aluout = unsigned'(as >>> bu[4:0]); // changed from 3:0 made 4:0
+            alu_op_sub: aluout = au -   bu;
+            alu_op_xor: aluout = au ^   bu;
+            alu_op_srl: aluout = au >>  bu[4:0]; // changed from 3:0 made 4:0
+            alu_op_or : aluout = au |   bu;
+            alu_op_and: aluout = au &   bu;
+            default   : aluout = 'x;
+        endcase
+    end
 
     // branch stuff, dont need for this checkpoint, will be its own FU
     always_comb begin
@@ -143,7 +161,7 @@ import rv32i_types::*;
         
             default   : begin
                 regf_we = 1'b0;
-                rd_v = id_ex.rd_v;
+                rd_v = id_ex.rd_data;
                 a = '0;
                 b = '0;
                 aluop = '0;
@@ -160,11 +178,11 @@ import rv32i_types::*;
 
     always_comb
     begin
-        ex_mem.inst = id_ex.inst;
+       ex_mem.inst = id_ex.inst;
         ex_mem.pc = id_ex.pc;
         ex_mem.pc_next = pc_next;//id_ex.pc_next;
         ex_mem.order = id_ex.order;
-        ex_mem.alu_m1_sel = id_ex.alu_m1_sel;
+        //ex_mem.alu_m1_sel = id_ex.alu_m1_sel;
         ex_mem.valid = id_ex.valid;
         ex_mem.stall = id_ex.stall;
 
@@ -179,21 +197,48 @@ import rv32i_types::*;
         ex_mem.rs1_s = use_rs1 ? id_ex.rs1_s : '0; // CHANGE THIS!!! - store still uses it but cannot use rs1
         ex_mem.rs2_s = rs2_s_real;
         ex_mem.rd_s = rd_s_real;
-        ex_mem.rs1_v = use_rs1 ? rs1_v : '0; // reg file or forwarded
+        ex_mem.rs1_data = use_rs1 ? id_ex.rs1_data : '0; // reg file or forwarded
         ex_mem.use_rs1 = use_rs1;
-        ex_mem.rs2_v = use_rs2 ? rs2_v : '0; // reg file or forwarded
+        ex_mem.rs2_data = use_rs2 ? id_ex.rs2_data : '0; // reg file or forwarded
         ex_mem.use_rs2 = use_rs2;
-        ex_mem.rd_v = rd_v; // new
-        ex_mem.regf_we = regf_we; // new
-        ex_mem.dmem_addr = dmem_addr;
-        ex_mem.dmem_addr_saved = dmem_addr_saved;
-        ex_mem.dmem_rmask = dmem_rmask;
-        ex_mem.dmem_wmask = dmem_wmask;
-        ex_mem.dmem_wdata = dmem_wdata;
-        ex_mem.dreq = dreq;
-        ex_mem.dreq_load = dreq_load;
+        ex_mem.rd_data = rd_v; // new
+        ex_mem.regf_we = regf_we; // new -> phys
+        ex_mem.is_store = '0; // NO STORES IN THIS ONE
+        //ex_mem.dmem_addr = dmem_addr;
+        //ex_mem.dmem_addr_saved = dmem_addr_saved;
+        //ex_mem.dmem_rmask = dmem_rmask;
+        //ex_mem.dmem_wmask = dmem_wmask;
+        //ex_mem.dmem_wdata = dmem_wdata;
+       // ex_mem.dreq = dreq;
+       // ex_mem.dreq_load = dreq_load;
         ex_mem.use_rd = id_ex.use_rd;
-        ex_mem.branch_taken = branch_taken;
+        //ex_mem.branch_taken = branch_taken;
+        ex_mem.use_prs1 = id_ex.use_prs1;
+        ex_mem.rs1_paddr = id_ex.rs1_paddr;
+        ex_mem.rs1_ready = id_ex.rs1_ready;
+
+        ex_mem.use_prs2 = id_ex.use_prs2;
+        ex_mem.rs2_paddr = id_ex.rs2_paddr;
+        ex_mem.rs2_ready = id_ex.rs2_ready;
+
+        ex_mem.rd_paddr = id_ex.rd_paddr;
+
+
+        ex_mem.rob_idx = id_ex.rob_idx;
+
+        ex_mem.rob_overflow = id_ex.rob_overflow;
+
+        // ex_mem.useless = id_ex.useless;
+
+
+        funct_unit_busy = '0; //pre_wb_int_stall;   //CHANGE
+
+        ex_mem.rfvi_monitor_vals = id_ex.rfvi_monitor_vals;
+        ex_mem.rfvi_monitor_vals.monitor_rs1_rdata = use_rs1 ? id_ex.rs1_data : '0;
+        ex_mem.rfvi_monitor_vals.monitor_rs2_rdata = use_rs2 ? id_ex.rs2_data : '0;
+        ex_mem.rfvi_monitor_vals.monitor_regf_we = regf_we;
+        ex_mem.rfvi_monitor_vals.monitor_rd_wdata = rd_v;
+
     end
     
 endmodule : banch_unit

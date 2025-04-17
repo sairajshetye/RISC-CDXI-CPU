@@ -20,24 +20,24 @@ import rv32i_types::*;
 
     logic iq_enq, dq_enq, rq_enq, fl_enq, rob_enq, wb_int_enq, wb_mult_enq, fl_enq_rob, decode_stall;
     logic iq_deq, dq_deq, rq_deq, fl_deq, wb_int_deq, wb_mult_deq;
-    logic really_full_int, really_full_mult;
+    logic really_full_int, really_full_mult, really_full_br;
 
     if_id_stage_reg_t if_id_reg_next, if_id_inst_out;
     id_ex_stage_reg_t id_ex_reg_next, id_ex_inst_out;
     ra_dp_stage_reg_t ra_dp_reg_next, ra_dp_inst_out;
-    dp_is_stage_reg_t dp_is_inst_out, dp_is_out_mult, dp_is_out_int;
+    dp_is_stage_reg_t dp_is_inst_out, dp_is_out_mult, dp_is_out_int, dp_is_out_br;
     dp_is_stage_reg_t int_to_wb, mult_to_wb, wb_reg_next, wb_int_out, wb_mult_out;
 
 
     // WRITE BACKS
-    dp_is_stage_reg_t   wb_inst_out         [2];
-    logic               prf_we              [2]; 
-    logic               ld_status           [2];
-    status_t            status_n            [2];
-    logic   [3:0]       rob_idx_ld          [2];
-    logic   [6:0]       p_addr_out_wb       [2];
-    logic   [31:0]      wb_data_out         [2];
-    rfvi_packet_t       rfvi_monitor_vals   [2];
+    dp_is_stage_reg_t   wb_inst_out         [3];
+    logic               prf_we              [3]; 
+    logic               ld_status           [3];
+    status_t            status_n            [3];
+    logic   [3:0]       rob_idx_ld          [3];
+    logic   [6:0]       p_addr_out_wb       [3];
+    logic   [31:0]      wb_data_out         [3];
+    rfvi_packet_t       rfvi_monitor_vals   [3];
 
     rob_entry_t rob_entry, rob_out;
 
@@ -113,16 +113,17 @@ import rv32i_types::*;
 
     // end
 
-    logic dispatch_stall_mult, dispatch_stall_int;
+    logic dispatch_stall_mult, dispatch_stall_int, dispatch_stall_br;
 
-    logic load_station_mult, load_station_int;
-    logic funct_mult_busy, funct_int_busy, funct_mult_done;
+    logic load_station_mult, load_station_int, load_station_br;
+    logic funct_mult_busy, funct_int_busy, funct_br_busy;
+    logic funct_mult_done;
 
     logic [31:0] rs1_rdata, rs2_rdata;
 
-    logic valid_output_mult, valid_output_int;
+    //logic valid_output_mult, valid_output_int, valid_output_br; //not used
 
-    logic valid_rdata_mult, valid_rdata_int;
+    logic valid_rdata_mult, valid_rdata_int, valid_rdata_br;
     logic done, done_stall;
 
     assign ufp_wdata = '0;
@@ -133,8 +134,8 @@ import rv32i_types::*;
     assign prs1_s = ra_dp_reg_next.rs1_paddr;
     assign prs2_s = ra_dp_reg_next.rs2_paddr;
 
-    assign wb_int_enq = int_to_wb.valid && !funct_int_busy;
-    assign wb_mult_enq = mult_to_wb.valid && funct_mult_done;
+    //assign wb_int_enq = int_to_wb.valid && !funct_int_busy;
+    //assign wb_mult_enq = mult_to_wb.valid && funct_mult_done;
     
 
     always_comb begin
@@ -280,11 +281,13 @@ import rv32i_types::*;
     dispatch dispatch(
         .ra_dp(ra_dp_inst_out), // comes from rename queue, input
 
-        .dispatch_stall_mult('0), // input
-        .dispatch_stall_int('0), // input
+        // .dispatch_stall_mult('0), // input
+        // .dispatch_stall_int('0), // input
+        // .dispatch_stall_br('0),
 
         .load_station_mult(load_station_mult), // output
         .load_station_int(load_station_int), // output
+        .load_station_br(load_station_br),
 
         .rs1_rdata(rs1_rdata), // input from the register file arbiter
         .rs2_rdata(rs2_rdata), // input from the register file arbiter
@@ -293,12 +296,15 @@ import rv32i_types::*;
 
         .data_paddr_0(p_addr_out_wb[0]),
         .data_paddr_1(p_addr_out_wb[1]),
+        //.data_paddr_2(p_addr_out_wb[2]),
         .data_in_0(wb_data_out[0]),
         .data_in_1(wb_data_out[1]),
+        //.data_in_2(wb_data_out[2]),
 
-        .dp_is(dp_is_inst_out), // output
-        .valid_output_mult(valid_output_mult), // output
-        .valid_output_int(valid_output_int) // output
+        .dp_is(dp_is_inst_out) // output
+        // .valid_output_mult(valid_output_mult), // output dont use
+        // .valid_output_int(valid_output_int), // output dont use
+        // .valid_output_br(valid_output_br)   //dont use
     );
 
     r_station station_mult(
@@ -327,6 +333,22 @@ import rv32i_types::*;
         .valid_rdata(valid_rdata_int), // output
         .dispatch_stall(dispatch_stall_int), // output
         .really_full(really_full_int),
+        .data_paddr_0(p_addr_out_wb[0]), // input
+        .data_paddr_1(p_addr_out_wb[1]), // input
+        .data_in_0(wb_data_out[0]), // input
+        .data_in_1(wb_data_out[1]) // input
+    );
+
+    r_station station_br(
+        .clk(clk), // input
+        .rst(rst), // input
+        .funct_unit_busy(funct_br_busy), // input
+        .load_station(load_station_br),
+        .inst_in(dp_is_inst_out), // input
+        .inst_out(dp_is_out_br), // output
+        .valid_rdata(valid_rdata_br), // output
+        .dispatch_stall(dispatch_stall_br), // output
+        .really_full(really_full_br),
         .data_paddr_0(p_addr_out_wb[0]), // input
         .data_paddr_1(p_addr_out_wb[1]), // input
         .data_in_0(wb_data_out[0]), // input
@@ -363,7 +385,7 @@ import rv32i_types::*;
         .clk(clk),
         .rst(!rst),
         .rs_out(dp_is_out_mult),
-        .pre_wb_mult_stall(mult_wb_stall),
+        //.pre_wb_mult_stall(mult_wb_stall),
         //.rs1_v(),
         //.rs2_v(),
         .funct_unit_busy(funct_mult_busy),
@@ -373,14 +395,23 @@ import rv32i_types::*;
 
     integer_unit funct_int(
         .id_ex(dp_is_out_int),
-        .pre_wb_int_stall(int_wb_stall),
+        //.pre_wb_int_stall(int_wb_stall),
         //.rs1_v(),
         //.rs2_v(),
         .funct_unit_busy(funct_int_busy),
         .ex_mem(wb_inst_out[0])
     );
 
-    pre_wb_q #(
+    banch_unit funct_br(
+        .id_ex(dp_is_out_br),
+        //.pre_wb_int_stall(int_wb_stall),
+        //.rs1_v(),
+        //.rs2_v(),
+        .funct_unit_busy(funct_br_busy),
+        .ex_mem(wb_inst_out[2])
+    );
+
+   /*  pre_wb_q #(
         .DEPTH      (8)
     ) int_fu_q (
         .clk(clk),
@@ -403,11 +434,11 @@ import rv32i_types::*;
         .inst_out_wb(mult_to_wb),
         .valid_rdata(mult_valid_rdata),
         .wb_stall(mult_wb_stall)
-    );
+    ); */
 
-    always_comb begin
-        wb_int_deq = '1;
-        wb_mult_deq = '1;
+    // always_comb begin
+    //     wb_int_deq = '1;
+    //     wb_mult_deq = '1;
 
         // if (wb_int_enq && wb_mult_enq) begin // both same
         //     if (int_to_wb.rob_idx < mult_to_wb.rob_idx) begin
@@ -450,7 +481,7 @@ import rv32i_types::*;
         // else begin
         //     wb_inst_out = '0;
        // end
-    end
+    // end
 
     // pre_wb_q #(
     //     .DEPTH      (8)
@@ -489,6 +520,18 @@ import rv32i_types::*;
         .rfvi_monitor_vals(rfvi_monitor_vals[1])
         //.deq(wb_deq)
     );
+
+    // writeback wb_br (
+    //     .inst_in_wb(wb_inst_out[2]), // d
+    //     .prf_regf_we(prf_we[2]), // d
+    //     .ld_status(ld_status[2]), // d
+    //     .status_out(status_n[2]), // d
+    //     .rob_idx_ld(rob_idx_ld[2]), // d
+    //     .p_addr_out(p_addr_out_wb[2]),
+    //     .data_out(wb_data_out[2]),
+    //     .rfvi_monitor_vals(rfvi_monitor_vals[2])
+    //     //.deq(wb_deq)
+    // );
 
      robert #(
         .DEPTH      (16)
