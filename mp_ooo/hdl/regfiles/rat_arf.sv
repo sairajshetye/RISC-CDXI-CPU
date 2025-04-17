@@ -3,6 +3,7 @@ import rv32i_types::*;
 (
     input   logic           clk,
     input   logic           rst,
+    input   logic           flush,
     input   logic           regf_we,
     input   logic   [31:0]  rd_v,
     input   logic   [4:0]   rs1_s, rs2_s, rd_s,
@@ -49,6 +50,10 @@ import rv32i_types::*;
             end
             fl_enq <= '0;
             fl_data_in <= '0;
+        end else if (flush) begin
+            for (integer i = 0; i < 32; i++) begin
+                data[i].p_addr <= data[i].p_addr_ret;
+            end
         end else begin
             fl_enq <= '0;
             fl_data_in <= '0;

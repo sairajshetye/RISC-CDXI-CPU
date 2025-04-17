@@ -18,6 +18,8 @@ import rv32i_types::*;
     //input   status_t                status_in_3,
     input   logic                   ld_branch_res,
     input   branch_t                branch_res_in, 
+    input   logic [31:0]            br_pc_next,
+    //input   logic [63:0]            order_out_wb,
     input   rob_entry_t             rob_in,
     input   logic [PTR_SIZE-1:0]    rob_idx_in,     //read idx
     input   logic [PTR_SIZE-1:0]    rob_idx_ld_0,     //for ld status
@@ -37,7 +39,8 @@ import rv32i_types::*;
     output  logic                   rob_overflow,
     output  logic                   aregf_we,
     output  logic [4:0]             ard_s,
-    output  logic [6:0]             p_addr_ret
+    output  logic [6:0]             p_addr_ret,
+    output logic flush
 
 );
 
@@ -160,6 +163,8 @@ import rv32i_types::*;
 
         if (ld_branch_res) begin
             rob[rob_idx_in].br_result <= branch_res_in;
+            rob[rob_idx_in].pc_next <= br_pc_next;
+            //rob[rob_idx_in].order <= order_out_wb;
         end
 
     
@@ -179,12 +184,14 @@ import rv32i_types::*;
             aregf_we <= '0;
             ard_s <= '0;
             p_addr_ret <= '0;
+            flush <= '0;
         end
         else if (empty) begin
             rob_out <= '0;
             aregf_we <= '0;
             ard_s <= '0;
             p_addr_ret <= '0;
+            flush <= '0;
         end else begin
             if (rob[head[PTR_SIZE-1:0]].status == done) begin
                 aregf_we <= '1;
@@ -195,6 +202,12 @@ import rv32i_types::*;
                 aregf_we <= '0;
                 ard_s <= '0;
                 p_addr_ret <= '0;
+            end
+            if (rob[head[PTR_SIZE-1:0]].br_pred != rob[head[PTR_SIZE-1:0]].br_result) begin
+
+                flush <= '1;
+            end else begin
+                flush <= '0; //???
             end
             rob_out <= rob[head[PTR_SIZE-1:0]];
         end

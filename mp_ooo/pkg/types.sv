@@ -241,6 +241,7 @@ package rv32i_types;
         logic           is_store;
         logic           use_rd;
         // what else? - 391 bits
+        branch_t        branch_taken;
         // logic             rs1_data
         logic           use_prs1;
         logic    [6:0]  rs1_paddr;
@@ -389,6 +390,8 @@ package rv32i_types;
         logic [4:0] rd_addr;
         branch_t br_pred;
         branch_t br_result;
+        logic [31:0] pc_next;
+        logic [63:0] order;
 
         rfvi_packet_t       rfvi_monitor_vals;
     } rob_entry_t;

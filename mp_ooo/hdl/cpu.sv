@@ -129,6 +129,11 @@ import rv32i_types::*;
 
     logic flush;
 
+    branch_t branch_res_out;
+    logic ld_branch_res;
+    logic [31:0] br_pc_next;
+    logic [63:0] order_out_wb;
+
     assign ufp_wdata = '0;
     assign ufp_wmask = '0;
 
@@ -157,6 +162,8 @@ import rv32i_types::*;
     always_comb begin
         if (rst) begin
             pc_next = 32'hAAAAA000;
+        end else if (flush) begin
+            pc_next = rob_out.pc_next;
         end else if (!iq_stall && !if_id_reg_next.fetch_stall && !done_stall) begin // && !if_id_reg_next.fetch_stall
             pc_next = pc + 4;
         end else begin
@@ -182,6 +189,9 @@ import rv32i_types::*;
         .clk(clk),
         .rst(rst),
         .iq_stall(iq_stall),
+        .flush(flush),
+        .order_br(rob_out.order),
+
         // .dq_stall(dq_stall),
         .enq(iq_enq),
         // .deq(iq_deq),
@@ -199,7 +209,7 @@ import rv32i_types::*;
         .DEPTH      (8)
     ) inst_q(
         .clk(clk),
-        .rst(rst),
+        .rst(rst || flush),
         .enq(iq_enq),
         .deq(!dq_stall && !dq_stall_next),
         .inst_in(if_id_reg_next),
@@ -226,7 +236,7 @@ import rv32i_types::*;
         .DEPTH      (8)
     ) decode_q(
         .clk(clk),
-        .rst(rst),
+        .rst(rst || flush),
         .enq(dq_enq),
         // .deq(dq_deq && !(decode_stall | rob_stall)),
         .deq(!rq_stall && !rob_stall && !decode_stall && !rq_stall_next),
@@ -269,7 +279,7 @@ import rv32i_types::*;
         .DEPTH      (8)
     ) rename_q(
         .clk(clk),
-        .rst(rst),
+        .rst(rst || flush),
         .enq(rq_enq),
         // .deq(rq_deq),
         .deq(!dispatch_stall_mult && !dispatch_stall_int && !really_full_mult && !really_full_int && !really_full_br), // && !really_full_mult && !really_full_int
@@ -319,7 +329,7 @@ import rv32i_types::*;
         .DEPTH      (4)
     ) station_mult(
         .clk(clk), // input
-        .rst(rst), // input
+        .rst(rst || flush), // input
         .funct_unit_busy(funct_mult_busy), // input
         .load_station(load_station_mult),
         .inst_in(dp_is_inst_out), // input
@@ -341,7 +351,7 @@ import rv32i_types::*;
         .DEPTH      (4)
     ) station_int(
         .clk(clk), // input
-        .rst(rst), // input
+        .rst(rst || flush), // input
         .funct_unit_busy(funct_int_busy), // input
         .load_station(load_station_int),
         .inst_in(dp_is_inst_out), // input
@@ -363,7 +373,7 @@ import rv32i_types::*;
         .DEPTH      (4)
     ) station_br(
         .clk(clk), // input
-        .rst(rst), // input
+        .rst(rst || flush), // input
         .funct_unit_busy(funct_br_busy), // input
         .load_station(load_station_br),
         .inst_in(dp_is_inst_out), // input
@@ -384,7 +394,7 @@ import rv32i_types::*;
 
     multiply_divide_unit funct_mult(
         .clk(clk),
-        .rst(!rst),
+        .rst(!rst ),    //add flush somehow
         .rs_out(dp_is_out_mult),
         //.pre_wb_mult_stall(mult_wb_stall),
         //.rs1_v(),
@@ -408,8 +418,7 @@ import rv32i_types::*;
         //.rs1_v(),
         //.rs2_v(),
         .funct_unit_busy(funct_br_busy),
-        .ex_mem(wb_inst_out[2]),
-        .flush(flush)
+        .ex_mem(wb_inst_out[2])
 
     );
 
@@ -450,15 +459,19 @@ import rv32i_types::*;
         //.deq(wb_deq)
     );
 
-    writeback wb_br (
+    br_writeback wb_br (
         .inst_in_wb(wb_inst_out[2]), // d
         .prf_regf_we(prf_we[2]), // d
         .ld_status(ld_status[2]), // d
         .status_out(status_n[2]), // d
         .rob_idx_ld(rob_idx_ld[2]), // d
+        .ld_branch_res(ld_branch_res),
+        .branch_res_out(branch_res_out),
         .p_addr_out(p_addr_out_wb[2]),
         .data_out(wb_data_out[2]),
-        .rfvi_monitor_vals(rfvi_monitor_vals[2])
+        .rfvi_monitor_vals(rfvi_monitor_vals[2]),
+        .br_pc_next(br_pc_next)
+        //.order_out_wb(order_out_wb)
         //.deq(wb_deq)
     );
 
@@ -480,7 +493,7 @@ import rv32i_types::*;
         .DEPTH      (16)
     ) robert(
         .clk(clk),
-        .rst(rst),
+        .rst(rst || flush),
         .enq(rob_enq),
         .ld_status_0(ld_status[0]),
         .ld_status_1(ld_status[1]),
@@ -491,7 +504,7 @@ import rv32i_types::*;
         .status_in_1(status_n[1]),
         .status_in_2(status_n[2]),
         //.status_in_3(status_n[3]),
-        .ld_branch_res('0),
+        .ld_branch_res(branch_res_out),
         .rob_idx_ld_0(rob_idx_ld[0]),
         .rob_idx_ld_1(rob_idx_ld[1]),
         .rob_idx_ld_2(rob_idx_ld[2]),
@@ -500,9 +513,11 @@ import rv32i_types::*;
         .rfvi_monitor_vals_1(rfvi_monitor_vals[1]),
         .rfvi_monitor_vals_2(rfvi_monitor_vals[2]),
         //.rfvi_monitor_vals_3(rfvi_monitor_vals[3]),
-        .branch_res_in(not_taken), // '0
+        .branch_res_in(branch_res_out), 
+        .br_pc_next(br_pc_next),
+        .order_out_wb(order_out_wb),
         .rob_in(rob_entry),
-        .rob_idx_in('0),
+        .rob_idx_in(rob_idx_ld[2]),
         .rob_out(rob_out),
         .valid_rdata(rob_valid_rdata),
         .alloc_stall(rob_stall),
@@ -512,7 +527,8 @@ import rv32i_types::*;
         .rob_overflow(rob_overflow),
         .aregf_we(aregf_we),
         .ard_s(ard_s),
-        .p_addr_ret(p_addr_ret)
+        .p_addr_ret(p_addr_ret),
+        .flush(flush)
     );
 
 
@@ -532,6 +548,7 @@ import rv32i_types::*;
     rat_arf rat_arf_1 (
         .clk(clk),
         .rst(rst),
+        .flush(flush),
         .regf_we(aregf_we),
         .rd_v(commit_prs.value),
         .rs1_s(rs1_s), 
