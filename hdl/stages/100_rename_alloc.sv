@@ -85,7 +85,7 @@ import rv32i_types::*;
         rob_entry.br_result = not_taken; // should be not known CHANGE LATER
         rob_entry.rfvi_monitor_vals = '0;
         rob_entry.pc_next = id_ex.pc_next;
-        rob_entry.order = id_ex.order;
+        //rob_entry.order = id_ex.order;
     end
 
     // 3. send to dispatch

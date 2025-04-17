@@ -132,7 +132,8 @@ import rv32i_types::*;
     branch_t branch_res_out;
     logic ld_branch_res;
     logic [31:0] br_pc_next;
-    logic [63:0] order_out_wb;
+    // logic [63:0] order_out_wb;
+    logic [63:0] order_reg;
 
     assign ufp_wdata = '0;
     assign ufp_wmask = '0;
@@ -171,6 +172,19 @@ import rv32i_types::*;
         end
     end
 
+    always_ff @(posedge clk) begin  //commit order
+        
+        if (rst) begin
+            order_reg <= '0;
+            
+        //end else if (flush) begin
+            //order_reg <= order_br + 1'b1;
+        end else if (rob_valid_rdata) begin
+            order_reg <= order_reg + 1;
+        end 
+    end
+
+
     always_ff @(posedge clk) begin
         if (rst) begin
             done_stall <= '0;
@@ -190,7 +204,7 @@ import rv32i_types::*;
         .rst(rst),
         .iq_stall(iq_stall),
         .flush(flush),
-        .order_br(rob_out.order),
+        .order_br(order_reg),
 
         // .dq_stall(dq_stall),
         .enq(iq_enq),
@@ -515,11 +529,11 @@ import rv32i_types::*;
         //.rfvi_monitor_vals_3(rfvi_monitor_vals[3]),
         .branch_res_in(branch_res_out), 
         .br_pc_next(br_pc_next),
-        .order_out_wb(order_out_wb),
+        //.order_out_wb(order_out_wb),
         .rob_in(rob_entry),
         .rob_idx_in(rob_idx_ld[2]),
         .rob_out(rob_out),
-        .valid_rdata(rob_valid_rdata),
+        .valid_rdata(rob_valid_rdata),  //use to ld comnmit order
         .alloc_stall(rob_stall),
         .decode_stall(decode_stall),
         .deq(fl_enq_rob),

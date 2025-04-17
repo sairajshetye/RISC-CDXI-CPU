@@ -391,7 +391,7 @@ package rv32i_types;
         branch_t br_pred;
         branch_t br_result;
         logic [31:0] pc_next;
-        logic [63:0] order;
+        //logic [63:0] order;
 
         rfvi_packet_t       rfvi_monitor_vals;
     } rob_entry_t;
