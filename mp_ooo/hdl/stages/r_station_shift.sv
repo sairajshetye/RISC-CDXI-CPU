@@ -39,7 +39,7 @@ import rv32i_types::*;
     logic   [WIDTH-1:0]     data_t;
     logic   [DEPTH-1:0]     idx_rep; 
     logic   [DEPTH-1:0]     rs1_rep, rs2_rep;   //0 for rs1, 2 for rs2
-    logic replace;      //0 for no replace, 1 for yes replace
+    logic remove;
     dp_is_stage_reg_t inst_tmp;
 
     always_comb begin
@@ -55,24 +55,28 @@ import rv32i_types::*;
 
         output_idx = '0;
         quit = '0;
+        remove = '0;
 
         // Find the oldest instruction - this is the instruction we'll output
         for (integer i = DEPTH-1; i >= 0; i--) begin
-            if (!quit) begin
+            if (station[i].valid && !funct_unit_busy && !quit) begin
                 if (station[i].valid && station[i].use_rs1 && station[i].use_rs2) begin
                     if (station[i].rs1_ready && station[i].rs2_ready) begin
                         output_idx = PTR_SIZE'(unsigned'(i));
                         quit = '1;
+                        remove = '1;
                     end
                 end else if (station[i].valid && station[i].use_rs1) begin
                     if (station[i].rs1_ready) begin
                         output_idx = PTR_SIZE'(unsigned'(i));
                         quit = '1;
+                        remove = '1;
                     end
                 end else if (station[i].valid && station[i].use_rs2) begin
                     if (station[i].rs2_ready) begin
                         output_idx = PTR_SIZE'(unsigned'(i));
                         quit = '1;
+                        remove = '1;
                     end
                 end
             end
@@ -83,7 +87,7 @@ import rv32i_types::*;
         rs1_rep = '0;
         rs2_rep = '0;
 
-        // Check if any of the rs1/
+        // Check if any of the rs1/rs2 can be forwarded, and remember their indices
         for (integer i = 0; i < DEPTH; i++) begin
             if (station[i].valid) begin
                 if (!station[i].rs1_ready && station[i].use_prs1) begin
@@ -118,6 +122,7 @@ import rv32i_types::*;
             end
         end
 
+
         
 
     end
@@ -139,7 +144,18 @@ import rv32i_types::*;
             end
             inst_out <= '0;
         end else begin
-        
+            for (integer i = 0; i < DEPTH; i++) begin
+                if (idx_rep[i]) begin
+                    if (rs2_rep[i]) begin   //rs2 replace
+                        station[i].rs2_data <= data_t;
+                        station[i].rs2_ready <= '1;
+                    end 
+                    if (rs1_rep[i]) begin      //rs1 replace
+                        station[i].rs1_data <= data_t;
+                        station[i].rs1_ready <= '1;
+                    end
+                end 
+            end
         end
     end
 
