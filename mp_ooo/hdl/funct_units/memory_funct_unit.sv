@@ -6,8 +6,8 @@ import rv32i_types::*;
     //input logic [31:0] rs2_v,
     //input logic [31:0] ex_mem_rd_v,
     //input logic [31:0] mem_wb_rd_v,
-    output logic funct_unit_busy,
-    output dp_is_stage_reg_t ex_mem
+    //output logic funct_unit_busy,
+    output dp_lds_stage_reg_t ex_mem
     //input mem_wb_stage_reg_t mem_wb, wb
 );
     
@@ -103,7 +103,7 @@ import rv32i_types::*;
             op_b_load : begin
                 // NOT NEEDED YET 
                 regf_we = 1'b0;
-                rd_v = id_ex.rd_v;
+                rd_v = id_ex.rd_data;
                 rd_s_real = id_ex.rd_s;
                 a = rs1_v;
                 b = id_ex.i_imm;
@@ -154,7 +154,7 @@ import rv32i_types::*;
 
             default   : begin
                 regf_we = 1'b0;
-                rd_v = id_ex.rd_v;
+                rd_v = id_ex.rd_data;
                 a = '0;
                 b = '0;
                 aluop = '0;
@@ -197,13 +197,13 @@ import rv32i_types::*;
         ex_mem.rd_data = rd_v; // new
         ex_mem.regf_we = regf_we; // new -> phys
         ex_mem.is_store = '0; // NO STORES IN THIS ONE
-        //ex_mem.dmem_addr = dmem_addr;
-        //ex_mem.dmem_addr_saved = dmem_addr_saved;
-        //ex_mem.dmem_rmask = dmem_rmask;
-        //ex_mem.dmem_wmask = dmem_wmask;
-        //ex_mem.dmem_wdata = dmem_wdata;
-       // ex_mem.dreq = dreq;
-       // ex_mem.dreq_load = dreq_load;
+        ex_mem.dmem_addr = dmem_addr;
+        ex_mem.dmem_addr_saved = dmem_addr_saved;
+        ex_mem.dmem_rmask = dmem_rmask;
+        ex_mem.dmem_wmask = dmem_wmask;
+        ex_mem.dmem_wdata = dmem_wdata;
+        ex_mem.dreq = dreq;
+        ex_mem.dreq_load = dreq_load;
         ex_mem.use_rd = id_ex.use_rd;
         ex_mem.branch_taken = id_ex.branch_taken;
         ex_mem.use_prs1 = id_ex.use_prs1;
@@ -224,7 +224,7 @@ import rv32i_types::*;
         // ex_mem.useless = id_ex.useless;
 
 
-        funct_unit_busy = '0;   //CHANGE
+        //funct_unit_busy = '0;   //CHANGE
 
         ex_mem.rfvi_monitor_vals = id_ex.rfvi_monitor_vals;
         ex_mem.rfvi_monitor_vals.monitor_rs1_rdata = use_rs1 ? id_ex.rs1_data : '0;

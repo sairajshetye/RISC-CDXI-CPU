@@ -13,7 +13,7 @@ import rv32i_types::*;
     output logic            load_station_mult,
     output logic            load_station_int,
     output logic            load_station_br,
-    //output logic            load_station_mem,
+    output logic            load_station_mem,
 
     input logic [31:0]   rs1_rdata,
     input logic [31:0]   rs2_rdata,
@@ -156,8 +156,8 @@ import rv32i_types::*;
     always_comb begin
         load_station_mult = '0;
         load_station_int = '0;
-        //load_station_mem = '0;
         load_station_br = '0;
+        load_station_mem = '0;
         unique case (ra_dp.opcode)
                 op_b_lui    : begin
                     load_station_mult = '0;
@@ -185,10 +185,13 @@ import rv32i_types::*;
                 op_b_load   : begin
                     load_station_mult = '0;
                     load_station_int = '0;
+                    load_station_mem = '1;
+
                 end
                 op_b_store  : begin
                     load_station_mult = '0;
                     load_station_int = '0;
+                    load_station_mem = '1;
                 end
                 op_b_imm    : begin
                     load_station_mult = '0;

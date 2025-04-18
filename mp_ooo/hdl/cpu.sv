@@ -18,7 +18,7 @@ import rv32i_types::*;
     logic [31:0] pc;
     logic [31:0] pc_next;
 
-    logic iq_enq, dq_enq, rq_enq, fl_enq, rob_enq, wb_int_enq, wb_mult_enq, fl_enq_rob, decode_stall;
+    logic iq_enq, dq_enq, rq_enq, fl_enq, rob_enq, wb_int_enq, wb_mult_enq, fl_enq_rob, decode_stall, lds_stall, lds_enq, lds_deq;
     logic iq_deq, dq_deq, rq_deq, fl_deq; 
     logic really_full_int, really_full_mult, really_full_br, really_full_mem;
 
@@ -27,7 +27,7 @@ import rv32i_types::*;
     ra_dp_stage_reg_t ra_dp_reg_next, ra_dp_inst_out;
     dp_is_stage_reg_t dp_is_inst_out, dp_is_out_mult, dp_is_out_int, dp_is_out_br, dp_is_out_mem;
     dp_is_stage_reg_t int_to_wb, mult_to_wb, wb_reg_next, wb_int_out, wb_mult_out, wb_mem_out;
-
+    dp_lds_stage_reg_t inst_in_lds, inst_out_lds;
 
 
     // WRITE BACKS
@@ -48,9 +48,9 @@ import rv32i_types::*;
 
     logic [255:0] lb_rdata;
 
-    logic iq_valid_rdata, dq_valid_rdata, rq_valid_rdata, fl_valid_rdata, rob_valid_rdata, int_valid_rdata, mult_valid_rdata;
+    logic iq_valid_rdata, dq_valid_rdata, rq_valid_rdata, fl_valid_rdata, rob_valid_rdata, int_valid_rdata, mult_valid_rdata, valid_rdata_lds;
     logic iq_stall, dq_stall, rq_stall, fl_stall, rob_stall, int_wb_stall, mult_wb_stall, br_wb_stall, mem_wb_stall;
-    logic iq_stall_next, dq_stall_next, rq_stall_next;
+    logic iq_stall_next, dq_stall_next, rq_stall_next, lds_stall;
 
     //logic [31:0] rs1_v, rs2_v;
     logic [4:0] rs1_s, rs2_s;
@@ -316,7 +316,7 @@ import rv32i_types::*;
         .load_station_mult(load_station_mult), // output
         .load_station_int(load_station_int), // output
         .load_station_br(load_station_br),
-        //.load_station_mem(load_station_mem),//output
+        .load_station_mem(load_station_mem),//output
 
         .rs1_rdata(rs1_rdata), // input from the register file arbiter
         .rs2_rdata(rs2_rdata), // input from the register file arbiter
@@ -405,6 +405,23 @@ import rv32i_types::*;
         //.data_in_3(wb_data_out[3]) // input
     );
 
+    load_store_unit ld_s_unit(
+        .id_ex(dp_is_inst_out),
+        //.funct_unit_busy(),
+        .ex_mem(inst_in_lds)
+
+    );
+
+    lds_q ld_store_q(
+        .clk(clk),
+        .rst(rst),
+        .enq(load_station_mem),
+        .ready_deq(lds_deq),
+        .inst_in_lds(inst_in_lds),
+        .inst_out_lds(inst_out_lds),
+        .valid_rdata(valid_rdata_lds),
+        .lds_stall(lds_stall)
+    );
 
     multiply_divide_unit funct_mult(
         .clk(clk),
