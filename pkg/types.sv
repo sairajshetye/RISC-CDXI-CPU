@@ -265,6 +265,70 @@ package rv32i_types;
     } dp_is_stage_reg_t;
 
     typedef struct packed {
+        logic   [31:0]      inst;
+        logic   [31:0]      pc;
+        logic   [63:0]      order;
+        logic   [31:0]      pc_next;
+        logic               valid;
+        logic               stall;
+
+        //alu_m1_sel_t        alu_m1_sel;
+
+        logic   [2:0]   funct3;
+        logic   [6:0]   funct7;
+        logic   [6:0]   opcode;
+        logic   [31:0]  i_imm;
+        logic   [31:0]  s_imm;
+        logic   [31:0]  b_imm;
+        logic   [31:0]  u_imm;
+        logic   [31:0]  j_imm;
+        logic   [4:0]   rs1_s;
+        logic           use_rs1;
+        logic   [4:0]   rs2_s;
+        logic           use_rs2;
+        logic   [4:0]   rd_s;
+        // logic   [31:0]  rs1_v;
+        // logic   [31:0]  rs2_v;
+        //logic   [31:0]  rd_v;
+        logic           regf_we;
+        logic           is_store;
+        logic           use_rd;
+        // what else? - 391 bits
+        branch_t        branch_taken;
+        // logic             rs1_data
+        logic           use_prs1;
+        logic    [6:0]  rs1_paddr;
+        logic           rs1_ready;
+        logic    [31:0] rs1_data;
+
+        logic           use_prs2;
+        logic    [6:0]  rs2_paddr;
+        logic           rs2_ready;
+        logic    [31:0] rs2_data;
+
+        logic    [6:0]  rd_paddr;
+        logic    [31:0] rd_data;
+
+        logic    [3:0]  rob_idx;
+        logic           rob_overflow;
+
+        logic   [31:0]  dmem_addr;
+        logic   [31:0]  dmem_addr_saved;
+        logic   [3:0]   dmem_rmask;
+        logic   [3:0]   dmem_wmask;
+        logic   [31:0]  dmem_wdata;
+        logic   [31:0]  dmem_rdata;
+        logic           dreq;
+        logic           dreq_load;
+
+        rfvi_packet_t       rfvi_monitor_vals;
+
+        
+
+        // logic           useless;
+    } dp_lds_stage_reg_t;
+
+    typedef struct packed {
         //valid, renamed, p_addr, value
         logic           valid;
         logic           renamed; // not renamed = 0, renamed = 1
