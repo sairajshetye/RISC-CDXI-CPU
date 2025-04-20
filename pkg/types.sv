@@ -150,6 +150,7 @@ package rv32i_types;
         // logic   [31:0]  rd_v;
         logic           regf_we;
         logic           is_store;
+        logic           is_load;
         logic           use_rd;
         // what else? - 391-32 bits
         // logic           deq;
@@ -186,6 +187,7 @@ package rv32i_types;
         //logic   [31:0]  rd_v;
         logic           regf_we;
         logic           is_store;
+        logic           is_load;
         logic           use_rd;
         // what else? - 391 bits
         // logic             rs1_data
@@ -239,6 +241,7 @@ package rv32i_types;
         //logic   [31:0]  rd_v;
         logic           regf_we;
         logic           is_store;
+        logic           is_load;
         logic           use_rd;
         // what else? - 391 bits
         branch_t        branch_taken;
@@ -292,6 +295,7 @@ package rv32i_types;
         //logic   [31:0]  rd_v;
         logic           regf_we;
         logic           is_store;
+        logic           is_load;
         logic           use_rd;
         // what else? - 391 bits
         branch_t        branch_taken;
@@ -301,7 +305,7 @@ package rv32i_types;
         logic           rs1_ready;
         logic    [31:0] rs1_data;
 
-        logic           use_prs2;
+        logic           use_prs2;   //using 
         logic    [6:0]  rs2_paddr;
         logic           rs2_ready;
         logic    [31:0] rs2_data;
@@ -455,6 +459,7 @@ package rv32i_types;
         branch_t br_pred;
         branch_t br_result;
         logic [31:0] pc_next;
+        logic ld_store; //'0 for no, '1 if either load or store
         //logic [63:0] order;
 
         rfvi_packet_t       rfvi_monitor_vals;
