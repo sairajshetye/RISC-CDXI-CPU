@@ -76,7 +76,7 @@ import rv32i_types::*;
             rob_enq = '0;
         end
         rob_entry.valid = '1;
-        rob_entry.status = waiting;
+        rob_entry.status = (id_ex.is_load || id_ex.is_store) ? done : waiting;
         rob_entry.opcode = id_ex.opcode;
         rob_entry.use_rd = id_ex.use_rd;
         rob_entry.rd_paddr = prd_s;
@@ -85,6 +85,7 @@ import rv32i_types::*;
         rob_entry.br_result = not_taken; // should be not known CHANGE LATER
         rob_entry.rfvi_monitor_vals = '0;
         rob_entry.pc_next = id_ex.pc_next;
+        rob_entry.ld_store = (id_ex.is_load || id_ex.is_store) ? '1 : '0;
         //rob_entry.order = id_ex.order;
     end
 
@@ -112,6 +113,7 @@ import rv32i_types::*;
         ra_dp.rd_s = id_ex.rd_s;
         ra_dp.regf_we = id_ex.regf_we;
         ra_dp.is_store = id_ex.is_store;
+        ra_dp.is_load = id_ex.is_load;
         ra_dp.use_rd = id_ex.use_rd;
 
         // new

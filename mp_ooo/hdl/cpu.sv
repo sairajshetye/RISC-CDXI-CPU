@@ -25,9 +25,9 @@ import rv32i_types::*;
     if_id_stage_reg_t if_id_reg_next, if_id_inst_out;
     id_ex_stage_reg_t id_ex_reg_next, id_ex_inst_out;
     ra_dp_stage_reg_t ra_dp_reg_next, ra_dp_inst_out;
-    dp_is_stage_reg_t dp_is_inst_out, dp_is_out_mult, dp_is_out_int, dp_is_out_br, dp_is_out_mem;
+    dp_is_stage_reg_t dp_is_inst_out, dp_is_out_mult, dp_is_out_int, dp_is_out_br, dp_is_out_mem, dp_lds_inst_out;
     dp_is_stage_reg_t int_to_wb, mult_to_wb, wb_reg_next, wb_int_out, wb_mult_out, wb_mem_out;
-    dp_lds_stage_reg_t inst_in_lds, inst_out_lds;
+    dp_lds_stage_reg_t inst_out_lds;
 
 
     // WRITE BACKS
@@ -50,7 +50,7 @@ import rv32i_types::*;
 
     logic iq_valid_rdata, dq_valid_rdata, rq_valid_rdata, fl_valid_rdata, rob_valid_rdata, int_valid_rdata, mult_valid_rdata, valid_rdata_lds;
     logic iq_stall, dq_stall, rq_stall, fl_stall, rob_stall, int_wb_stall, mult_wb_stall, br_wb_stall, mem_wb_stall;
-    logic iq_stall_next, dq_stall_next, rq_stall_next, lds_stall;
+    logic iq_stall_next, dq_stall_next, rq_stall_next;
 
     //logic [31:0] rs1_v, rs2_v;
     logic [4:0] rs1_s, rs2_s;
@@ -58,7 +58,7 @@ import rv32i_types::*;
 
     logic [6:0] fl_data_in, p_addr_out; // free list
 
-    logic [3:0] rob_tail_idx;
+    logic [3:0] rob_tail_idx, rob_head_idx;
     logic [6:0] rs1_paddr, rs2_paddr;
 
     logic [4:0] rat_rs1, rat_rs2;
@@ -405,23 +405,46 @@ import rv32i_types::*;
         //.data_in_3(wb_data_out[3]) // input
     );
 
-    load_store_unit ld_s_unit(
-        .id_ex(dp_is_inst_out),
-        //.funct_unit_busy(),
-        .ex_mem(inst_in_lds)
 
-    );
-
-    lds_q ld_store_q(
+    lds_q #(
+        .DEPTH      (4)
+    ) ld_store_q(
         .clk(clk),
         .rst(rst),
         .enq(load_station_mem),
         .ready_deq(lds_deq),
-        .inst_in_lds(inst_in_lds),
-        .inst_out_lds(inst_out_lds),
+        .inst_in_lds(dp_is_inst_out),
+        .inst_out_lds(dp_lds_inst_out),
         .valid_rdata(valid_rdata_lds),
-        .lds_stall(lds_stall)
+        .lds_stall(lds_stall),
+
+        .data_paddr_0(p_addr_out_wb[0]), // input
+        .data_paddr_1(p_addr_out_wb[1]), // input
+        .data_paddr_2(p_addr_out_wb[2]), // input
+        //.data_paddr_3(p_addr_out_wb[3]), // input
+        .data_in_0(wb_data_out[0]), // input
+        .data_in_1(wb_data_out[1]), // input
+        .data_in_2(wb_data_out[2]) // input
+        //.data_in_3(wb_data_out[3]) // input
     );
+
+    load_store_unit ld_s_unit(
+        .id_ex(dp_lds_inst_out),
+        //.funct_unit_busy(),
+        .ex_mem(inst_out_lds)
+
+    );
+
+    always_comb begin
+        lds_deq = '0;
+        if (rob_out.ld_store == '1) begin   //if rob commit is a ld store
+            if (inst_out_lds.rob_idx == rob_head_idx) begin //if load or store at head of queue is the commit inst from the rob
+                //trigger the memory
+                lds_deq = '1;
+            end
+        end
+    end
+
 
     multiply_divide_unit funct_mult(
         .clk(clk),
@@ -526,6 +549,7 @@ import rv32i_types::*;
         .clk(clk),
         .rst(rst || flush),
         .enq(rob_enq),
+        .lds_deq(lds_deq),
         .ld_status_0(ld_status[0]),
         .ld_status_1(ld_status[1]),
         .ld_status_2(ld_status[2]),
@@ -555,6 +579,7 @@ import rv32i_types::*;
         .decode_stall(decode_stall),
         .deq(fl_enq_rob),
         .rob_tail_idx(rob_tail_idx),
+        .rob_head_idx(rob_head_idx),
         .rob_overflow(rob_overflow),
         .aregf_we(aregf_we),
         .ard_s(ard_s),

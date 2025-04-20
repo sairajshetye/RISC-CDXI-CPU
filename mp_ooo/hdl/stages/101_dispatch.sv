@@ -66,6 +66,7 @@ import rv32i_types::*;
 
         dp_is.regf_we = ra_dp.regf_we;
         dp_is.is_store = ra_dp.is_store;
+        dp_is.is_load = ra_dp.is_load;
         dp_is.use_rd = ra_dp.use_rd;
         dp_is.branch_taken = not_taken;        //for br
 

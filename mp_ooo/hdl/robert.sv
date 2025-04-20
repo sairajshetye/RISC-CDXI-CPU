@@ -8,6 +8,7 @@ import rv32i_types::*;
     input   logic                   clk,
     input   logic                   rst,
     input   logic                   enq,
+    input   logic                   lds_deq,
     input   logic                   ld_status_0,
     input   logic                   ld_status_1,
     input   logic                   ld_status_2,
@@ -36,6 +37,7 @@ import rv32i_types::*;
     output  logic                   decode_stall,
     output  logic                   deq,
     output  logic [PTR_SIZE-1:0]    rob_tail_idx,
+    output  logic [PTR_SIZE-1:0]    rob_head_idx,
     output  logic                   rob_overflow,
     output  logic                   aregf_we,
     output  logic [4:0]             ard_s,
@@ -73,8 +75,11 @@ import rv32i_types::*;
         rob_tail_idx = tail[PTR_SIZE-1:0]; // in rename and allocate, set inst rob idx field to this tail
         rob_overflow = tail[PTR_SIZE];
 
-        deq = (rob[head[PTR_SIZE-1:0]].status == done && rob[head[PTR_SIZE-1:0]].valid && !empty);
-
+        if (rob[head[PTR_SIZE-1:0]].ld_store) begin
+            deq = lds_deq;
+        end else begin
+            deq = (rob[head[PTR_SIZE-1:0]].status == done && rob[head[PTR_SIZE-1:0]].valid && !empty);
+        end
     end
 
     // always_ff @(posedge clk) begin // NOT BEING USED, CAN DELETE LATER?
@@ -186,6 +191,7 @@ import rv32i_types::*;
             p_addr_ret <= '0;
             flush <= '0;
             valid_rdata <= '0;
+            rob_head_idx <= '0;
         end
         else if (empty) begin
             rob_out <= '0;
@@ -194,9 +200,10 @@ import rv32i_types::*;
             p_addr_ret <= '0;
             flush <= '0;
             valid_rdata <= '0;
+            rob_head_idx <= '0;
         end else begin
             if (rob[head[PTR_SIZE-1:0]].status == done) begin
-                aregf_we <= '1;
+                aregf_we <= (rob[head[PTR_SIZE-1:0]].ld_store) ? '0 : '1;
                 ard_s <= rob[head[PTR_SIZE-1:0]].rd_addr;
                 p_addr_ret <= rob[head[PTR_SIZE-1:0]].rd_paddr;
                 valid_rdata <= rob[head[PTR_SIZE-1:0]].valid;
@@ -214,6 +221,7 @@ import rv32i_types::*;
                 flush <= '0; //???
             end
             rob_out <= rob[head[PTR_SIZE-1:0]];
+            rob_head_idx <= head[PTR_SIZE-1:0];
             
         end
     end
