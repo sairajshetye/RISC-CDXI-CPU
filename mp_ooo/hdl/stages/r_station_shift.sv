@@ -78,18 +78,24 @@ import rv32i_types::*;
                         quit = '1;
                         remove = '1;
                     end
-                end else if (station[i].valid && station[i].use_prs1) begin
+                end else if (station[i].valid && station[i].use_prs1 && !station[i].use_prs2) begin
                     if (station[i].rs1_ready) begin
                         output_idx = PTR_SIZE'(unsigned'(i));
                         quit = '1;
                         remove = '1;
                     end
-                end else if (station[i].valid && station[i].use_prs2) begin
+                end else if (station[i].valid && station[i].use_prs2 && !station[i].use_prs1) begin
                     if (station[i].rs2_ready) begin
                         output_idx = PTR_SIZE'(unsigned'(i));
                         quit = '1;
                         remove = '1;
                     end
+                end else if (station[i].valid && !station[i].use_prs2 && !station[i].use_prs1) begin
+                    //if (station[i].rs2_ready) begin
+                    output_idx = PTR_SIZE'(unsigned'(i));
+                    quit = '1;
+                    remove = '1;
+                    //end
                 end
             end
         end
@@ -212,6 +218,9 @@ import rv32i_types::*;
              // MAKE RES STATION INTO A SHIFT REGISTER
 
             // shift register functionality
+            if (remove && !load_station) begin
+                station[open_idx] <= '0;
+            end
             for (integer i = 1; i < DEPTH; i++) begin
                 if (remove) begin 
                     if (PTR_SIZE'(unsigned'(i)) <= output_idx) begin
