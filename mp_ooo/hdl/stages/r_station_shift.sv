@@ -249,7 +249,7 @@ import rv32i_types::*;
             end
 
             // if not full and we are loading, just put into open_idx
-            if (!full && load_station && inst_tmp.valid) begin
+            if (!full && load_station && inst_tmp.valid && ((inst_tmp.use_rs1 && !inst_tmp.rs1_ready)||(inst_tmp.use_rs2 && !inst_tmp.rs2_ready))) begin
                 station[open_idx] <= inst_tmp;
                 station[open_idx].valid <= '1;
             end 
@@ -260,12 +260,16 @@ import rv32i_types::*;
             end else if (!funct_unit_busy && load_station) begin 
                 if ((!inst_tmp.use_rs2) && (!inst_tmp.use_rs1)) begin
                     inst_out <= inst_tmp;
+                    station[output_idx] <= '0;
                 end else if ((inst_tmp.use_rs1 && inst_tmp.rs1_ready) && (inst_tmp.use_rs2 && inst_tmp.rs2_ready)) begin
                     inst_out <= inst_tmp;
+                    station[output_idx] <= '0;
                 end else if (inst_tmp.use_rs1 && inst_tmp.rs1_ready && !inst_tmp.use_rs2) begin
                     inst_out <= inst_tmp;
+                    station[output_idx] <= '0;
                 end else if (inst_tmp.use_rs2 && inst_tmp.rs2_ready && !inst_tmp.use_rs1) begin
                     inst_out <= inst_tmp;
+                    station[output_idx] <= '0;
                 end else if (empty && !funct_unit_busy) begin
                     inst_out <= '0;
                 end
