@@ -63,7 +63,7 @@ import rv32i_types::*;
 
     logic [4:0] rat_rs1, rat_rs2;
 
-    arf_reg_t ars1_v, ars2_v;
+    arf_reg_t ars1_v, ars2_v, ars1_v_comb, ars2_v_comb;
     prf_t     prs1_v, prs2_v, prs1_v_comb, prs2_v_comb;
 
     logic       rs1_renamed, rs2_renamed;
@@ -79,19 +79,37 @@ import rv32i_types::*;
 
     // cache port variables
 
-    logic   [31:0]  ufp_addr;
-    logic   [3:0]   ufp_rmask;
-    logic   [3:0]   ufp_wmask;
-    logic   [255:0]  ufp_rdata;
-    logic   [31:0]  ufp_wdata;
-    logic           ufp_resp;
+    logic   [31:0]      ufp_addr    [2];
+    logic   [3:0]       ufp_rmask   [2];
+    logic   [3:0]       ufp_wmask   [2];
+    logic   [255:0]     ufp_rdata_inst;
+    logic   [31:0]      ufp_rdata_data;
+    logic   [31:0]      ufp_wdata   [2];
+    logic               ufp_resp    [2];
 
-    logic   [31:0]  dfp_addr;
-    logic           dfp_read;
-    logic           dfp_write;
-    logic   [255:0] dfp_rdata;
-    logic   [255:0] dfp_wdata;
-    logic           dfp_resp;
+    logic   [31:0]      dfp_addr    [2];
+    logic               dfp_read    [2];
+    logic               dfp_write   [2];
+    //logic   [255:0]     dfp_rdata   [2];
+    logic   [255:0]     dfp_wdata   [2];
+    //logic               dfp_resp    [2];
+
+
+    logic   [31:0]  dfp_addr_com    [2];
+    logic           dfp_read_com    [2];
+    logic           dfp_write_com   [2];
+    logic   [255:0] dfp_wdata_com   [2];
+    logic   [255:0] dfp_rdata_com   [2];
+    logic           dfp_resp_com    [2];
+
+    logic   [31:0]  dfp_addr_arb;
+    logic           dfp_read_arb;
+    logic           dfp_write_arb;
+    logic   [255:0] dfp_wdata_arb;
+    
+    logic           dfp_resp_arb;
+    logic   [255:0] dfp_rdata_arb;
+    
     
     // other arbiter variables
 
@@ -135,11 +153,11 @@ import rv32i_types::*;
     // logic [63:0] order_out_wb;
     logic [63:0] order_reg;
 
-    assign ufp_wdata = '0;
-    assign ufp_wmask = '0;
+    assign ufp_wdata[0] = '0;
+    assign ufp_wmask[0] = '0;
 
-    assign rs1_s = ra_dp_reg_next.rs1_s;
-    assign rs2_s = ra_dp_reg_next.rs2_s;
+    assign rs1_s = ra_dp_inst_out.rs1_s;
+    assign rs2_s = ra_dp_inst_out.rs2_s;
     assign prs1_s = ra_dp_inst_out.rs1_paddr;
     assign prs2_s = ra_dp_inst_out.rs2_paddr;
 
@@ -148,8 +166,8 @@ import rv32i_types::*;
     
 
     always_comb begin
-        if (|ufp_rmask && ufp_resp) begin
-            cache_rdata = ufp_rdata;
+        if (|ufp_rmask[0] && ufp_resp[0]) begin
+            cache_rdata = ufp_rdata_inst;
         end else begin
             cache_rdata = '0;
         end
@@ -192,6 +210,7 @@ import rv32i_types::*;
             done_stall <= done;
         end
     end
+
     pcreg pcreg(
         .clk(clk),
         .rst(rst),
@@ -209,10 +228,10 @@ import rv32i_types::*;
         // .dq_stall(dq_stall),
         .enq(iq_enq),
         // .deq(iq_deq),
-        .imem_addr(ufp_addr),
-        .imem_rmask(ufp_rmask),
+        .imem_addr(ufp_addr[0]),
+        .imem_rmask(ufp_rmask[0]),
         .imem_rdata(cache_rdata_32),
-        .imem_resp(ufp_resp),
+        .imem_resp(ufp_resp[0]),
         .pc(pc),
         .pc_next(pc_next),
         .if_id(if_id_reg_next),
@@ -584,7 +603,7 @@ import rv32i_types::*;
         .aregf_we(aregf_we),
         .ard_s(ard_s),
         .p_addr_ret(p_addr_ret),
-        .flush(flush)
+        .flush(flush)   //output
     );
 
 
@@ -622,8 +641,11 @@ import rv32i_types::*;
         .rs2_paddr(rs2_paddr),
         .fl_enq(fl_enq),
         .fl_data_in(fl_data_in),
-        .ars1_v(ars1_v), 
-        .ars2_v(ars2_v)
+        //.ars1_v(ars1_v), 
+        //.ars2_v(ars2_v),
+        .ars1_v_comb(ars1_v_comb), 
+        .ars2_v_comb(ars2_v_comb)
+
     );
 
     prf prf (
@@ -673,7 +695,7 @@ import rv32i_types::*;
         //     rs1_ready = '1;
         // end
         else if (!ra_dp_inst_out.use_prs1 && ra_dp_inst_out.use_rs1) begin // ROB? JUST TAKE ARCH
-            rs1_rdata = ars1_v.value;
+            rs1_rdata = ars1_v_comb.value;
             rs1_ready = '1;
         end
         else begin // WHAT IS THIS
@@ -694,7 +716,7 @@ import rv32i_types::*;
         //     rs2_ready = '1;
         // end
         else if (!ra_dp_inst_out.use_prs2 && ra_dp_inst_out.use_rs2) begin // ROB? JUST TAKE ARCH
-            rs2_rdata = ars2_v.value;
+            rs2_rdata = ars2_v_comb.value;
             rs2_ready = '1;
         end
         else begin // WHAT IS THIS
@@ -711,16 +733,16 @@ import rv32i_types::*;
         .bmem_raddr(bmem_raddr), // input
         .bmem_rdata(bmem_rdata), // input
         .bmem_rvalid(bmem_rvalid), // input
-        .cache_read(dfp_read), // input
+        .cache_read(dfp_read_arb), // input
 
         .a_raddr(a_raddr), // does cache need?
-        .a_rdata(dfp_rdata), // to cache
-        .a_resp(dfp_resp), // to cache (resp)
+        .a_rdata(dfp_rdata_arb), // to cache
+        .a_resp(dfp_resp_arb), // to cache (resp)
         .bmem_read(bmem_read),
 
-        .cache_addr(dfp_addr), // input
-        .cache_wdata(dfp_wdata), // input
-        .cache_write(dfp_write), // input
+        .cache_addr(dfp_addr_arb), // input
+        .cache_wdata(dfp_wdata_arb), // input
+        .cache_write(dfp_write_arb), // input
 
         .bmem_addr(bmem_addr),
         .bmem_wdata(bmem_wdata),
@@ -729,24 +751,88 @@ import rv32i_types::*;
         .bmem_ready(bmem_ready) // input
     );
 
+    /*
+        logic   [31:0]  dfp_addr_com    [2];
+        logic           dfp_read_com    [2];
+        logic           dfp_write_com   [2];
+        logic   [255:0] dfp_wdata_com   [2];
+        logic   [255:0] dfp_rdata_com   [2];
+        logic           dfp_resp_com    [2];
+    */
+    assign dfp_addr_com[0] = dfp_addr[0];
+    assign dfp_read_com[0] = dfp_read[0];
+    assign dfp_write_com[0] = dfp_write[0];
+    assign dfp_wdata_com[0] = dfp_wdata[0];
+
+    assign dfp_addr_com[1] = dfp_addr[1];
+    assign dfp_read_com[1] = dfp_read[1];
+    assign dfp_write_com[1] = dfp_write[1];
+    assign dfp_wdata_com[1] = dfp_wdata[1];
+
+
+    arbiter2 arbiter2(
+        .clk(clk),
+        .rst(rst),
+        .dfp_addr(dfp_addr_com),
+        .dfp_read(dfp_read_com),
+        .dfp_write(dfp_write_com),
+        .dfp_wdata(dfp_wdata_com),
+        .dfp_addr_arb(dfp_addr_arb), // out
+        .dfp_read_arb(dfp_read_arb), // out
+        .dfp_write_arb(dfp_write_arb), // out
+        .dfp_wdata_arb(dfp_wdata_arb), // out
+        .dfp_resp_arb(dfp_resp_arb),
+        .dfp_rdata_arb(dfp_rdata_arb),
+        .dfp_rdata_cache(dfp_rdata_com), // out
+        .dfp_resp_cache(dfp_resp_com) // out
+    );
+
     cache_mod icache(
         .clk(clk), // input
         .rst(rst), // input
 
-        .ufp_addr(ufp_addr), // input
-        .ufp_rmask(ufp_rmask), // input
-        .ufp_wmask(ufp_wmask), // input
-        .ufp_rdata(ufp_rdata),
-        .ufp_wdata(ufp_wdata), // input
-        .ufp_resp(ufp_resp),
+        .ufp_addr(ufp_addr[0]), // input
+        .ufp_rmask(ufp_rmask[0]), // input
+        .ufp_wmask(ufp_wmask[0]), // input
+        .ufp_rdata(ufp_rdata_inst),
+        .ufp_wdata(ufp_wdata[0]), // input
+        .ufp_resp(ufp_resp[0]),
 
         // memory side signals, dfp -> downward facing port
-        .dfp_addr(dfp_addr),
-        .dfp_read(dfp_read),
-        .dfp_write(dfp_write),
-        .dfp_rdata(dfp_rdata), // input
-        .dfp_wdata(dfp_wdata),
-        .dfp_resp(dfp_resp) // input
+        .dfp_addr(dfp_addr[0]),
+        .dfp_read(dfp_read[0]),
+        .dfp_write(dfp_write[0]),
+        .dfp_rdata(dfp_rdata_com[0]), // input
+        .dfp_wdata(dfp_wdata[0]),
+        .dfp_resp(dfp_resp_com[0]) // input
+    );
+
+    // tie to 0 
+    always_comb begin
+        ufp_addr[1] = '0;
+        ufp_rmask[1] = '0;
+        ufp_wmask[1] = '0;
+        ufp_wdata[1] = '0;
+    end
+
+    cache dcache(
+        .clk(clk), // input
+        .rst(rst), // input
+
+        .ufp_addr(ufp_addr[1]), // input
+        .ufp_rmask(ufp_rmask[1]), // input
+        .ufp_wmask(ufp_wmask[1]), // input
+        .ufp_rdata(ufp_rdata_data),
+        .ufp_wdata(ufp_wdata[1]), // input
+        .ufp_resp(ufp_resp[1]),
+
+        // memory side signals, dfp -> downward facing port
+        .dfp_addr(dfp_addr[1]),
+        .dfp_read(dfp_read[1]),
+        .dfp_write(dfp_write[1]),
+        .dfp_rdata(dfp_rdata_com[1]), // input
+        .dfp_wdata(dfp_wdata[1]),
+        .dfp_resp(dfp_resp_com[1]) // input
     );
 
     logic           monitor_valid;
