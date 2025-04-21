@@ -339,7 +339,73 @@ import rv32i_types::*;
 
     );
 
-    r_station #(
+    // r_station #(
+    //     .DEPTH      (4)
+    // ) station_mult(
+    //     .clk(clk), // input
+    //     .rst(rst || flush), // input
+    //     .funct_unit_busy(funct_mult_busy), // input
+    //     .load_station(load_station_mult),
+    //     .inst_in(dp_is_inst_out), // input
+    //     .inst_out(dp_is_out_mult), // output
+    //     .valid_rdata(valid_rdata_mult), // output
+    //     .dispatch_stall(dispatch_stall_mult), // output
+    //     .really_full(really_full_mult),
+    //     .data_paddr_0(p_addr_out_wb[0]), // input
+    //     .data_paddr_1(p_addr_out_wb[1]), // input
+    //     .data_paddr_2(p_addr_out_wb[2]), // input
+    //     //.data_paddr_3(p_addr_out_wb[3]),
+    //     .data_in_0(wb_data_out[0]), // input
+    //     .data_in_1(wb_data_out[1]), // input
+    //     .data_in_2(wb_data_out[2]) // input
+    //     //.data_in_3(wb_data_out[3])
+    // );
+
+    // r_station #(
+    //     .DEPTH      (4)
+    // ) station_int(
+    //     .clk(clk), // input
+    //     .rst(rst || flush), // input
+    //     .funct_unit_busy(funct_int_busy), // input
+    //     .load_station(load_station_int),
+    //     .inst_in(dp_is_inst_out), // input
+    //     .inst_out(dp_is_out_int), // output
+    //     .valid_rdata(valid_rdata_int), // output
+    //     .dispatch_stall(dispatch_stall_int), // output
+    //     .really_full(really_full_int),
+    //     .data_paddr_0(p_addr_out_wb[0]), // input
+    //     .data_paddr_1(p_addr_out_wb[1]), // input
+    //     .data_paddr_2(p_addr_out_wb[2]), // input
+    //     //.data_paddr_3(p_addr_out_wb[3]),
+    //     .data_in_0(wb_data_out[0]), // input
+    //     .data_in_1(wb_data_out[1]), // input
+    //     .data_in_2(wb_data_out[2]) // input
+    //     //.data_in_3(wb_data_out[3])
+    // );
+
+    // r_station #(
+    //     .DEPTH      (4)
+    // ) station_br(
+    //     .clk(clk), // input
+    //     .rst(rst || flush), // input
+    //     .funct_unit_busy(funct_br_busy), // input
+    //     .load_station(load_station_br),
+    //     .inst_in(dp_is_inst_out), // input
+    //     .inst_out(dp_is_out_br), // output
+    //     .valid_rdata(valid_rdata_br), // output
+    //     .dispatch_stall(dispatch_stall_br), // output
+    //     .really_full(really_full_br),
+    //     .data_paddr_0(p_addr_out_wb[0]), // input
+    //     .data_paddr_1(p_addr_out_wb[1]), // input
+    //     .data_paddr_2(p_addr_out_wb[2]), // input
+    //     //.data_paddr_3(p_addr_out_wb[3]), // input
+    //     .data_in_0(wb_data_out[0]), // input
+    //     .data_in_1(wb_data_out[1]), // input
+    //     .data_in_2(wb_data_out[2]) // input
+    //     //.data_in_3(wb_data_out[3]) // input
+    // );
+
+    r_station_shift #(
         .DEPTH      (4)
     ) station_mult(
         .clk(clk), // input
@@ -361,7 +427,7 @@ import rv32i_types::*;
         //.data_in_3(wb_data_out[3])
     );
 
-    r_station #(
+    r_station_shift #(
         .DEPTH      (4)
     ) station_int(
         .clk(clk), // input
@@ -383,7 +449,7 @@ import rv32i_types::*;
         //.data_in_3(wb_data_out[3])
     );
 
-    r_station #(
+    r_station_shift #(
         .DEPTH      (4)
     ) station_br(
         .clk(clk), // input
