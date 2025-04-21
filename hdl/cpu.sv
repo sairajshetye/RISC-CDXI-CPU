@@ -339,7 +339,7 @@ import rv32i_types::*;
 
     );
 
-    r_station #(
+    r_station_shift  #(
         .DEPTH      (4)
     ) station_mult(
         .clk(clk), // input
@@ -361,7 +361,7 @@ import rv32i_types::*;
         //.data_in_3(wb_data_out[3])
     );
 
-    r_station #(
+    r_station_shift  #(
         .DEPTH      (4)
     ) station_int(
         .clk(clk), // input
@@ -383,7 +383,7 @@ import rv32i_types::*;
         //.data_in_3(wb_data_out[3])
     );
 
-    r_station #(
+    r_station_shift  #(
         .DEPTH      (4)
     ) station_br(
         .clk(clk), // input
