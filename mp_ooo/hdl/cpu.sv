@@ -79,19 +79,19 @@ import rv32i_types::*;
 
     // cache port variables
 
-    logic   [31:0]  ufp_addr;
-    logic   [3:0]   ufp_rmask;
-    logic   [3:0]   ufp_wmask;
-    logic   [255:0]  ufp_rdata;
-    logic   [31:0]  ufp_wdata;
-    logic           ufp_resp;
+    logic   [31:0]      ufp_addr    [2];
+    logic   [3:0]       ufp_rmask   [2];
+    logic   [3:0]       ufp_wmask   [2];
+    logic   [255:0]     ufp_rdata   [2];
+    logic   [31:0]      ufp_wdata   [2];
+    logic               ufp_resp    [2];
 
-    logic   [31:0]  dfp_addr;
-    logic           dfp_read;
-    logic           dfp_write;
-    logic   [255:0] dfp_rdata;
-    logic   [255:0] dfp_wdata;
-    logic           dfp_resp;
+    logic   [31:0]      dfp_addr    [2];
+    logic               dfp_read    [2];
+    logic               dfp_write   [2];
+    logic   [255:0]     dfp_rdata   [2];
+    logic   [255:0]     dfp_wdata   [2];
+    logic               dfp_resp    [2];
     
     // other arbiter variables
 
@@ -135,8 +135,8 @@ import rv32i_types::*;
     // logic [63:0] order_out_wb;
     logic [63:0] order_reg;
 
-    assign ufp_wdata = '0;
-    assign ufp_wmask = '0;
+    assign ufp_wdata[0] = '0;
+    assign ufp_wmask[0] = '0;
 
     assign rs1_s = ra_dp_reg_next.rs1_s;
     assign rs2_s = ra_dp_reg_next.rs2_s;
@@ -148,8 +148,8 @@ import rv32i_types::*;
     
 
     always_comb begin
-        if (|ufp_rmask && ufp_resp) begin
-            cache_rdata = ufp_rdata;
+        if (|ufp_rmask[0] && ufp_resp[0]) begin
+            cache_rdata = ufp_rdata[0];
         end else begin
             cache_rdata = '0;
         end
@@ -209,10 +209,10 @@ import rv32i_types::*;
         // .dq_stall(dq_stall),
         .enq(iq_enq),
         // .deq(iq_deq),
-        .imem_addr(ufp_addr),
-        .imem_rmask(ufp_rmask),
+        .imem_addr(ufp_addr[0]),
+        .imem_rmask(ufp_rmask[0]),
         .imem_rdata(cache_rdata_32),
-        .imem_resp(ufp_resp),
+        .imem_resp(ufp_resp[0]),
         .pc(pc),
         .pc_next(pc_next),
         .if_id(if_id_reg_next),
@@ -669,16 +669,16 @@ import rv32i_types::*;
         .bmem_raddr(bmem_raddr), // input
         .bmem_rdata(bmem_rdata), // input
         .bmem_rvalid(bmem_rvalid), // input
-        .cache_read(dfp_read), // input
+        .cache_read(dfp_read[0]), // input
 
         .a_raddr(a_raddr), // does cache need?
-        .a_rdata(dfp_rdata), // to cache
-        .a_resp(dfp_resp), // to cache (resp)
+        .a_rdata(dfp_rdata[0]), // to cache
+        .a_resp(dfp_resp[0]), // to cache (resp)
         .bmem_read(bmem_read),
 
-        .cache_addr(dfp_addr), // input
-        .cache_wdata(dfp_wdata), // input
-        .cache_write(dfp_write), // input
+        .cache_addr(dfp_addr[0]), // input
+        .cache_wdata(dfp_wdata[0]), // input
+        .cache_write(dfp_write[0]), // input
 
         .bmem_addr(bmem_addr),
         .bmem_wdata(bmem_wdata),
@@ -691,21 +691,41 @@ import rv32i_types::*;
         .clk(clk), // input
         .rst(rst), // input
 
-        .ufp_addr(ufp_addr), // input
-        .ufp_rmask(ufp_rmask), // input
-        .ufp_wmask(ufp_wmask), // input
-        .ufp_rdata(ufp_rdata),
-        .ufp_wdata(ufp_wdata), // input
-        .ufp_resp(ufp_resp),
+        .ufp_addr(ufp_addr[0]), // input
+        .ufp_rmask(ufp_rmask[0]), // input
+        .ufp_wmask(ufp_wmask[0]), // input
+        .ufp_rdata(ufp_rdata[0]),
+        .ufp_wdata(ufp_wdata[0]), // input
+        .ufp_resp(ufp_resp[0]),
 
         // memory side signals, dfp -> downward facing port
-        .dfp_addr(dfp_addr),
-        .dfp_read(dfp_read),
-        .dfp_write(dfp_write),
-        .dfp_rdata(dfp_rdata), // input
-        .dfp_wdata(dfp_wdata),
-        .dfp_resp(dfp_resp) // input
+        .dfp_addr(dfp_addr[0]),
+        .dfp_read(dfp_read[0]),
+        .dfp_write(dfp_write[0]),
+        .dfp_rdata(dfp_rdata[0]), // input
+        .dfp_wdata(dfp_wdata[0]),
+        .dfp_resp(dfp_resp[0]) // input
     );
+
+    // cache dcache(
+    //     .clk(clk), // input
+    //     .rst(rst), // input
+
+    //     .ufp_addr(ufp_addr[1]), // input
+    //     .ufp_rmask(ufp_rmask[1]), // input
+    //     .ufp_wmask(ufp_wmask[1]), // input
+    //     .ufp_rdata(ufp_rdata[1]),
+    //     .ufp_wdata(ufp_wdata[1]), // input
+    //     .ufp_resp(ufp_resp[1]),
+
+    //     // memory side signals, dfp -> downward facing port
+    //     .dfp_addr(dfp_addr[1]),
+    //     .dfp_read(dfp_read[1]),
+    //     .dfp_write(dfp_write[1]),
+    //     .dfp_rdata(dfp_rdata[1]), // input
+    //     .dfp_wdata(dfp_wdata[1]),
+    //     .dfp_resp(dfp_resp[1]) // input
+    // );
 
     logic           monitor_valid;
     logic   [63:0]  monitor_order;
