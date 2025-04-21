@@ -27,7 +27,7 @@ auipc x5, 400
 # need to have offset label, doesn't work otherwise
 
 jal x7, mixed 
-jal x5, end
+jal x5, mixed
 
 #JALR
 
@@ -105,6 +105,12 @@ label_jalr_target:
     #########################
     nop                          # placeholder
     nop
+
+and x1, x1, x0
+
+label:
+    addi x1, x1, 1
+    blt x1, x2, label
 
 
 end:
