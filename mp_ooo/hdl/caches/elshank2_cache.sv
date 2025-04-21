@@ -19,7 +19,7 @@ module cache (
     input   logic           dfp_resp
 );
 
-     enum logic [1:0] {
+    enum logic [1:0] {
         idle,
         compare,
         allocate,

@@ -24,7 +24,8 @@ import rv32i_types::*;
     //output  logic   [31:0]  rs1_v, rs2_v,
     //input   logic           load_stall,
     //input   logic           global_stall
-    output   arf_reg_t       ars1_v, ars2_v // outputs the full struct
+    //output   arf_reg_t       ars1_v, ars2_v, ars1_v_comb, ars2_v_comb // outputs the full struct
+    output   arf_reg_t       ars1_v_comb, ars2_v_comb
 );
 
     // RAT + ARF + RRF
@@ -80,7 +81,7 @@ import rv32i_types::*;
         end
     end
 
-    always_ff @(posedge clk) begin
+    /* always_ff @(posedge clk) begin
         if (rst) begin
             ars1_v <= '0;
             ars2_v <= '0;
@@ -127,7 +128,7 @@ import rv32i_types::*;
                 ars2_v.p_addr_ret <= '0;
                 ars2_v.value <= '0;
             end
-        end
+        end */
         /*else if (!global_stall & !load_stall) begin
             if (transparent_1)
                 rs1_v <= (rs1_s != 5'd0) ? rd_v : '0;
@@ -148,9 +149,53 @@ import rv32i_types::*;
                 rs1_v <= (rs2_s_ex != 5'd0) ? rd_v : '0;
         end
         */
-    end
+    //end
+    always_comb begin
+            if (rs1_s != 5'd0) begin
+                if (transparent_1) begin
+                    //ars1_v <= (rs1_s != 5'd0) ? rd_v : '0;
+                    ars1_v_comb.valid = data[rs1_s].valid;
+                    ars1_v_comb.renamed = data[rs1_s].renamed;
+                    ars1_v_comb.p_addr = data[rs1_s].p_addr;
+                    ars1_v_comb.p_addr_ret = data[rs1_s].p_addr_ret;
+                    ars1_v_comb.value = rd_v;
 
-    always_comb begin // always comb??????
+                end
+                else begin
+                    ars1_v_comb = data[rs1_s];
+                end
+            end
+            else begin
+                ars1_v_comb.valid = '1;
+                ars1_v_comb.renamed = '0;
+                ars1_v_comb.p_addr = '0;
+                ars1_v_comb.p_addr_ret = '0;
+                ars1_v_comb.value = '0;
+            end
+            if (rs2_s != 5'd0) begin
+                if (transparent_2) begin
+                    //ars2_v <= (rs2_s != 5'd0) ? rd_v : '0;
+                    ars2_v_comb.valid = data[rs2_s].valid;
+                    ars2_v_comb.renamed = data[rs2_s].renamed;
+                    ars2_v_comb.p_addr = data[rs2_s].p_addr;
+                    ars2_v_comb.p_addr_ret = data[rs2_s].p_addr_ret;
+                    ars2_v_comb.value = rd_v;
+                end
+                else begin
+                    ars2_v_comb = data[rs2_s];
+                end
+            end
+            else begin
+                ars2_v_comb.valid = '1;
+                ars2_v_comb.renamed = '0;
+                ars2_v_comb.p_addr = '0;
+                ars2_v_comb.p_addr_ret = '0;
+                ars2_v_comb.value = '0;
+            end
+    //end
+
+
+    //always_comb begin // always comb??????
         if (rst) begin
             rs1_renamed = '0;
             rs2_renamed = '0;
