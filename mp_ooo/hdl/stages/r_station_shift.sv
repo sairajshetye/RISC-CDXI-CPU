@@ -72,19 +72,19 @@ import rv32i_types::*;
         // Find the oldest instruction - this is the instruction we'll output
         for (integer i = DEPTH-1; i >= 0; i--) begin
             if (station[i].valid && !funct_unit_busy && !quit) begin
-                if (station[i].valid && station[i].use_rs1 && station[i].use_rs2) begin
+                if (station[i].valid && station[i].use_prs1 && station[i].use_prs2) begin
                     if (station[i].rs1_ready && station[i].rs2_ready) begin
                         output_idx = PTR_SIZE'(unsigned'(i));
                         quit = '1;
                         remove = '1;
                     end
-                end else if (station[i].valid && station[i].use_rs1) begin
+                end else if (station[i].valid && station[i].use_prs1) begin
                     if (station[i].rs1_ready) begin
                         output_idx = PTR_SIZE'(unsigned'(i));
                         quit = '1;
                         remove = '1;
                     end
-                end else if (station[i].valid && station[i].use_rs2) begin
+                end else if (station[i].valid && station[i].use_prs2) begin
                     if (station[i].rs2_ready) begin
                         output_idx = PTR_SIZE'(unsigned'(i));
                         quit = '1;
@@ -161,7 +161,7 @@ import rv32i_types::*;
         // Set the instruction temp in that will be put into the reservation station
         inst_tmp = inst_in;
         if (inst_in.valid) begin 
-            if (inst_in.use_rs1) begin
+            if (inst_in.use_prs1) begin
                 if (inst_in.rs1_paddr == data_paddr_0) begin 
                     inst_tmp.rs1_data = data_in_0;
                     inst_tmp.rs1_ready = '1;
@@ -174,7 +174,7 @@ import rv32i_types::*;
                 end
             end
             
-            if (inst_in.use_rs2) begin
+            if (inst_in.use_prs2) begin
                 if (inst_in.rs2_paddr == data_paddr_0) begin 
                     inst_tmp.rs2_data = data_in_0;
                     inst_tmp.rs2_ready = '1;
@@ -253,6 +253,10 @@ import rv32i_types::*;
                 station[open_idx] <= inst_tmp;
                 station[open_idx].valid <= '1;
             end 
+            else if (!full && load_station && inst_tmp.valid && !((inst_tmp.use_rs1 && !inst_tmp.rs1_ready)||(inst_tmp.use_rs2 && !inst_tmp.rs2_ready)) && (remove || funct_unit_busy)) begin
+                station[open_idx] <= inst_tmp;
+                station[open_idx].valid <= '1;
+            end 
             
             if (!empty && !funct_unit_busy && remove) begin
                 inst_out <= station[output_idx];
@@ -270,10 +274,12 @@ import rv32i_types::*;
                 end else if (inst_tmp.use_rs2 && inst_tmp.rs2_ready && !inst_tmp.use_rs1) begin
                     inst_out <= inst_tmp;
                     station[output_idx] <= '0;
-                end else if (empty && !funct_unit_busy) begin
-                    inst_out <= '0;
                 end
-            end else if (funct_unit_busy) begin
+            end 
+            else if (empty && !funct_unit_busy) begin
+                inst_out <= '0;
+            end
+            else if (funct_unit_busy) begin
                 inst_out <= '0;
             end
 
