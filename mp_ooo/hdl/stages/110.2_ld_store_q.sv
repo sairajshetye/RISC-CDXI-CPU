@@ -20,7 +20,9 @@ import rv32i_types::*;
     input   logic   [6:0]  data_paddr_1, //from mult 
     input   logic   [31:0]     data_in_1,    //from mult
     input   logic   [6:0]  data_paddr_2, //from br
-    input   logic   [31:0]     data_in_2    //from br
+    input   logic   [31:0]     data_in_2,    //from br
+    input   logic   [6:0]  data_paddr_3, //from ld
+    input   logic   [31:0]     data_in_3    //from ld
 
 );
 
@@ -124,14 +126,14 @@ import rv32i_types::*;
                         //internal_array_lds[i].rs2_data = data_in;
                        // internal_array_lds[i].rs2_ready = data_in;
                 end
-                // else if (!internal_array_lds[i].rs2_ready && station[i].use_prs2 && (internal_array_lds[i].rs2_paddr == data_paddr_3)) begin      //if using rs2 check if bus_in is for rs2
-                //         data_t = data_in_3;
-                //         idx_rep[i] = '1;
-                //         rs2_rep[i] = '1;
-                //         //replace = '1;
-                //         //internal_array_lds[i].rs2_data = data_in;
-                //        // internal_array_lds[i].rs2_ready = data_in;
-                // end
+                else if (!internal_array_lds[i].rs2_ready && internal_array_lds[i].use_prs2 && (internal_array_lds[i].rs2_paddr == data_paddr_3)) begin      //if using rs2 check if bus_in is for rs2
+                        data_t = data_in_3;
+                        idx_rep[i] = '1;
+                        //rs2_rep[i] = '1;
+                        //replace = '1;
+                        //internal_array_lds[i].rs2_data = data_in;
+                       // internal_array_lds[i].rs2_ready = data_in;
+                end
             end
         end
     end

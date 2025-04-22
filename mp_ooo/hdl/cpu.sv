@@ -31,14 +31,14 @@ import rv32i_types::*;
 
 
     // WRITE BACKS
-    dp_is_stage_reg_t   wb_inst_out         [3];
-    logic               prf_we              [3]; 
-    logic               ld_status           [3];
-    status_t            status_n            [3];
-    logic   [3:0]       rob_idx_ld          [3];
-    logic   [6:0]       p_addr_out_wb       [3];
-    logic   [31:0]      wb_data_out         [3];
-    rfvi_packet_t       rfvi_monitor_vals   [3];
+    dp_is_stage_reg_t   wb_inst_out         [4];
+    logic               prf_we              [4]; 
+    logic               ld_status           [4];
+    status_t            status_n            [4];
+    logic   [3:0]       rob_idx_ld          [4];
+    logic   [6:0]       p_addr_out_wb       [4];
+    logic   [31:0]      wb_data_out         [4];
+    rfvi_packet_t       rfvi_monitor_vals   [4];
 
     rob_entry_t rob_entry, rob_out;
 
@@ -143,7 +143,7 @@ import rv32i_types::*;
     logic valid_output_mult, valid_output_int, valid_output_br, valid_output_mem;
 
     logic valid_rdata_mult, valid_rdata_int, valid_rdata_br, valid_rdata_mem;
-    logic done, done_stall;
+    logic dones, done_stall;
 
     logic flush;
 
@@ -207,7 +207,7 @@ import rv32i_types::*;
         if (rst) begin
             done_stall <= '0;
         end else begin
-            done_stall <= done;
+            done_stall <= dones;
         end
     end
 
@@ -235,7 +235,7 @@ import rv32i_types::*;
         .pc(pc),
         .pc_next(pc_next),
         .if_id(if_id_reg_next),
-        .done(done)
+        .done(dones)
     );
 
     inst_q #(
@@ -345,11 +345,11 @@ import rv32i_types::*;
         .data_paddr_0(p_addr_out_wb[0]),
         .data_paddr_1(p_addr_out_wb[1]),
         .data_paddr_2(p_addr_out_wb[2]), // input
-        //.data_paddr_3(p_addr_out_wb[3]),
+        .data_paddr_3(p_addr_out_wb[3]),
         .data_in_0(wb_data_out[0]),
         .data_in_1(wb_data_out[1]),
         .data_in_2(wb_data_out[2]), // input
-        //.data_in_3(wb_data_out[3])
+        .data_in_3(wb_data_out[3]),
 
         .dp_is(dp_is_inst_out), // output
         .valid_output_mult(valid_output_mult), // output
@@ -373,11 +373,11 @@ import rv32i_types::*;
         .data_paddr_0(p_addr_out_wb[0]), // input
         .data_paddr_1(p_addr_out_wb[1]), // input
         .data_paddr_2(p_addr_out_wb[2]), // input
-        //.data_paddr_3(p_addr_out_wb[3]),
+        .data_paddr_3(p_addr_out_wb[3]),
         .data_in_0(wb_data_out[0]), // input
         .data_in_1(wb_data_out[1]), // input
-        .data_in_2(wb_data_out[2]) // input
-        //.data_in_3(wb_data_out[3])
+        .data_in_2(wb_data_out[2]), // input
+        .data_in_3(wb_data_out[3])
     );
 
     r_station_shift  #(
@@ -395,11 +395,11 @@ import rv32i_types::*;
         .data_paddr_0(p_addr_out_wb[0]), // input
         .data_paddr_1(p_addr_out_wb[1]), // input
         .data_paddr_2(p_addr_out_wb[2]), // input
-        //.data_paddr_3(p_addr_out_wb[3]),
+        .data_paddr_3(p_addr_out_wb[3]),
         .data_in_0(wb_data_out[0]), // input
         .data_in_1(wb_data_out[1]), // input
-        .data_in_2(wb_data_out[2]) // input
-        //.data_in_3(wb_data_out[3])
+        .data_in_2(wb_data_out[2]), // input
+        .data_in_3(wb_data_out[3])
     );
 
     r_station_shift  #(
@@ -417,11 +417,11 @@ import rv32i_types::*;
         .data_paddr_0(p_addr_out_wb[0]), // input
         .data_paddr_1(p_addr_out_wb[1]), // input
         .data_paddr_2(p_addr_out_wb[2]), // input
-        //.data_paddr_3(p_addr_out_wb[3]), // input
+        .data_paddr_3(p_addr_out_wb[3]), // input
         .data_in_0(wb_data_out[0]), // input
         .data_in_1(wb_data_out[1]), // input
-        .data_in_2(wb_data_out[2]) // input
-        //.data_in_3(wb_data_out[3]) // input
+        .data_in_2(wb_data_out[2]), // input
+        .data_in_3(wb_data_out[3]) // input
     );
 
 
@@ -440,11 +440,11 @@ import rv32i_types::*;
         .data_paddr_0(p_addr_out_wb[0]), // input
         .data_paddr_1(p_addr_out_wb[1]), // input
         .data_paddr_2(p_addr_out_wb[2]), // input
-        //.data_paddr_3(p_addr_out_wb[3]), // input
+        .data_paddr_3(p_addr_out_wb[3]), // input
         .data_in_0(wb_data_out[0]), // input
         .data_in_1(wb_data_out[1]), // input
-        .data_in_2(wb_data_out[2]) // input
-        //.data_in_3(wb_data_out[3]) // input
+        .data_in_2(wb_data_out[2]), // input
+        .data_in_3(wb_data_out[3]) // input
     );
 
     load_store_unit ld_s_unit(
@@ -459,9 +459,32 @@ import rv32i_types::*;
         if (rob_out.ld_store == '1) begin   //if rob commit is a ld store
             if (inst_out_lds.rob_idx == rob_head_idx) begin //if load or store at head of queue is the commit inst from the rob
                 //trigger the memory
-                lds_deq = '1;
+                
             end
         end
+        //make this in ff to hold? idk
+        if (ufp_resp[1] && inst_out_lds.valid) begin
+            //wb_inst_out[3] = inst_out_lds;
+            wb_inst_out[3] = '0;
+            prf_we[3] = inst_out_lds.regf_we;
+            ld_status[3] = '1;
+            status_n[3] = done;
+            rob_idx_ld[3] = inst_out_lds.rob_idx;
+            p_addr_out_wb[3] = inst_out_lds.rd_paddr;
+            wb_data_out[3] = ufp_rdata_data;    //????
+            rfvi_monitor_vals[3] = inst_out_lds.rfvi_monitor_vals;
+            lds_deq = '1;
+        end else begin
+            wb_inst_out[3] = '0;
+            prf_we[3] = '0;
+            ld_status[3] = '0;
+            status_n[3] = waiting;
+            rob_idx_ld[3] = '0;
+            p_addr_out_wb[3] = '0;
+            wb_data_out[3] = '0;
+            rfvi_monitor_vals[3] = '0;
+        end
+
     end
 
 
@@ -572,21 +595,21 @@ import rv32i_types::*;
         .ld_status_0(ld_status[0]),
         .ld_status_1(ld_status[1]),
         .ld_status_2(ld_status[2]),
-        //.ld_status_3(ld_status[3]),
+        .ld_status_3(ld_status[3]),
     
         .status_in_0(status_n[0]), // '0
         .status_in_1(status_n[1]),
         .status_in_2(status_n[2]),
-        //.status_in_3(status_n[3]),
+        .status_in_3(status_n[3]),
         .ld_branch_res(branch_res_out),
         .rob_idx_ld_0(rob_idx_ld[0]),
         .rob_idx_ld_1(rob_idx_ld[1]),
         .rob_idx_ld_2(rob_idx_ld[2]),
-        //.rob_idx_ld_3(rob_idx_ld[3]),
+        .rob_idx_ld_3(rob_idx_ld[3]),
         .rfvi_monitor_vals_0(rfvi_monitor_vals[0]),
         .rfvi_monitor_vals_1(rfvi_monitor_vals[1]),
         .rfvi_monitor_vals_2(rfvi_monitor_vals[2]),
-        //.rfvi_monitor_vals_3(rfvi_monitor_vals[3]),
+        .rfvi_monitor_vals_3(rfvi_monitor_vals[3]),
         .branch_res_in(branch_res_out), 
         .br_pc_next(br_pc_next),
         //.order_out_wb(order_out_wb),
@@ -654,17 +677,17 @@ import rv32i_types::*;
         .regf_we_0(prf_we[0]),
         .regf_we_1(prf_we[1]),
         .regf_we_2(prf_we[2]),
-        //.regf_we_3(prf_we[3]),
+        .regf_we_3(prf_we[3]),
         .rd_v_0(wb_data_out[0]),
         .rd_v_1(wb_data_out[1]),
         .rd_v_2(wb_data_out[2]),
-        //.rd_v_3(wb_data_out[3]),
+        .rd_v_3(wb_data_out[3]),
         .rs1_s(prs1_s), 
         .rs2_s(prs2_s), 
         .rd_s_0(p_addr_out_wb[0]),
         .rd_s_1(p_addr_out_wb[1]),
         .rd_s_2(p_addr_out_wb[2]),
-        //.rd_s_3(p_addr_out_wb[3]),
+        .rd_s_3(p_addr_out_wb[3]),
         .commit_rs(p_addr_ret),
         .prs1_v(prs1_v), 
         .prs2_v(prs2_v),
