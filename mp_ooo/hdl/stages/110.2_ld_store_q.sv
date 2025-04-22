@@ -33,6 +33,7 @@ import rv32i_types::*;
     logic deq;
     logic in_out; 
     logic [PTR_SIZE:0] head;
+    logic [PTR_SIZE:0] head_next;
     logic [PTR_SIZE:0] tail;
 
     dp_lds_stage_reg_t internal_array_lds [DEPTH];
@@ -84,11 +85,11 @@ import rv32i_types::*;
         //     deq = '0;
         // end
 
-        //deq = ready_deq;
-        deq = (ready_deq && (internal_array_lds[head[PTR_SIZE-1:0]].use_rs2 == '1) && (internal_array_lds[head[PTR_SIZE-1:0]].rs1_ready == '1) && internal_array_lds[head[PTR_SIZE-1:0]].valid && !empty);
+        deq = ready_deq;
+        //deq = (ready_deq && (internal_array_lds[head[PTR_SIZE-1:0]].use_rs2 == '1) && (internal_array_lds[head[PTR_SIZE-1:0]].rs1_ready == '1) && internal_array_lds[head[PTR_SIZE-1:0]].valid && !empty);
 
         in_out = (enq && deq);
-
+        head_next = head + 1'b1;
     end
 
     // always_ff @(posedge clk) begin // NOT BEING USED, CAN DELETE LATER?
@@ -160,7 +161,30 @@ import rv32i_types::*;
             end 
             
             if (!empty) begin
-                inst_out_lds <= internal_array_lds[head[PTR_SIZE-1:0]];
+                if (!deq) begin
+                    if (internal_array_lds[head[PTR_SIZE-1:0]].is_load) begin
+                        if (internal_array_lds[head[PTR_SIZE-1:0]].rs1_ready) begin
+                            inst_out_lds <= internal_array_lds[head[PTR_SIZE-1:0]];
+                        end
+                    end
+                    else if (internal_array_lds[head[PTR_SIZE-1:0]].is_store) begin
+                        if (internal_array_lds[head[PTR_SIZE-1:0]].rs1_ready && internal_array_lds[head[PTR_SIZE-1:0]].rs2_ready) begin
+                            inst_out_lds <= internal_array_lds[head[PTR_SIZE-1:0]];
+                        end
+                    end
+                end
+                else begin
+                    if (internal_array_lds[head_next[PTR_SIZE-1:0]].is_load) begin
+                        if (internal_array_lds[head_next[PTR_SIZE-1:0]].rs1_ready) begin
+                            inst_out_lds <= internal_array_lds[head_next[PTR_SIZE-1:0]];
+                        end
+                    end
+                    else if (internal_array_lds[head_next[PTR_SIZE-1:0]].is_store) begin
+                        if (internal_array_lds[head_next[PTR_SIZE-1:0]].rs1_ready && internal_array_lds[head_next[PTR_SIZE-1:0]].rs2_ready) begin
+                            inst_out_lds <= internal_array_lds[head_next[PTR_SIZE-1:0]];
+                        end
+                    end
+                end
             end
             //if (inst_in_wb.valid) begin
                 if (enq && deq) begin
@@ -183,7 +207,7 @@ import rv32i_types::*;
                     internal_array_lds[tail[PTR_SIZE-1:0]] <= inst_in_lds; 
                     tail <= (tail + 1'b1);
                 end else if (deq && !empty) begin
-                    inst_out_lds <= internal_array_lds[head[PTR_SIZE-1:0]];
+                    //inst_out_lds <= internal_array_lds[head_next[PTR_SIZE-1:0]];
                     internal_array_lds[head[PTR_SIZE-1:0]] <= '0;
                     head <= (head + 1'b1);
                 end

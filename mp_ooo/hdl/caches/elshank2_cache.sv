@@ -228,7 +228,7 @@ module cache (
                 if (hit) begin
                     lru_web = 1'b0;
                     if (|ufp_rmask_reg && (ufp_wmask_reg == 4'b0000)) begin
-                        ufp_rdata = 'x;
+                        ufp_rdata = '0;
                         for (integer unsigned i = 0; i < 4; i++) begin
                             if (ufp_rmask_reg[i]) begin
                                 ufp_rdata[unsigned'(i)*8+:8] = data_d_out[way_hit][((offset*8)+(unsigned'(i)*8))+:8]; 

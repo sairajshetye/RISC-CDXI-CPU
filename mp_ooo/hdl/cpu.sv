@@ -153,6 +153,9 @@ import rv32i_types::*;
     // logic [63:0] order_out_wb;
     logic [63:0] order_reg;
 
+
+    logic   [7:0]    head_out;
+
     assign ufp_wdata[0] = '0;
     assign ufp_wmask[0] = '0;
 
@@ -272,7 +275,7 @@ import rv32i_types::*;
         .rst(rst || flush),
         .enq(dq_enq),
         // .deq(dq_deq && !(decode_stall | rob_stall)),
-        .deq(!rq_stall && !rob_stall && !decode_stall && !rq_stall_next),
+        .deq(!rq_stall && !rob_stall && !decode_stall && !rq_stall_next && !lds_stall),
         .inst_in_d(id_ex_reg_next),
         .inst_out_d(id_ex_inst_out),
         .valid_rdata(dq_valid_rdata),
@@ -286,6 +289,7 @@ import rv32i_types::*;
         .p_addr(p_addr_out), // FL
         .rob_idx(rob_tail_idx),
         .rob_overflow(rob_overflow),
+        .fl_head(head_out),
         
         // from RAT
         .rs1_renamed(rs1_renamed), 
@@ -433,10 +437,10 @@ import rv32i_types::*;
 
 
     lds_q #(
-        .DEPTH      (4)
+        .DEPTH      (8)
     ) ld_store_q(
         .clk(clk),
-        .rst(rst),
+        .rst(rst || flush),
         .enq(load_station_mem),
         .ready_deq(lds_deq),
         .inst_in_lds(inst_out_lds),
@@ -457,28 +461,6 @@ import rv32i_types::*;
 
     always_comb begin
         lds_deq = '0;
-        if (rob_out.ld_store == '1) begin   //if rob commit is a ld store
-            if (inst_out_lds_q.rob_idx == rob_head_idx) begin //if load or store at head of queue is the commit inst from the rob
-                //trigger the memory
-                ufp_addr[1] = inst_out_lds_q.dmem_addr;
-                ufp_rmask[1] = inst_out_lds_q.dmem_rmask;
-                ufp_wmask[1] = inst_out_lds_q.dmem_wmask;
-                ufp_wdata[1] = inst_out_lds_q.dmem_wdata;
-            end else begin
-                ufp_addr[1] = '0;
-                ufp_rmask[1] = '0;
-                ufp_wmask[1] = '0;
-                ufp_wdata[1] = '0;
-            end
-        end
-        else begin
-            ufp_addr[1] = '0;
-            ufp_rmask[1] = '0;
-            ufp_wmask[1] = '0;
-            ufp_wdata[1] = '0;
-        end
-
-        //make this in ff to hold? idk
         if (ufp_resp[1] && inst_out_lds_q.valid) begin
             //wb_inst_out[3] = inst_out_lds;
             wb_inst_out[3] = '0;
@@ -504,8 +486,31 @@ import rv32i_types::*;
             wb_data_out[3] = '0;
             rfvi_monitor_vals[3] = '0;
 
+        
+        if (rob_out.ld_store == '1 && !ufp_resp[1]) begin   //if rob commit is a ld store
+            if (inst_out_lds_q.rob_idx == rob_head_idx) begin //if load or store at head of queue is the commit inst from the rob
+                //trigger the memory
+                ufp_addr[1] = inst_out_lds_q.dmem_addr;
+                ufp_rmask[1] = inst_out_lds_q.dmem_rmask;
+                ufp_wmask[1] = inst_out_lds_q.dmem_wmask;
+                ufp_wdata[1] = inst_out_lds_q.dmem_wdata;
+            end else begin
+                ufp_addr[1] = '0;
+                ufp_rmask[1] = '0;
+                ufp_wmask[1] = '0;
+                ufp_wdata[1] = '0;
+            end
+        end
+        else begin
+            ufp_addr[1] = '0;
+            ufp_rmask[1] = '0;
+            ufp_wmask[1] = '0;
+            ufp_wdata[1] = '0;
         end
 
+        //make this in ff to hold? idk
+        
+        end
     end
 
     // always_ff @(posedge clk) begin
@@ -710,11 +715,14 @@ import rv32i_types::*;
         .clk(clk),
         .rst(rst),
         .enq(fl_enq),
-        .deq(fl_deq),//!rq_stall && !rob_stall
+        .deq(fl_deq), //!rq_stall && !rob_stall
+        .flush(flush),
+        .fl_head(rob_out.fl_head),
         .p_addr_in(fl_data_in), // rob_out.rd_paddr
         .p_addr_out(p_addr_out),
         .valid_rdata(fl_valid_rdata),
-        .rename_stall(fl_stall)
+        .rename_stall(fl_stall),
+        .head_out(head_out)
     );
 
     rat_arf rat_arf_1 (
@@ -825,7 +833,7 @@ import rv32i_types::*;
 
     arbiter arbiter(
         .clk(clk), // input
-        .rst(rst), // input
+        .rst(rst || flush), // input
 
         .bmem_raddr(bmem_raddr), // input
         .bmem_rdata(bmem_rdata), // input
@@ -869,7 +877,7 @@ import rv32i_types::*;
 
     arbiter2 arbiter2(
         .clk(clk),
-        .rst(rst),
+        .rst(rst || flush),
         .dfp_addr(dfp_addr_com),
         .dfp_read(dfp_read_com),
         .dfp_write(dfp_write_com),

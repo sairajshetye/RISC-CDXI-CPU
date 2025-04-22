@@ -10,10 +10,13 @@ import rv32i_types::*;
     input   logic                   rst,
     input   logic                   enq,
     input   logic                   deq,
+    input   logic                   flush,
+    input   logic   [7:0]           fl_head,
     input   logic   [WIDTH-1:0]     p_addr_in, // there are 128 physical registers
     output  logic   [WIDTH-1:0]     p_addr_out,
     output  logic                   valid_rdata,
-    output  logic                   rename_stall
+    output  logic                   rename_stall,
+    output  logic   [PTR_SIZE:0]    head_out
 
 );
 
@@ -79,6 +82,9 @@ import rv32i_types::*;
             tail <= {1'b1, {(PTR_SIZE){1'b0}}};
             head <= 8'b0001;
         end else begin
+            if (flush) begin
+                head <= fl_head;
+            end else begin
             if (enq && deq) begin
                 internal_array[tail[PTR_SIZE-1:0]] <= p_addr_in;
                 tail <= (tail + 4'b0001);
@@ -90,6 +96,7 @@ import rv32i_types::*;
                 head <= (head + 4'b0001);
             end
         end
+        end
     
     end
 
@@ -99,6 +106,7 @@ import rv32i_types::*;
         end else begin
             p_addr_out = internal_array[head[PTR_SIZE-1:0]];
         end
+        head_out = head;
     end
 
 endmodule : free_list
