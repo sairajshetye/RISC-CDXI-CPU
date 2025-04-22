@@ -232,6 +232,12 @@ import rv32i_types::*;
         ex_mem.rfvi_monitor_vals.monitor_rs2_rdata = use_rs2 ? id_ex.rs2_data : '0;
         ex_mem.rfvi_monitor_vals.monitor_regf_we = regf_we;
         ex_mem.rfvi_monitor_vals.monitor_rd_wdata = rd_v;
+        ex_mem.rfvi_monitor_vals.monitor_mem_addr = dmem_addr;
+        ex_mem.rfvi_monitor_vals.monitor_mem_rmask = dmem_rmask;
+        ex_mem.rfvi_monitor_vals.monitor_mem_wmask = dmem_wmask;
+        ex_mem.rfvi_monitor_vals.monitor_mem_wdata = dmem_wdata;
+
+
     end
     
 endmodule : load_store_unit

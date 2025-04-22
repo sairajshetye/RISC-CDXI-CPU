@@ -479,16 +479,18 @@ import rv32i_types::*;
         end
 
         //make this in ff to hold? idk
-        if (ufp_resp[1] && inst_out_lds.valid) begin
+        if (ufp_resp[1] && inst_out_lds_q.valid) begin
             //wb_inst_out[3] = inst_out_lds;
             wb_inst_out[3] = '0;
-            prf_we[3] = inst_out_lds.regf_we;
+            prf_we[3] = inst_out_lds_q.regf_we;
             ld_status[3] = '1;
             status_n[3] = done;
-            rob_idx_ld[3] = inst_out_lds.rob_idx;
-            p_addr_out_wb[3] = inst_out_lds.rd_paddr;
-            rfvi_monitor_vals[3] = inst_out_lds.rfvi_monitor_vals;
+            rob_idx_ld[3] = inst_out_lds_q.rob_idx;
+            p_addr_out_wb[3] = inst_out_lds_q.rd_paddr;
+            rfvi_monitor_vals[3] = inst_out_lds_q.rfvi_monitor_vals;
             lds_deq = '1;
+            rfvi_monitor_vals[3].monitor_rd_wdata = ufp_rdata_data; 
+            rfvi_monitor_vals[3].monitor_mem_rdata = ufp_rdata_data;
 
             wb_data_out[3] = ufp_rdata_data;    //????
 
@@ -501,9 +503,63 @@ import rv32i_types::*;
             p_addr_out_wb[3] = '0;
             wb_data_out[3] = '0;
             rfvi_monitor_vals[3] = '0;
+
         end
 
     end
+
+    // always_ff @(posedge clk) begin
+    //     if (rst) begin
+    //         lds_deq <= '0;
+    //         ufp_addr[1] <= '0;
+    //             ufp_rmask[1] <= '0;
+    //             ufp_wmask[1] <= '0;
+    //             ufp_wdata[1] <= '0;
+
+    //             wb_inst_out[3] <= '0;
+    //         prf_we[3] <= '0;
+    //         ld_status[3] <= '0;
+    //         status_n[3] <= waiting;
+    //         rob_idx_ld[3] <= '0;
+    //         p_addr_out_wb[3] <= '0;
+    //         wb_data_out[3] <= '0;
+    //         rfvi_monitor_vals[3] <= '0;
+    //     end else begin
+
+        
+
+    //     if (rob_out.ld_store == '1) begin   //if rob commit is a ld store
+    //         if (inst_out_lds_q.rob_idx == rob_head_idx) begin //if load or store at head of queue is the commit inst from the rob
+    //             //trigger the memory
+    //             ufp_addr[1] <= inst_out_lds_q.dmem_addr;
+    //             ufp_rmask[1] <= inst_out_lds_q.dmem_rmask;
+    //             ufp_wmask[1] <= inst_out_lds_q.dmem_wmask;
+    //             ufp_wdata[1] <= inst_out_lds_q.dmem_wdata;
+    //         end 
+    //     end
+
+    //     //make this in ff to hold? idk
+    //     if (ufp_resp[1] && inst_out_lds_q.valid) begin
+    //         //wb_inst_out[3] = inst_out_lds;
+    //         wb_inst_out[3] <= '0;
+    //         prf_we[3] <= inst_out_lds_q.regf_we;
+    //         ld_status[3] <= '1;
+    //         status_n[3] <= done;
+    //         rob_idx_ld[3] <= inst_out_lds_q.rob_idx;
+    //         p_addr_out_wb[3] <= inst_out_lds_q.rd_paddr;
+    //         rfvi_monitor_vals[3] <= inst_out_lds_q.rfvi_monitor_vals;
+    //         lds_deq <= '1;
+
+    //         wb_data_out[3] <= ufp_rdata_data;    //????
+    //         rfvi_monitor_vals[3].monitor_rd_wdata <= ufp_rdata_data; 
+    //         rfvi_monitor_vals[3].monitor_mem_rdata <= ufp_rdata_data;
+
+            
+
+    //     end
+
+    // end
+    // end
 
 
     multiply_divide_unit funct_mult(
@@ -609,7 +665,7 @@ import rv32i_types::*;
         .clk(clk),
         .rst(rst || flush),
         .enq(rob_enq),
-        .lds_deq(lds_deq),
+        //.lds_deq(lds_deq),
         .ld_status_0(ld_status[0]),
         .ld_status_1(ld_status[1]),
         .ld_status_2(ld_status[2]),
@@ -905,11 +961,11 @@ import rv32i_types::*;
     assign monitor_rd_wdata  = rob_out.rfvi_monitor_vals.monitor_rd_wdata;
     assign monitor_pc_rdata  = rob_out.rfvi_monitor_vals.monitor_pc_rdata;
     assign monitor_pc_wdata  = rob_out.rfvi_monitor_vals.monitor_pc_wdata;
-    assign monitor_mem_addr  = '0;
-    assign monitor_mem_rmask = '0;
-    assign monitor_mem_wmask = '0;
-    assign monitor_mem_rdata = '0;
-    assign monitor_mem_wdata = '0;
+    assign monitor_mem_addr  = rob_out.rfvi_monitor_vals.monitor_mem_addr;
+    assign monitor_mem_rmask = rob_out.rfvi_monitor_vals.monitor_mem_rmask;
+    assign monitor_mem_wmask = rob_out.rfvi_monitor_vals.monitor_mem_wmask;
+    assign monitor_mem_rdata = rob_out.rfvi_monitor_vals.monitor_mem_rdata;
+    assign monitor_mem_wdata = rob_out.rfvi_monitor_vals.monitor_mem_wdata;
     
 
 endmodule : cpu

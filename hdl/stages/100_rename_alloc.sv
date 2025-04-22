@@ -76,7 +76,7 @@ import rv32i_types::*;
             rob_enq = '0;
         end
         rob_entry.valid = '1;
-        rob_entry.status = (id_ex.is_load || id_ex.is_store) ? done : waiting;
+        rob_entry.status = waiting;
         rob_entry.opcode = id_ex.opcode;
         rob_entry.use_rd = id_ex.use_rd;
         rob_entry.rd_paddr = prd_s;
