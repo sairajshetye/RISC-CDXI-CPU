@@ -272,7 +272,7 @@ import rv32i_types::*;
         .rst(rst || flush),
         .enq(dq_enq),
         // .deq(dq_deq && !(decode_stall | rob_stall)),
-        .deq(!rq_stall && !rob_stall && !decode_stall && !rq_stall_next),
+        .deq(!rq_stall && !rob_stall && !decode_stall && !rq_stall_next && !lds_stall),
         .inst_in_d(id_ex_reg_next),
         .inst_out_d(id_ex_inst_out),
         .valid_rdata(dq_valid_rdata),
@@ -433,10 +433,10 @@ import rv32i_types::*;
 
 
     lds_q #(
-        .DEPTH      (4)
+        .DEPTH      (8)
     ) ld_store_q(
         .clk(clk),
-        .rst(rst),
+        .rst(rst || flush),
         .enq(load_station_mem),
         .ready_deq(lds_deq),
         .inst_in_lds(inst_out_lds),
@@ -825,7 +825,7 @@ import rv32i_types::*;
 
     arbiter arbiter(
         .clk(clk), // input
-        .rst(rst), // input
+        .rst(rst || flush), // input
 
         .bmem_raddr(bmem_raddr), // input
         .bmem_rdata(bmem_rdata), // input
@@ -869,7 +869,7 @@ import rv32i_types::*;
 
     arbiter2 arbiter2(
         .clk(clk),
-        .rst(rst),
+        .rst(rst || flush),
         .dfp_addr(dfp_addr_com),
         .dfp_read(dfp_read_com),
         .dfp_write(dfp_write_com),

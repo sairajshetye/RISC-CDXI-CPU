@@ -52,6 +52,8 @@ import rv32i_types::*;
             fl_enq <= '0;
             fl_data_in <= '0;
         end else if (flush) begin
+            fl_enq <= '0;
+            fl_data_in <= '0;
             for (integer i = 0; i < 32; i++) begin
                 data[i].p_addr <= data[i].p_addr_ret;
             end
