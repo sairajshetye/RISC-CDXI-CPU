@@ -7,6 +7,7 @@ import rv32i_types::*;
     input   logic   [6:0]   p_addr,
     input   logic   [3:0]   rob_idx,
     input   logic           rob_overflow,
+    input   logic   [7:0]   fl_head,
     // from RAT
     input   logic           rs1_renamed, rs2_renamed,
     input   logic   [6:0]   rs1_paddr, rs2_paddr,
@@ -86,6 +87,7 @@ import rv32i_types::*;
         rob_entry.rfvi_monitor_vals = '0;
         rob_entry.pc_next = id_ex.pc_next;
         rob_entry.ld_store = (id_ex.is_load || id_ex.is_store) ? '1 : '0;
+        rob_entry.fl_head = fl_head;
         //rob_entry.order = id_ex.order;
     end
 
@@ -112,6 +114,8 @@ import rv32i_types::*;
         ra_dp.use_rs2 = id_ex.use_rs2;
         ra_dp.rd_s = id_ex.rd_s;
         ra_dp.regf_we = id_ex.regf_we;
+        ra_dp.is_br = id_ex.is_br;
+        ra_dp.head = (id_ex.is_br) ? '0 : fl_head;
         ra_dp.is_store = id_ex.is_store;
         ra_dp.is_load = id_ex.is_load;
         ra_dp.use_rd = id_ex.use_rd;

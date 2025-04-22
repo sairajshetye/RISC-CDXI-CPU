@@ -149,6 +149,7 @@ package rv32i_types;
         // logic   [31:0]  rs2_v;
         // logic   [31:0]  rd_v;
         logic           regf_we;
+        logic           is_br;
         logic           is_store;
         logic           is_load;
         logic           use_rd;
@@ -186,6 +187,8 @@ package rv32i_types;
         // logic   [31:0]  rs2_v;
         //logic   [31:0]  rd_v;
         logic           regf_we;
+        logic           is_br;
+        logic [7:0]     head;    //change if not 128 phys regs
         logic           is_store;
         logic           is_load;
         logic           use_rd;
@@ -240,6 +243,8 @@ package rv32i_types;
         // logic   [31:0]  rs2_v;
         //logic   [31:0]  rd_v;
         logic           regf_we;
+        logic           is_br;
+        logic [7:0]     head;    //change if not 128 phys regs
         logic           is_store;
         logic           is_load;
         logic           use_rd;
@@ -294,6 +299,8 @@ package rv32i_types;
         // logic   [31:0]  rs2_v;
         //logic   [31:0]  rd_v;
         logic           regf_we;
+        logic           is_br;
+        logic [7:0]     head;    //change if not 128 phys regs
         logic           is_store;
         logic           is_load;
         logic           use_rd;
@@ -460,6 +467,7 @@ package rv32i_types;
         branch_t br_result;
         logic [31:0] pc_next;
         logic ld_store; //'0 for no, '1 if either load or store
+        logic [7:0] fl_head;
         //logic [63:0] order;
 
         rfvi_packet_t       rfvi_monitor_vals;

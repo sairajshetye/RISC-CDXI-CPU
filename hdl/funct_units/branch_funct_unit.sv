@@ -213,6 +213,8 @@ import rv32i_types::*;
         ex_mem.regf_we = regf_we; // new -> phys
         ex_mem.is_store = '0; // NO STORES IN THIS ONE
         ex_mem.is_load = '0;
+        ex_mem.is_br = '1;
+        ex_mem.head = id_ex.head;
         //ex_mem.dmem_addr = dmem_addr;
         //ex_mem.dmem_addr_saved = dmem_addr_saved;
         //ex_mem.dmem_rmask = dmem_rmask;

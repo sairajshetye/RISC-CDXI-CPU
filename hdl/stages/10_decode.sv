@@ -25,7 +25,7 @@ import rv32i_types::*;
     logic   [4:0]   rd_s;
     logic   [31:0]  rd_v;
     logic           regf_we;
-    logic           use_rs1, use_rs2, use_rd, is_store, is_load;
+    logic           use_rs1, use_rs2, use_rd, is_store, is_load, is_br;
     logic   [4:0]   rs1_s;
     logic   [4:0]   rs2_s;
 
@@ -44,6 +44,7 @@ import rv32i_types::*;
     //assign rd_s   = if_id.inst[11:7];
     assign is_store = opcode == 7'b0100011 ? 1'b1 : 1'b0;
     assign is_load = opcode == 7'b0000011 ? 1'b1 : 1'b0;
+    //assign is_br = opcode == 7'b0000011 ? 1'b1 : 1'b0;
 
     assign regf_we = 1'b1; // should only write back at wb stage tho hmm and if needed
 
@@ -56,60 +57,70 @@ import rv32i_types::*;
                 use_rs2 = '0;
                 use_rd = '1;
                 valid_check = '1;
+                is_br = '0;
             end
             7'b0110011: begin // b_reg
                 use_rs1 = '1;
                 use_rs2 = '1;
                 use_rd = '1;
                 valid_check = '1;
+                is_br = '0;
             end
             7'b0000011: begin // b_load
                 use_rs1 = '1;
                 use_rs2 = '0;
                 use_rd = '1;
                 valid_check = '1;
+                is_br = '0;
             end
             7'b0100011: begin // b_store
                 use_rs1 = '1;
                 use_rs2 = '1;
                 use_rd = '0;
                 valid_check = '1;
+                is_br = '0;
             end
             7'b1100011 : begin // b_br
                 use_rs1 = '1;
                 use_rs2 = '1;
                 use_rd = '0;
                 valid_check = '1;
+                is_br = '1;
             end
             7'b1100111: begin // b_jalr
                 use_rs1 = '1;
                 use_rs2 = '0;
                 use_rd = '1;
                 valid_check = '1;
+                is_br = '1;
             end
             7'b1101111: begin // b_jal
                 use_rs1 = '0;
                 use_rs2 = '0;
                 use_rd = '1;
                 valid_check = '1;
+                is_br = '1;
             end
             7'b0010111: begin // b_auipc
                 use_rs1 = '0;
                 use_rs2 = '0;
                 use_rd = '1;
                 valid_check = '1;
+                is_br = '0;
             end
             7'b0110111: begin // b_lui
                 use_rs1 = '0;
                 use_rs2 = '0;
                 use_rd = '1;
                 valid_check = '1;
+                is_br = '0;
             end
             default: begin
                 use_rs1 = '0;
                 use_rs2 = '0;
                 use_rd = '1; // default will use rd
                 valid_check = '0;
+                is_br = '0;
             end
         endcase
 
@@ -145,6 +156,7 @@ import rv32i_types::*;
         id_ex.regf_we = regf_we;
         id_ex.use_rs1 = use_rs1;
         id_ex.use_rs2 = use_rs2;
+        id_ex.is_br = is_br;
         id_ex.is_store = is_store;
         id_ex.is_load = is_load;
         id_ex.use_rd = use_rd;

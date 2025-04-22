@@ -65,6 +65,8 @@ import rv32i_types::*;
         dp_is.rd_s = ra_dp.rd_s;
 
         dp_is.regf_we = ra_dp.regf_we;
+        dp_is.is_br = ra_dp.is_br;
+        dp_is.head = ra_dp.head;
         dp_is.is_store = ra_dp.is_store;
         dp_is.is_load = ra_dp.is_load;
         dp_is.use_rd = ra_dp.use_rd;
