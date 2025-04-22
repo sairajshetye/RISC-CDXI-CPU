@@ -71,7 +71,7 @@ import rv32i_types::*;
 
     always_comb begin
         state_next = state;
-        tiebreak_next = '0;
+        tiebreak_next = tiebreak;
 
         dfp_addr_arb = '0;
         dfp_read_arb = '0;
