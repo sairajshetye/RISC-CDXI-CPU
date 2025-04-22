@@ -12,6 +12,7 @@ import rv32i_types::*;
     input   logic                   ready_deq,
     input   dp_is_stage_reg_t       inst_in_lds,
     output  dp_is_stage_reg_t       inst_out_lds,
+    output  dp_is_stage_reg_t       inst_out_lds_trans,
     output  logic                   valid_rdata,
     output  logic                   lds_stall,
 
@@ -142,6 +143,7 @@ import rv32i_types::*;
     always_ff @(posedge clk) begin
         if (rst) begin
             inst_out_lds <= '0;
+            inst_out_lds_trans <= '0;
             for (integer i = 0; i < DEPTH; i++) begin
                 internal_array_lds[i] <= '0;
             end
@@ -184,6 +186,7 @@ import rv32i_types::*;
                     internal_array_lds[head[PTR_SIZE-1:0]] <= '0;
                     head <= (head + 1'b1);
                 end
+                inst_out_lds_trans <= internal_array_lds[head[PTR_SIZE-1:0]];
             //end
         end
     
