@@ -479,17 +479,19 @@ import rv32i_types::*;
         end
 
         //make this in ff to hold? idk
-        if (ufp_resp[1] && inst_out_lds.valid) begin
+        if (ufp_resp[1] && inst_out_lds_q.valid) begin
             //wb_inst_out[3] = inst_out_lds;
             wb_inst_out[3] = '0;
-            prf_we[3] = inst_out_lds.regf_we;
+            prf_we[3] = inst_out_lds_q.regf_we;
             ld_status[3] = '1;
             status_n[3] = done;
-            rob_idx_ld[3] = inst_out_lds.rob_idx;
-            p_addr_out_wb[3] = inst_out_lds.rd_paddr;
-            rfvi_monitor_vals[3] = inst_out_lds.rfvi_monitor_vals;
+            rob_idx_ld[3] = inst_out_lds_q.rob_idx;
+            p_addr_out_wb[3] = inst_out_lds_q.rd_paddr;
+            rfvi_monitor_vals[3] = inst_out_lds_q.rfvi_monitor_vals;
             lds_deq = '1;
 
+            rfvi_monitor_vals[3].monitor_rd_wdata = ufp_rdata_data;
+            rfvi_monitor_vals[3].monitor_mem_rdata = ufp_rdata_data;
             wb_data_out[3] = ufp_rdata_data;    //????
 
         end else begin
@@ -905,11 +907,11 @@ import rv32i_types::*;
     assign monitor_rd_wdata  = rob_out.rfvi_monitor_vals.monitor_rd_wdata;
     assign monitor_pc_rdata  = rob_out.rfvi_monitor_vals.monitor_pc_rdata;
     assign monitor_pc_wdata  = rob_out.rfvi_monitor_vals.monitor_pc_wdata;
-    assign monitor_mem_addr  = '0;
-    assign monitor_mem_rmask = '0;
-    assign monitor_mem_wmask = '0;
-    assign monitor_mem_rdata = '0;
-    assign monitor_mem_wdata = '0;
+    assign monitor_mem_addr  = rob_out.rfvi_monitor_vals.monitor_mem_addr;
+    assign monitor_mem_rmask = rob_out.rfvi_monitor_vals.monitor_mem_rmask;
+    assign monitor_mem_wmask = rob_out.rfvi_monitor_vals.monitor_mem_wmask;
+    assign monitor_mem_rdata = rob_out.rfvi_monitor_vals.monitor_mem_rdata;
+    assign monitor_mem_wdata = rob_out.rfvi_monitor_vals.monitor_mem_wdata;
     
 
 endmodule : cpu

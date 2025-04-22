@@ -76,7 +76,7 @@ import rv32i_types::*;
         rob_overflow = tail[PTR_SIZE];
 
         if (rob[head[PTR_SIZE-1:0]].ld_store) begin
-            deq = lds_deq;
+            deq = (rob[head[PTR_SIZE-1:0]].status == done && rob[head[PTR_SIZE-1:0]].valid && !empty);
         end else begin
             deq = (rob[head[PTR_SIZE-1:0]].status == done && rob[head[PTR_SIZE-1:0]].valid && !empty);
         end
