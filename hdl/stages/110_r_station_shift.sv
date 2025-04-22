@@ -21,7 +21,9 @@ import rv32i_types::*;
     input   logic   [6:0]  data_paddr_1, //from mult 
     input   logic   [31:0]     data_in_1,    //from mult
     input   logic   [6:0]  data_paddr_2, //from br
-    input   logic   [31:0]     data_in_2    //from br
+    input   logic   [31:0]     data_in_2,    //from br
+    input   logic   [6:0]  data_paddr_3, //from ld
+    input   logic   [31:0]     data_in_3    //from ld
 
 );
 
@@ -143,6 +145,10 @@ import rv32i_types::*;
                         data_t = data_in_2;
                         idx_rep[i] = '1;
                         rs1_rep[i] = '1;
+                    end else if (station[i].rs1_paddr == data_paddr_3) begin
+                        data_t = data_in_3;
+                        idx_rep[i] = '1;
+                        rs1_rep[i] = '1;
                     end
                 end 
 
@@ -157,6 +163,10 @@ import rv32i_types::*;
                         rs2_rep[i] = '1;
                     end else if (station[i].rs2_paddr == data_paddr_2) begin
                         data_t = data_in_2;
+                        idx_rep[i] = '1;
+                        rs2_rep[i] = '1;
+                    end else if (station[i].rs2_paddr == data_paddr_3) begin
+                        data_t = data_in_3;
                         idx_rep[i] = '1;
                         rs2_rep[i] = '1;
                     end
@@ -177,6 +187,9 @@ import rv32i_types::*;
                 end else if (inst_in.rs1_paddr == data_paddr_2) begin
                     inst_tmp.rs1_data = data_in_2;
                     inst_tmp.rs1_ready = '1;
+                end else if (inst_in.rs1_paddr == data_paddr_3) begin
+                    inst_tmp.rs1_data = data_in_3;
+                    inst_tmp.rs1_ready = '1;
                 end
             end
             
@@ -189,6 +202,9 @@ import rv32i_types::*;
                     inst_tmp.rs2_ready = '1;
                 end else if (inst_in.rs2_paddr == data_paddr_2) begin
                     inst_tmp.rs2_data = data_in_2;
+                    inst_tmp.rs2_ready = '1;
+                end else if (inst_in.rs2_paddr == data_paddr_3) begin
+                    inst_tmp.rs2_data = data_in_3;
                     inst_tmp.rs2_ready = '1;
                 end
             end

@@ -26,8 +26,8 @@ import rv32i_types::*;
     input logic [31:0]   data_in_1,
     input logic [6:0]    data_paddr_2,
     input logic [31:0]   data_in_2,
-    // input logic [6:0]    data_paddr_3,
-    // input logic [31:0]   data_in_3,
+    input logic [6:0]    data_paddr_3,
+    input logic [31:0]   data_in_3,
 
 
     output dp_is_stage_reg_t dp_is,
@@ -109,10 +109,10 @@ import rv32i_types::*;
             dp_is.rs1_ready = '1;
             dp_is.rs1_data = data_in_2;
         end
-        // else if (!dp_is.rs1_ready && ra_dp.use_rs1 && ra_dp.rs1_paddr == data_paddr_3) begin
-        //     dp_is.rs1_ready = '1;
-        //     dp_is.rs1_data = data_in_3;
-        // end
+        else if (!dp_is.rs1_ready && ra_dp.use_rs1 && ra_dp.rs1_paddr == data_paddr_3) begin
+            dp_is.rs1_ready = '1;
+            dp_is.rs1_data = data_in_3;
+        end
 
         if (!dp_is.rs2_ready && ra_dp.use_rs2 && ra_dp.rs2_paddr == data_paddr_0) begin
             dp_is.rs2_ready = '1;
@@ -126,10 +126,10 @@ import rv32i_types::*;
             dp_is.rs2_ready = '1;
             dp_is.rs2_data = data_in_2;
         end
-        // else if (!dp_is.rs2_ready && ra_dp.use_rs2 && ra_dp.rs2_paddr == data_paddr_3) begin
-        //     dp_is.rs2_ready = '1;
-        //     dp_is.rs2_data = data_in_3;
-        // end
+        else if (!dp_is.rs2_ready && ra_dp.use_rs2 && ra_dp.rs2_paddr == data_paddr_3) begin
+            dp_is.rs2_ready = '1;
+            dp_is.rs2_data = data_in_3;
+        end
         
  
         if (dispatch_stall_mult) begin 
