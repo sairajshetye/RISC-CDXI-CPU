@@ -10,9 +10,9 @@ import rv32i_types::*;
     input   logic                   rst,
     input   logic                   enq,
     input   logic                   ready_deq,
-    input   dp_is_stage_reg_t       inst_in_lds,
-    output  dp_is_stage_reg_t       inst_out_lds,
-    output  dp_is_stage_reg_t       inst_out_lds_trans,
+    input   dp_lds_stage_reg_t       inst_in_lds,
+    output  dp_lds_stage_reg_t       inst_out_lds,
+    //output  dp_is_stage_reg_t       inst_out_lds_trans,
     output  logic                   valid_rdata,
     output  logic                   lds_stall,
 
@@ -35,7 +35,7 @@ import rv32i_types::*;
     logic [PTR_SIZE:0] head;
     logic [PTR_SIZE:0] tail;
 
-    dp_is_stage_reg_t internal_array_lds [DEPTH];
+    dp_lds_stage_reg_t internal_array_lds [DEPTH];
 
     logic full;
     logic empty;
@@ -143,7 +143,7 @@ import rv32i_types::*;
     always_ff @(posedge clk) begin
         if (rst) begin
             inst_out_lds <= '0;
-            inst_out_lds_trans <= '0;
+            //inst_out_lds_trans <= '0;
             for (integer i = 0; i < DEPTH; i++) begin
                 internal_array_lds[i] <= '0;
             end
@@ -159,8 +159,9 @@ import rv32i_types::*;
                 end 
             end 
             
-
-
+            if (!empty) begin
+                inst_out_lds <= internal_array_lds[head[PTR_SIZE-1:0]];
+            end
             //if (inst_in_wb.valid) begin
                 if (enq && deq) begin
                     //internal_array_wb[tail[PTR_SIZE-1:0]] <= inst_in_wb;
@@ -178,7 +179,7 @@ import rv32i_types::*;
                     tail <= (tail + 1'b1);
                     head <= (head + 1'b1);
                 end else if (enq && !full) begin
-                    inst_out_lds <= '0;
+                    inst_out_lds <= internal_array_lds[head[PTR_SIZE-1:0]];; //'0;
                     internal_array_lds[tail[PTR_SIZE-1:0]] <= inst_in_lds; 
                     tail <= (tail + 1'b1);
                 end else if (deq && !empty) begin
@@ -186,7 +187,7 @@ import rv32i_types::*;
                     internal_array_lds[head[PTR_SIZE-1:0]] <= '0;
                     head <= (head + 1'b1);
                 end
-                inst_out_lds_trans <= internal_array_lds[head[PTR_SIZE-1:0]];
+                
             //end
         end
     

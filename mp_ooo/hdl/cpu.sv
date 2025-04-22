@@ -26,8 +26,8 @@ import rv32i_types::*;
     id_ex_stage_reg_t id_ex_reg_next, id_ex_inst_out;
     ra_dp_stage_reg_t ra_dp_reg_next, ra_dp_inst_out;
     dp_is_stage_reg_t dp_is_inst_out, dp_is_out_mult, dp_is_out_int, dp_is_out_br, dp_is_out_mem, dp_lds_inst_out;
-    dp_is_stage_reg_t int_to_wb, mult_to_wb, wb_reg_next, wb_int_out, wb_mult_out, wb_mem_out, inst_out_lds_trans;
-    dp_lds_stage_reg_t inst_out_lds;
+    dp_is_stage_reg_t int_to_wb, mult_to_wb, wb_reg_next, wb_int_out, wb_mult_out, wb_mem_out;
+    dp_lds_stage_reg_t inst_out_lds, inst_out_lds_q;
 
 
     // WRITE BACKS
@@ -424,6 +424,13 @@ import rv32i_types::*;
         .data_in_3(wb_data_out[3]) // input
     );
 
+    load_store_unit ld_s_unit(
+        .id_ex(dp_is_inst_out),
+        //.funct_unit_busy(),
+        .ex_mem(inst_out_lds)
+
+    );
+
 
     lds_q #(
         .DEPTH      (4)
@@ -432,9 +439,8 @@ import rv32i_types::*;
         .rst(rst),
         .enq(load_station_mem),
         .ready_deq(lds_deq),
-        .inst_in_lds(dp_is_inst_out),
-        .inst_out_lds(dp_lds_inst_out),
-        .inst_out_lds_trans(inst_out_lds_trans),
+        .inst_in_lds(inst_out_lds),
+        .inst_out_lds(inst_out_lds_q),
         .valid_rdata(valid_rdata_lds),
         .lds_stall(lds_stall),
 
@@ -448,33 +454,17 @@ import rv32i_types::*;
         .data_in_3(wb_data_out[3]) // input
     );
 
-    load_store_unit ld_s_unit(
-        .id_ex(dp_lds_inst_out),
-        //.funct_unit_busy(),
-        .ex_mem(inst_out_lds)
-
-    );
 
     always_comb begin
         lds_deq = '0;
         if (rob_out.ld_store == '1) begin   //if rob commit is a ld store
-            if (inst_out_lds.rob_idx == rob_head_idx) begin
-                
-                ufp_addr[1] = inst_out_lds.dmem_addr;
-                ufp_rmask[1] = inst_out_lds.dmem_rmask;
-                ufp_wmask[1] = inst_out_lds.dmem_wmask;
-                ufp_wdata[1] = inst_out_lds.dmem_wdata;
-            end
-            else if (inst_out_lds_trans.rob_idx == rob_head_idx) begin //if load or store at head of queue is the commit inst from the rob
+            if (inst_out_lds_q.rob_idx == rob_head_idx) begin //if load or store at head of queue is the commit inst from the rob
                 //trigger the memory
-                lds_deq = '1;
-
-                ufp_addr[1] = '0;
-                ufp_rmask[1] = '0;
-                ufp_wmask[1] = '0;
-                ufp_wdata[1] = '0;
-            end
-            else begin
+                ufp_addr[1] = inst_out_lds_q.dmem_addr;
+                ufp_rmask[1] = inst_out_lds_q.dmem_rmask;
+                ufp_wmask[1] = inst_out_lds_q.dmem_wmask;
+                ufp_wdata[1] = inst_out_lds_q.dmem_wdata;
+            end else begin
                 ufp_addr[1] = '0;
                 ufp_rmask[1] = '0;
                 ufp_wmask[1] = '0;
@@ -498,7 +488,7 @@ import rv32i_types::*;
             rob_idx_ld[3] = inst_out_lds.rob_idx;
             p_addr_out_wb[3] = inst_out_lds.rd_paddr;
             rfvi_monitor_vals[3] = inst_out_lds.rfvi_monitor_vals;
-            //lds_deq = '1;
+            lds_deq = '1;
 
             wb_data_out[3] = ufp_rdata_data;    //????
 
