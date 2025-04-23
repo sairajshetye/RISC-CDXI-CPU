@@ -185,6 +185,8 @@ import rv32i_types::*;
                         end
                     end
                 end
+            end else begin
+                inst_out_lds <= '0;
             end
             //if (inst_in_wb.valid) begin
                 if (enq && deq) begin
@@ -192,18 +194,19 @@ import rv32i_types::*;
                     //internal_array_wb[head[PTR_SIZE-1:0]].valid <= '0;
                     //inst_out_wb <= inst_in_wb;
                     if (empty) begin
-                        inst_out_lds <= inst_in_lds;
+                        //inst_out_lds <= inst_in_lds;
                     end else if (full) begin
-                        inst_out_lds <= internal_array_lds[head[PTR_SIZE-1:0]];
+                        //inst_out_lds <= internal_array_lds[head[PTR_SIZE-1:0]];
                         internal_array_lds[tail[PTR_SIZE-1:0]] <= inst_in_lds; 
                     end else begin
-                        inst_out_lds <= internal_array_lds[head[PTR_SIZE-1:0]];
+                        //inst_out_lds <= internal_array_lds[head[PTR_SIZE-1:0]];
                         internal_array_lds[tail[PTR_SIZE-1:0]] <= inst_in_lds; 
+                        internal_array_lds[head[PTR_SIZE-1:0]] <= '0;
                     end
                     tail <= (tail + 1'b1);
                     head <= (head + 1'b1);
                 end else if (enq && !full) begin
-                    inst_out_lds <= internal_array_lds[head[PTR_SIZE-1:0]];; //'0;
+                    //inst_out_lds <= internal_array_lds[head[PTR_SIZE-1:0]]; //'0;
                     internal_array_lds[tail[PTR_SIZE-1:0]] <= inst_in_lds; 
                     tail <= (tail + 1'b1);
                 end else if (deq && !empty) begin
