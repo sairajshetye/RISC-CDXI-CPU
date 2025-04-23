@@ -475,7 +475,11 @@ import rv32i_types::*;
             rfvi_monitor_vals[3].monitor_mem_rdata = ufp_rdata_data;
 
             wb_data_out[3] = ufp_rdata_data;    //????
-
+            ufp_addr[1] = '0;
+            ufp_rmask[1] = '0;
+            ufp_wmask[1] = '0;
+            ufp_wdata[1] = '0;
+            
         end else begin
             wb_inst_out[3] = '0;
             prf_we[3] = '0;

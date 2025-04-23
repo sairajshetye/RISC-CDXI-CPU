@@ -102,7 +102,7 @@ import rv32i_types::*;
         unique case (id_ex.opcode)
             op_b_load : begin
                 // NOT NEEDED YET 
-                regf_we = 1'b0;
+                regf_we = 1'b1;
                 rd_v = id_ex.rd_data;
                 rd_s_real = id_ex.rd_s;
                 a = rs1_v;
