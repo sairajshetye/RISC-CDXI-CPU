@@ -84,6 +84,10 @@ import rv32i_types::*;
         end else begin
             if (flush) begin
                 head <= fl_head;
+                if (enq && !full) begin
+                    internal_array[tail[PTR_SIZE-1:0]] <= p_addr_in; 
+                    tail <= (tail + 4'b0001);
+                end
             end else begin
             if (enq && deq) begin
                 internal_array[tail[PTR_SIZE-1:0]] <= p_addr_in;
@@ -102,7 +106,7 @@ import rv32i_types::*;
 
     always_comb begin
         if (empty) begin
-            p_addr_out = 'x;
+            p_addr_out = '0;
         end else begin
             p_addr_out = internal_array[head[PTR_SIZE-1:0]];
         end

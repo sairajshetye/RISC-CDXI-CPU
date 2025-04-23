@@ -275,7 +275,7 @@ import rv32i_types::*;
         .rst(rst || flush),
         .enq(dq_enq),
         // .deq(dq_deq && !(decode_stall | rob_stall)),
-        .deq(!rq_stall && !rob_stall && !decode_stall && !rq_stall_next && !lds_stall),
+        .deq(!rq_stall && !rob_stall && !decode_stall && !rq_stall_next && !lds_stall && !fl_stall),
         .inst_in_d(id_ex_reg_next),
         .inst_out_d(id_ex_inst_out),
         .valid_rdata(dq_valid_rdata),
@@ -475,6 +475,11 @@ import rv32i_types::*;
             rfvi_monitor_vals[3].monitor_mem_rdata = ufp_rdata_data;
 
             wb_data_out[3] = ufp_rdata_data;    //????
+
+            ufp_addr[1] = '0;
+            ufp_rmask[1] = '0;
+            ufp_wmask[1] = '0;
+            ufp_wdata[1] = '0;
 
         end else begin
             wb_inst_out[3] = '0;

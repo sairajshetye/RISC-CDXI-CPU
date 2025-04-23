@@ -62,6 +62,11 @@ import rv32i_types::*;
                 data[rd_s_2].value <= rd_v_2;
             end
 
+            if (regf_we_3) begin // write to PRF     && (rd_s != 5'd0)
+                data[rd_s_3].valid <= '1;
+                data[rd_s_3].value <= rd_v_3;
+            end
+
             if (free_we) begin
                 data[rd_s_free].valid <= '0;
                 data[rd_s_free].value <= '0;
