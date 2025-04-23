@@ -275,7 +275,7 @@ import rv32i_types::*;
         .rst(rst || flush),
         .enq(dq_enq),
         // .deq(dq_deq && !(decode_stall | rob_stall)),
-        .deq(!rq_stall && !rob_stall && !decode_stall && !rq_stall_next && !lds_stall),
+        .deq(!rq_stall && !rob_stall && !decode_stall && !rq_stall_next && !lds_stall && !fl_stall),
         .inst_in_d(id_ex_reg_next),
         .inst_out_d(id_ex_inst_out),
         .valid_rdata(dq_valid_rdata),
@@ -721,7 +721,7 @@ import rv32i_types::*;
         .p_addr_in(fl_data_in), // rob_out.rd_paddr
         .p_addr_out(p_addr_out),
         .valid_rdata(fl_valid_rdata),
-        .rename_stall(fl_stall),
+        .fl_stall(fl_stall),
         .head_out(head_out)
     );
 
