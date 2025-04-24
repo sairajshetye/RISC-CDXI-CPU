@@ -1,6 +1,7 @@
 module cache_mod (
     input   logic           clk,
     input   logic           rst,
+    input   logic           flush,
 
     // cpu side signals, ufp -> upward facing port
     input   logic   [31:0]  ufp_addr,
@@ -160,7 +161,7 @@ module cache_mod (
     */
 
     always_ff @(posedge clk) begin
-        if (rst) begin
+        if (rst | flush) begin
             lb_data_reg <= '0;
             lb_addr_reg <= '0;
         end else if (hit) begin
@@ -170,14 +171,14 @@ module cache_mod (
     end
 
     always_ff @(posedge clk) begin
-        if (rst)
+        if (rst | flush)
             ufp_addr_reg2 <= 32'hAAAAA000;
         else if (|ufp_rmask)
             ufp_addr_reg2 <= ufp_addr;
     end
 
     always_ff @(posedge clk) begin
-        if (rst) begin
+        if (rst | flush) begin
             state <= idle;
             ufp_addr_reg <= 32'hAAAAA000;
             ufp_rmask_reg <= '0;

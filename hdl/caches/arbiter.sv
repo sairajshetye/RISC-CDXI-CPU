@@ -3,7 +3,7 @@ import rv32i_types::*;
 (
     input   logic               clk,
     input   logic               rst,
-
+    input   logic               flush,
     input   logic   [31:0]      bmem_raddr,
     input   logic   [63:0]      bmem_rdata,
     input   logic               bmem_rvalid,
@@ -56,10 +56,25 @@ import rv32i_types::*;
 
     logic               ready;
 
+    logic               ignore;
+
     assign ready = bmem_ready;
 
     always_ff @(posedge clk) begin
         if (rst) begin
+            ignore <= '0;
+        end
+        else if (flush) begin
+            ignore <= '1;
+        end
+        else if (cache_read) begin
+            ignore <= '0;
+        end
+
+    end
+
+    always_ff @(posedge clk) begin
+        if (rst || flush) begin
             state <= rw_0;
             cache_rdata_reg <= '0;
             bram_wdata_reg <= '0;
@@ -74,7 +89,7 @@ import rv32i_types::*;
     always_comb begin
         check_next = check;
         bmem_read_next = bmem_read;
-        if (rst) begin
+        if (rst || flush) begin
             check_next = '0;
             bmem_read_next = '0;
         end
@@ -104,7 +119,7 @@ import rv32i_types::*;
 
 
     always_ff @(posedge clk) begin
-        if (rst) begin
+        if (rst || flush) begin
             check <= '0;
             bmem_read <= '0;
         end
@@ -132,7 +147,7 @@ import rv32i_types::*;
         got_response = '0;
         unique case (state)
             rw_0: begin
-                if (bmem_rvalid && cache_read && ready && (bmem_raddr == cache_addr)) begin
+                if (bmem_rvalid && cache_read && ready && (bmem_raddr == cache_addr) && !ignore) begin
                     cache_rdata_reg_next = {cache_rdata_reg[255:64], bmem_rdata};
                     a_rdata = '0;
                     a_resp = '0;
