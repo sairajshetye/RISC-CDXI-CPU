@@ -50,7 +50,11 @@ import rv32i_types::*;
 
     //logic [WIDTH-1:0] inst_in_reg;
     always_comb begin
-        tail_next = tail + 1'b1;
+        if (tail == 4'b1111) begin
+            tail_next = '0;
+        end else begin
+            tail_next = tail + 1'b1;
+        end
     end
     always_comb begin
 
@@ -76,12 +80,12 @@ import rv32i_types::*;
         // the fifo is empty
         // deq by itself should not be allowed since empty
 
-        full = (head[PTR_SIZE] != tail[PTR_SIZE] && head[PTR_SIZE-1:0] == tail[PTR_SIZE-1:0]); 
+        full = (head[PTR_SIZE] != tail[PTR_SIZE] && (head[PTR_SIZE-1:0] == tail[PTR_SIZE-1:0] )); 
         empty = (head == tail);
 
         lds_stall = full;
         valid_rdata = ~empty;
-        really_full = (head[PTR_SIZE] != tail[PTR_SIZE] && head[PTR_SIZE-1:0] == tail_next[PTR_SIZE-1:0]);
+        really_full = (head[PTR_SIZE-1:0] == tail_next[PTR_SIZE-1:0]);
         // really_full = '1;
         // for (integer i = 0; i < DEPTH-2; i++) begin
         //     // if we are loading, then index 0 is technically valid but we havent put anything there
