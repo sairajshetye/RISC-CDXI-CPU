@@ -78,15 +78,21 @@ import rv32i_types::*;
             check_next = '0;
             bmem_read_next = '0;
         end
-        else if (cache_read && !check) begin
-            check_next = '1;
-            bmem_read_next = '1;
+        else if (!got_response) begin
+            if (cache_read && !check) begin
+                check_next = '1;
+                bmem_read_next = '1;
+            end
+            else if (check && cache_read) begin
+                check_next = check;
+                bmem_read_next = '0;
+            end
+            else if (!cache_read) begin
+                check_next = '0;
+                bmem_read_next = bmem_read; 
+            end
         end
-        else if (check && cache_read) begin
-            check_next = check;
-            bmem_read_next = '0;
-        end
-        else if (!cache_read) begin
+        else begin
             check_next = '0;
             bmem_read_next = bmem_read; 
         end

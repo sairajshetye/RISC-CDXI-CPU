@@ -10,10 +10,13 @@ import rv32i_types::*;
     input   logic                   rst,
     input   logic                   enq,
     input   logic                   deq,
+    input   logic                   flush,
+    input   logic   [7:0]           fl_head,
     input   logic   [WIDTH-1:0]     p_addr_in, // there are 128 physical registers
     output  logic   [WIDTH-1:0]     p_addr_out,
     output  logic                   valid_rdata,
-    output  logic                   rename_stall
+    output  logic                   fl_stall,
+    output  logic   [PTR_SIZE:0]    head_out
 
 );
 
@@ -57,7 +60,7 @@ import rv32i_types::*;
         full = (head[PTR_SIZE] != tail[PTR_SIZE] && head[PTR_SIZE-1:0] == tail[PTR_SIZE-1:0]); 
         empty = (head == tail);
         
-        rename_stall = empty;
+        fl_stall = empty;
         valid_rdata = ~empty;
 
     end
@@ -73,21 +76,25 @@ import rv32i_types::*;
 
     always_ff @(posedge clk) begin
         if (rst) begin
-            for (integer i = 1; i < DEPTH-1; i++) begin
+            for (integer i = 0; i < DEPTH; i++) begin
                 internal_array[i] <= 7'(unsigned'(i)); 
             end
             tail <= {1'b1, {(PTR_SIZE){1'b0}}};
             head <= 8'b0001;
         end else begin
+
             if (enq && deq) begin
-                internal_array[tail] <= p_addr_in;
+                internal_array[tail[PTR_SIZE-1:0]] <= p_addr_in;
                 tail <= (tail + 4'b0001);
                 head <= (head + 4'b0001);
             end else if (enq && !full) begin
-                internal_array[tail] <= p_addr_in; 
+                internal_array[tail[PTR_SIZE-1:0]] <= p_addr_in; 
                 tail <= (tail + 4'b0001);
             end else if (deq && !empty) begin
                 head <= (head + 4'b0001);
+            end
+        if (flush) begin
+                head <= fl_head;
             end
         end
     
@@ -95,10 +102,11 @@ import rv32i_types::*;
 
     always_comb begin
         if (empty) begin
-            p_addr_out = 'x;
+            p_addr_out = '0;
         end else begin
             p_addr_out = internal_array[head[PTR_SIZE-1:0]];
         end
+        head_out = head;
     end
 
 endmodule : free_list

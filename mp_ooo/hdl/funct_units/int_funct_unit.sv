@@ -6,7 +6,7 @@ import rv32i_types::*;
     //input logic [31:0] rs2_v,
     //input logic [31:0] ex_mem_rd_v,
     //input logic [31:0] mem_wb_rd_v,
-    input  logic pre_wb_int_stall,
+    //input  logic pre_wb_int_stall,
     output logic funct_unit_busy,
     output dp_is_stage_reg_t ex_mem
     //input mem_wb_stage_reg_t mem_wb, wb
@@ -65,7 +65,7 @@ import rv32i_types::*;
             alu_op_srl: aluout = au >>  bu[4:0]; // changed from 3:0 made 4:0
             alu_op_or : aluout = au |   bu;
             alu_op_and: aluout = au &   bu;
-            default   : aluout = 'x;
+            default   : aluout = '0;
         endcase
     end
 
@@ -77,20 +77,20 @@ import rv32i_types::*;
             branch_f3_bge : br_en = (as >=  bs); // changed added =
             branch_f3_bltu: br_en = (au <  bu);
             branch_f3_bgeu: br_en = (au >=  bu); // changed added =
-            default       : br_en = 1'bx;
+            default       : br_en = 1'b0;
         endcase
     end
     
     always_comb
     begin
-        a          = 'x;
-        b          = 'x;
-        aluop      = 'x;
-        cmpop      = 'x;
-        dmem_addr  = 'x;
+        a          = '0;
+        b          = '0;
+        aluop      = '0;
+        cmpop      = '0;
+        dmem_addr  = '0;
         dmem_rmask = '0;
         dmem_wmask = '0;
-        dmem_wdata = 'x;
+        dmem_wdata = '0;
         dreq       = '0;
         dreq_load  = '0;
         rs2_s_real = '0;
@@ -226,6 +226,9 @@ import rv32i_types::*;
         ex_mem.rd_data = rd_v; // new
         ex_mem.regf_we = regf_we; // new -> phys
         ex_mem.is_store = '0; // NO STORES IN THIS ONE
+        ex_mem.is_load = '0;
+        ex_mem.is_br = '0;
+        ex_mem.head = '0;
         //ex_mem.dmem_addr = dmem_addr;
         //ex_mem.dmem_addr_saved = dmem_addr_saved;
         //ex_mem.dmem_rmask = dmem_rmask;
@@ -234,7 +237,7 @@ import rv32i_types::*;
        // ex_mem.dreq = dreq;
        // ex_mem.dreq_load = dreq_load;
         ex_mem.use_rd = id_ex.use_rd;
-        //ex_mem.branch_taken = branch_taken;
+        ex_mem.branch_taken = id_ex.branch_taken;
         ex_mem.use_prs1 = id_ex.use_prs1;
         ex_mem.rs1_paddr = id_ex.rs1_paddr;
         ex_mem.rs1_ready = id_ex.rs1_ready;
@@ -248,10 +251,12 @@ import rv32i_types::*;
 
         ex_mem.rob_idx = id_ex.rob_idx;
 
+        ex_mem.rob_overflow = id_ex.rob_overflow;
+
         // ex_mem.useless = id_ex.useless;
 
 
-        funct_unit_busy = pre_wb_int_stall;   //CHANGE
+        funct_unit_busy = '0;   //CHANGE
 
         ex_mem.rfvi_monitor_vals = id_ex.rfvi_monitor_vals;
         ex_mem.rfvi_monitor_vals.monitor_rs1_rdata = use_rs1 ? id_ex.rs1_data : '0;

@@ -12,7 +12,8 @@ import rv32i_types::*;
     input   ra_dp_stage_reg_t       inst_in_r,
     output  ra_dp_stage_reg_t       inst_out_r,
     output  logic                   valid_rdata,
-    output  logic                   rq_stall
+    output  logic                   rq_stall,
+    output  logic                   rq_stall_next
 
 );
 
@@ -22,13 +23,15 @@ import rv32i_types::*;
     logic in_out;
     logic [PTR_SIZE:0] head;
     logic [PTR_SIZE:0] tail;
+    logic [PTR_SIZE:0] tail_full;
 
     ra_dp_stage_reg_t internal_array_r [DEPTH];
 
-    logic full;
+    logic full, full_next;
     logic empty;
 
     //logic [WIDTH-1:0] inst_in_reg;
+    assign tail_full = tail + 1'b1;
 
     always_comb begin
 
@@ -53,11 +56,12 @@ import rv32i_types::*;
         // 4:
         // the fifo is empty
         // deq by itself should not be allowed since empty
-
+        full_next = (head[PTR_SIZE] != tail_full[PTR_SIZE] && head[PTR_SIZE-1:0] == (tail_full[PTR_SIZE-1:0]));
         full = (head[PTR_SIZE] != tail[PTR_SIZE] && head[PTR_SIZE-1:0] == tail[PTR_SIZE-1:0]); 
         empty = (head == tail);
 
         rq_stall = full;
+        rq_stall_next = full_next;
         valid_rdata = ~empty;
         in_out = (enq && deq);
 
@@ -74,41 +78,55 @@ import rv32i_types::*;
 
     always_ff @(posedge clk) begin
         if (rst) begin
+            inst_out_r <= '0;
             for (integer i = 0; i < DEPTH; i++) begin
                 internal_array_r[i] <= '0;
             end
             tail <= '0;
             head <= '0;
         end else begin
-            if (inst_in_r.valid) begin
+            inst_out_r <= '0;
+            //if (inst_in_r.valid) begin
                 if (enq && deq) begin
-                    internal_array_r[tail[PTR_SIZE-1:0]] <= inst_in_r;
+                    // internal_array_r[tail[PTR_SIZE-1:0]] <= inst_in_r;
+                    if (empty) begin
+                        inst_out_r <= inst_in_r;
+                    end else if (full) begin
+                        inst_out_r <= internal_array_r[head[PTR_SIZE-1:0]];
+                        internal_array_r[tail[PTR_SIZE-1:0]] <= inst_in_r; 
+                    end else begin
+                        inst_out_r <= internal_array_r[head[PTR_SIZE-1:0]];
+                        internal_array_r[tail[PTR_SIZE-1:0]] <= inst_in_r; 
+                    end
                     tail <= (tail + 4'b0001);
                     head <= (head + 4'b0001);
                 end else if (enq && !full) begin
+                    inst_out_r <= '0;
                     internal_array_r[tail[PTR_SIZE-1:0]] <= inst_in_r; 
                     tail <= (tail + 4'b0001);
                 end else if (deq && !empty) begin
+                    inst_out_r <= internal_array_r[head[PTR_SIZE-1:0]];
+                    internal_array_r[head[PTR_SIZE-1:0]] <= '0;
                     head <= (head + 4'b0001);
                 end
-            end
+            //end
         end
     
     end
 
-    always_ff @ (posedge clk) begin
-        if (rst) begin
-            inst_out_r <= '0;
-        end
-        else if (in_out) begin
-            inst_out_r <= inst_in_r;
-        end
-        else if (empty) begin
-            inst_out_r <= '0;
-        end 
-        else begin
-            inst_out_r <= internal_array_r[head[PTR_SIZE-1:0]];
-        end
-    end
+    // always_ff @ (posedge clk) begin
+    //     if (rst) begin
+    //         inst_out_r <= '0;
+    //     end
+    //     else if (in_out) begin
+    //         inst_out_r <= inst_in_r;
+    //     end
+    //     else if (empty) begin
+    //         inst_out_r <= '0;
+    //     end 
+    //     else begin
+    //         inst_out_r <= internal_array_r[head[PTR_SIZE-1:0]];
+    //     end
+    // end
 
 endmodule : rename_q
