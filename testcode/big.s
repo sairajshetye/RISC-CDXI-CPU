@@ -138,6 +138,7 @@ _start:
     slti x23, x8, -1945
     and x15, x11, x12
     ori x5, x10, 1594
+    nop
     sub x2, x21, x5
     andi x19, x15, 1332
     sub x8, x8, x23
@@ -1393,7 +1394,7 @@ _start:
     andi x31, x28, -1407
     andi x4, x19, 15
     andi x23, x21, -1806
-    xor x17, x31, x10
+    xor x17, x31, x10 # here
     sltiu x3, x14, 659
     add x24, x29, x18
     andi x9, x24, -552

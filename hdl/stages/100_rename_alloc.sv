@@ -6,17 +6,18 @@ import rv32i_types::*;
     // inputs from RAT, FL, stalls?
     input   logic   [6:0]   p_addr,
     input   logic   [3:0]   rob_idx,
-    //input   logic           rob_overflow,
+    input   logic           rob_overflow,
     // from RAT
     input   logic           rs1_renamed, rs2_renamed,
     input   logic   [6:0]   rs1_paddr, rs2_paddr,
 
-    input   logic           res_stall,
-    input   logic           rob_stall,
+    // input   logic           res_stall,
+    // input   logic           rob_stall,
+    input   logic           rq_stall,
     // output to ROB + dispatch, RAT
     //output  [4:0]   rd_s,
     output  logic           enq,
-    output  logic           deq,
+    // output  logic           deq,
     output  logic           rename_we,
     output  logic           fl_deq,
     output  logic           rob_enq,
@@ -46,7 +47,7 @@ import rv32i_types::*;
         rat_rs1 = id_ex.rs1_s;
         rat_rs2 = id_ex.rs2_s;
         rd_s = id_ex.rd_s;
-        if (id_ex.use_rd && rd_s != 5'd0) begin // only rename if rd != 0 and being used
+        if (id_ex.valid && id_ex.use_rd && rd_s != 5'd0) begin // only rename if rd != 0 and being used
             prd_s = p_addr;
             rename_we = '1;
             fl_deq = '1;
@@ -62,7 +63,13 @@ import rv32i_types::*;
     // enqueue into the rob
     // - set rob idx in the ra_dp 
     always_comb begin
-        if (id_ex.valid && !rob_stall) begin
+        // if (id_ex.valid && !rob_stall) begin
+        //     rob_enq = '1;
+        // end
+        // else begin
+        //     rob_enq = '0;
+        // end
+        if (id_ex.valid) begin
             rob_enq = '1;
         end
         else begin
@@ -77,6 +84,10 @@ import rv32i_types::*;
         rob_entry.br_pred = not_taken;
         rob_entry.br_result = not_taken; // should be not known CHANGE LATER
         rob_entry.rfvi_monitor_vals = '0;
+        rob_entry.pc_next = id_ex.pc_next;
+        rob_entry.ld_store = (id_ex.is_load || id_ex.is_store) ? '1 : '0;
+        rob_entry.fl_head = fl_head;
+        //rob_entry.order = id_ex.order;
     end
 
     // 3. send to dispatch
@@ -102,7 +113,10 @@ import rv32i_types::*;
         ra_dp.use_rs2 = id_ex.use_rs2;
         ra_dp.rd_s = id_ex.rd_s;
         ra_dp.regf_we = id_ex.regf_we;
+        ra_dp.is_br = id_ex.is_br;
+        ra_dp.head = (id_ex.is_br) ? '0 : fl_head;
         ra_dp.is_store = id_ex.is_store;
+        ra_dp.is_load = id_ex.is_load;
         ra_dp.use_rd = id_ex.use_rd;
 
         // new
@@ -117,16 +131,22 @@ import rv32i_types::*;
         ra_dp.rd_paddr = prd_s;
         ra_dp.useless = '0;
 
-        if (res_stall) begin
-            deq = '0;
-            ra_dp.deq = '0;
-        end
-        else begin
-            deq = '1;
-            ra_dp.deq = '1;
+        // if (res_stall) begin
+        //     deq = '0;
+        //     ra_dp.deq = '0;
+        // end
+        // else begin
+        //     deq = '1;
+        //     ra_dp.deq = '1;
+        // end
+
+        if (!rq_stall && id_ex.valid) begin
+            enq = '1;
+        end else begin
+            enq = '0;
         end
 
-        enq = id_ex.deq;
+        // enq = id_ex.deq;
 
         ra_dp.rfvi_monitor_vals = id_ex.rfvi_monitor_vals;
     end
