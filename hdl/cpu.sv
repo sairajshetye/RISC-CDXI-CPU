@@ -319,7 +319,7 @@ import rv32i_types::*;
         .rst(rst || flush),
         .enq(rq_enq),
         // .deq(rq_deq),
-        .deq(!dispatch_stall_mult && !dispatch_stall_int && !really_full_mult && !really_full_int && !really_full_br && !really_full_mem), // && !really_full_mult && !really_full_int
+        .deq(!dispatch_stall_mult && !dispatch_stall_int && !really_full_mult && !really_full_int && !really_full_br && !really_full_mem && !lds_stall), // && !really_full_mult && !really_full_int
         .inst_in_r(ra_dp_reg_next),
         .inst_out_r(ra_dp_inst_out),
         .valid_rdata(rq_valid_rdata),
