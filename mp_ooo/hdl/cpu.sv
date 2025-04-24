@@ -929,7 +929,7 @@ import rv32i_types::*;
     cache_mod icache(
         .clk(clk), // input
         .rst(rst), // input
-        .flush(flush),
+        .flush('0),
 
         .ufp_addr(ufp_addr[0]), // input
         .ufp_rmask(ufp_rmask[0]), // input
