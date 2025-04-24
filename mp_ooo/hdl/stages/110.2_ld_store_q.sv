@@ -36,6 +36,7 @@ import rv32i_types::*;
     logic [PTR_SIZE:0] head;
     logic [PTR_SIZE:0] head_next;
     logic [PTR_SIZE:0] tail;
+    logic [PTR_SIZE:0] tail_next;
 
     dp_lds_stage_reg_t internal_array_lds [DEPTH];
 
@@ -48,7 +49,9 @@ import rv32i_types::*;
     dp_is_stage_reg_t inst_tmp;
 
     //logic [WIDTH-1:0] inst_in_reg;
-
+    always_comb begin
+        tail_next = tail + 1'b1;
+    end
     always_comb begin
 
         // edge cases
@@ -78,16 +81,17 @@ import rv32i_types::*;
 
         lds_stall = full;
         valid_rdata = ~empty;
-        really_full = '1;
-        for (integer i = 0; i < DEPTH; i++) begin
-            // if we are loading, then index 0 is technically valid but we havent put anything there
-            if ((i == 0) && enq) begin
-                really_full &= '1;
-            end
-            else begin
-                really_full &= internal_array_lds[i].valid;
-            end
-        end
+        really_full = (head[PTR_SIZE] != tail[PTR_SIZE] && head[PTR_SIZE-1:0] == tail_next[PTR_SIZE-1:0]);
+        // really_full = '1;
+        // for (integer i = 0; i < DEPTH-2; i++) begin
+        //     // if we are loading, then index 0 is technically valid but we havent put anything there
+        //     if ((i == 0) && enq) begin
+        //         really_full &= '1;
+        //     end
+        //     else begin
+        //         really_full &= internal_array_lds[i].valid;
+        //     end
+        // end
         // if (!empty) begin
         //     deq = ready_deq;
         // end
@@ -100,6 +104,7 @@ import rv32i_types::*;
 
         in_out = (enq && deq);
         head_next = head + 1'b1;
+        //tail_next = tail + 1'b1;
     end
 
     // always_ff @(posedge clk) begin // NOT BEING USED, CAN DELETE LATER?
