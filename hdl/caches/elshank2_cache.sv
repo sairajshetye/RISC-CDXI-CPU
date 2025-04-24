@@ -1,4 +1,4 @@
-/* module cache (
+module cache (
     input   logic           clk,
     input   logic           rst,
 
@@ -141,11 +141,11 @@
         .dout0      (lru_raw)
     );
 
-    
+    /*
     fsm control_unit (
         .*
     );
-    
+    */
 
     always_ff @(posedge clk) begin
         if (rst) begin
@@ -334,4 +334,4 @@
         endcase
     end
 
-endmodule : cache */
+endmodule : cache
