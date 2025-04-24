@@ -145,7 +145,9 @@ import rv32i_types::*;
     logic valid_rdata_mult, valid_rdata_int, valid_rdata_br, valid_rdata_mem;
     logic dones, done_stall;
 
-    logic flush;
+    logic flush, flushed;
+    logic [31:0] flush_pc;
+    logic [63:0] o_reg;
 
     branch_t branch_res_out;
     logic ld_branch_res;
@@ -180,13 +182,30 @@ import rv32i_types::*;
             cache_rdata_32[unsigned'(i)*8+:8] = cache_rdata[((pc[4:0]*8)+(unsigned'(i)*8))+:8]; 
         end
     end
+    always_ff @(posedge clk) begin
+        if (rst) begin
+            flushed <= '0;
+            flush_pc <= '0;
+            o_reg <= '0;
+        end else if (flush) begin
+            flushed <= '1;
+            flush_pc <= rob_out.pc_next;
+            o_reg <= order_reg;
+        end else if (ufp_resp[0]) begin
+            flushed <= '0;
+            flush_pc <= '0;
+            o_reg <= '0;
 
-    always_comb begin
+        end
+
+    end
+
+    always_comb begin 
         if (rst) begin
             pc_next = 32'hAAAAA000;
-        end else if (flush) begin
-            pc_next = rob_out.pc_next;
-        end else if (!iq_stall && !if_id_reg_next.fetch_stall) begin // && !if_id_reg_next.fetch_stall
+        end else if (flushed) begin
+            pc_next = flush_pc;
+        end else if (!iq_stall && !if_id_reg_next.fetch_stall && ufp_resp[0] && !flushed) begin // && !if_id_reg_next.fetch_stall
             pc_next = pc + 4;
         end else begin
             pc_next = pc;
@@ -217,6 +236,7 @@ import rv32i_types::*;
     pcreg pcreg(
         .clk(clk),
         .rst(rst),
+        .fetch_stall(if_id_reg_next.fetch_stall && ufp_resp[0] && flushed),
         .pc(pc),
         .pc_next(pc_next)
     );
@@ -225,8 +245,8 @@ import rv32i_types::*;
         .clk(clk),
         .rst(rst),
         .iq_stall(iq_stall),
-        .flush(flush),
-        .order_br(order_reg),
+        .flush(flushed),
+        .order_br(o_reg),
 
         // .dq_stall(dq_stall),
         .enq(iq_enq),
@@ -245,7 +265,7 @@ import rv32i_types::*;
         .DEPTH      (8)
     ) inst_q(
         .clk(clk),
-        .rst(rst || flush),
+        .rst(rst || flush || flushed),
         .enq(iq_enq),
         .deq(!dq_stall && !dq_stall_next),
         .inst_in(if_id_reg_next),
@@ -909,6 +929,7 @@ import rv32i_types::*;
     cache_mod icache(
         .clk(clk), // input
         .rst(rst), // input
+        .flush(flush),
 
         .ufp_addr(ufp_addr[0]), // input
         .ufp_rmask(ufp_rmask[0]), // input

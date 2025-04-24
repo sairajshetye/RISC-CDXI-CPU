@@ -125,9 +125,19 @@ import rv32i_types::*;
                 b = '0;
                 aluop = '0;
                 cmpop = '0;
-                pc_next = id_ex.pc + id_ex.j_imm;
-                branch_taken = taken;
-                flush = '1;     //will change based on predicted br taken or not
+                // if (id_ex.rd_s == '0) begin
+                //     pc_next = id_ex.pc + id_ex.j_imm;
+                //     branch_taken = not_taken;
+                //     flush = '0;     //will change based on predicted br taken or not
+
+                // end else begin
+                    pc_next = id_ex.pc + id_ex.j_imm;
+                    branch_taken = taken;
+                    flush = '1;     //will change based on predicted br taken or not
+                // end
+                //pc_next = id_ex.pc + id_ex.j_imm;
+                //branch_taken = taken;
+                //flush = '1;     //will change based on predicted br taken or not
             end
             op_b_jalr : begin
                 // NOT NEEDED YET

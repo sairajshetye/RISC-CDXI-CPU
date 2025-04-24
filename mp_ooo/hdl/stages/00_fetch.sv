@@ -31,7 +31,7 @@ output logic done
         if (rst) begin
             order_reg <= '0;
             done <= '0;
-        end else if (flush) begin
+        end else if (flush && imem_resp) begin
             order_reg <= order_br + 1'b1;
         end else if (imem_resp && !iq_stall) begin
             order_reg <= order_reg + 1;
@@ -90,7 +90,7 @@ output logic done
                 if_id.fetch_stall = '0;
                 if_id.valid = '1;
 
-                if (!iq_stall) begin
+                if (!iq_stall && !flush) begin
                      enq = '1;
                 end
 
