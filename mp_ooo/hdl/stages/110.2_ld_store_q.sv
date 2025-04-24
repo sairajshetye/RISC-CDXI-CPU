@@ -10,8 +10,8 @@ import rv32i_types::*;
     input   logic                   rst,
     input   logic                   enq,
     input   logic                   ready_deq,
-    input   dp_lds_stage_reg_t       inst_in_lds,
-    output  dp_lds_stage_reg_t       inst_out_lds,
+    input   dp_is_stage_reg_t       inst_in_lds,
+    output  dp_is_stage_reg_t       inst_out_lds,
     //output  dp_is_stage_reg_t       inst_out_lds_trans,
     output  logic                   valid_rdata,
     output  logic                   lds_stall,
@@ -38,7 +38,7 @@ import rv32i_types::*;
     logic [PTR_SIZE:0] tail;
     logic [PTR_SIZE:0] tail_next;
 
-    dp_lds_stage_reg_t internal_array_lds [DEPTH];
+    dp_is_stage_reg_t internal_array_lds [DEPTH];
 
     logic full;
     logic empty;
@@ -176,6 +176,7 @@ import rv32i_types::*;
                 if (idx_rep[i]) begin
                     internal_array_lds[i].rs2_data <= data_t;
                     internal_array_lds[i].rs2_ready <= '1;
+                    
                 end 
             end 
             

@@ -87,7 +87,7 @@ import rv32i_types::*;
         dmem_addr  = 'x;
         dmem_rmask = '0;
         dmem_wmask = '0;
-        dmem_wdata = 'x;
+        dmem_wdata = '0;
         dreq       = '0;
         dreq_load  = '0;
         rs2_s_real = '0;
