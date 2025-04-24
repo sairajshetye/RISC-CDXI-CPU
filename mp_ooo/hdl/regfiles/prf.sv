@@ -47,22 +47,22 @@ import rv32i_types::*;
                 data[i].value <= '0;
             end
         end else begin
-            if (regf_we_0) begin // write to PRF     && (rd_s != 5'd0)
+            if (regf_we_0 && (rd_s_0 != 7'd0)) begin // write to PRF     && (rd_s != 5'd0)
                 data[rd_s_0].valid <= '1;
                 data[rd_s_0].value <= rd_v_0;
             end
 
-            if (regf_we_1) begin // write to PRF     && (rd_s != 5'd0)
+            if (regf_we_1 && (rd_s_1 != 7'd0)) begin // write to PRF     && (rd_s != 5'd0)
                 data[rd_s_1].valid <= '1;
                 data[rd_s_1].value <= rd_v_1;
             end
 
-            if (regf_we_2) begin // write to PRF     && (rd_s != 5'd0)
+            if (regf_we_2 && (rd_s_2 != 7'd0)) begin // write to PRF     && (rd_s != 5'd0)
                 data[rd_s_2].valid <= '1;
                 data[rd_s_2].value <= rd_v_2;
             end
 
-            if (regf_we_3) begin // write to PRF     && (rd_s != 5'd0)
+            if (regf_we_3 && (rd_s_3 != 7'd0)) begin // write to PRF     && (rd_s != 5'd0)
                 data[rd_s_3].valid <= '1;
                 data[rd_s_3].value <= rd_v_3;
             end
@@ -82,43 +82,45 @@ import rv32i_types::*;
         else begin // read from PRF
             if (transparent_1_0) begin
                 prs1_v_comb.valid = '1;
-                prs1_v_comb.value = rd_v_0;
+                prs1_v_comb.value = (rs1_s != 7'd0) ? rd_v_0 : '0;
             end
             else if (transparent_1_1) begin
                 prs1_v_comb.valid = '1;
-                prs1_v_comb.value = rd_v_1;
+                prs1_v_comb.value = (rs1_s != 7'd0) ? rd_v_1 : '0;
             end
             else if (transparent_1_2) begin
                 prs1_v_comb.valid = '1;
-                prs1_v_comb.value = rd_v_2;
+                prs1_v_comb.value = (rs1_s != 7'd0) ? rd_v_2 : '0;
             end
             else if (transparent_1_3) begin
                 prs1_v_comb.valid = '1;
-                prs1_v_comb.value = rd_v_3;
+                prs1_v_comb.value = (rs1_s != 7'd0) ? rd_v_3 : '0;
             end
             else begin
-                prs1_v_comb = data[rs1_s];
-                //prs1_v_comb.valid = '1;
+                prs1_v_comb.valid = (rs1_s != 7'd0) ? data[rs1_s].valid : '1;
+                prs1_v_comb.value = (rs1_s != 7'd0) ? data[rs1_s].value : '0;
             end
+
+
             if (transparent_2_0) begin
                 prs2_v_comb.valid = '1;
-                prs2_v_comb.value = rd_v_0;
+                prs2_v_comb.value = (rs2_s != 7'd0) ? rd_v_0 : '0;
             end
             else if (transparent_2_1) begin
                 prs2_v_comb.valid = '1;
-                prs2_v_comb.value = rd_v_1;
+                prs2_v_comb.value = (rs2_s != 7'd0) ? rd_v_1 : '0;
             end
             else if (transparent_2_2) begin
                 prs2_v_comb.valid = '1;
-                prs2_v_comb.value = rd_v_2;
+                prs2_v_comb.value = (rs2_s != 7'd0) ? rd_v_2 : '0;
             end
             else if (transparent_2_3) begin
                 prs2_v_comb.valid = '1;
-                prs2_v_comb.value = rd_v_3;
+                prs2_v_comb.value = (rs2_s != 7'd0) ? rd_v_3 : '0;
             end
             else begin
-                prs2_v_comb = data[rs2_s];
-                //prs2_v_comb.valid = '1;
+                prs2_v_comb.valid = (rs2_s != 7'd0) ? data[rs2_s].valid : '1;
+                prs2_v_comb.value = (rs2_s != 7'd0) ? data[rs2_s].value : '0;
             end
         end
         // else if (!global_stall & !load_stall) begin
