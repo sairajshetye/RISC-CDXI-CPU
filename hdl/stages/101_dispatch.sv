@@ -86,7 +86,7 @@ import rv32i_types::*;
         dp_is.rd_data = '0;
 
         dp_is.rob_idx = ra_dp.rob_idx;
-        //dp_is.rob_overflow = ra_dp.rob_overflow;
+        dp_is.rob_overflow = ra_dp.rob_overflow;
         
         // dp_is.useless = '0;
         if (ra_dp.use_rs1) begin
