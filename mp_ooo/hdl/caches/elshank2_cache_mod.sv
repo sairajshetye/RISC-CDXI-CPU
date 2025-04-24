@@ -279,7 +279,7 @@ module cache_mod (
 
                         // STORE THIS DATA IN A LINE BUFFER HERE
                         lb_data = data_d_out[way_hit];
-                        lb_addr = ufp_addr;
+                        lb_addr = ufp_addr_reg;
 
                         ufp_rdata = data_d_out[way_hit];
                     end
