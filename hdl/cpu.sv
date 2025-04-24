@@ -122,6 +122,8 @@ import rv32i_types::*;
     //logic [6:0]     commit_rs;
     prf_t           commit_prs;
 
+    logic [31:0]    dmem_rdata_extended;
+
     
 
     // always_ff @ (posedge clk) begin
@@ -466,6 +468,19 @@ import rv32i_types::*;
 
     );
 
+    always_comb 
+    begin
+        unique case (inst_out_lds_q.funct3)
+            load_f3_lb : dmem_rdata_extended = {{24{ufp_rdata_data[7 +8 *inst_out_lds_q.dmem_addr_saved[1:0]]}}, ufp_rdata_data[8 *inst_out_lds_q.dmem_addr_saved[1:0] +: 8 ]};
+            load_f3_lbu: dmem_rdata_extended = {{24{1'b0}}                          , ufp_rdata_data[8 *inst_out_lds_q.dmem_addr_saved[1:0] +: 8 ]};
+            load_f3_lh : dmem_rdata_extended = {{16{ufp_rdata_data[15+16*inst_out_lds_q.dmem_addr_saved[1]  ]}}, ufp_rdata_data[16*inst_out_lds_q.dmem_addr_saved[1]   +: 16]};
+            load_f3_lhu: dmem_rdata_extended = {{16{1'b0}}                          , ufp_rdata_data[16*inst_out_lds_q.dmem_addr_saved[1]   +: 16]};
+            load_f3_lw : dmem_rdata_extended = ufp_rdata_data;
+            default    : dmem_rdata_extended = '0;
+        endcase
+    end
+
+
     always_comb begin
         lds_deq = '0;
         if (ufp_resp[1] && inst_out_lds_q.valid) begin
@@ -478,11 +493,11 @@ import rv32i_types::*;
             p_addr_out_wb[3] = inst_out_lds_q.rd_paddr;
             rfvi_monitor_vals[3] = inst_out_lds_q.rfvi_monitor_vals;
             lds_deq = '1;
-            rfvi_monitor_vals[3].monitor_rd_wdata = ufp_rdata_data; 
+            rfvi_monitor_vals[3].monitor_rd_wdata = dmem_rdata_extended; 
             rfvi_monitor_vals[3].monitor_mem_rdata = ufp_rdata_data;
             //rfvi_monitor_vals[3].monitor_rs2_rdata = inst_out_lds_q.rs2_data;
            // rfvi_monitor_vals[3].monitor_mem_wdata = inst_out_lds_q.dmem_wdata;
-            wb_data_out[3] = ufp_rdata_data;    //????
+            wb_data_out[3] = dmem_rdata_extended;    //????
             ufp_addr[1] = '0;
             ufp_rmask[1] = '0;
             ufp_wmask[1] = '0;
