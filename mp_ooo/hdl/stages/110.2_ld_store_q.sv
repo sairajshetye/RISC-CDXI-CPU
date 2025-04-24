@@ -44,7 +44,8 @@ import rv32i_types::*;
     logic empty;
 
     logic   [WIDTH-1:0]     data_t;
-    logic   [DEPTH-1:0]     idx_rep; 
+    logic   [DEPTH-1:0]     idx_rep;
+    logic   [DEPTH-1:0]     rs1_rep, rs2_rep;   //0 for rs1, 2 for rs2 
     //logic   [DEPTH-1:0]     rs2_rep;
     dp_is_stage_reg_t inst_tmp;
 
@@ -121,40 +122,50 @@ import rv32i_types::*;
     always_comb begin
         data_t = '0;
         idx_rep = '0;
+        rs1_rep = '0;
+        rs2_rep = '0;
         for (integer i = 0; i < DEPTH; i++) begin
-            if (internal_array_lds[i].valid && internal_array_lds[i].is_store) begin
-                if (!internal_array_lds[i].rs2_ready && internal_array_lds[i].use_prs2 && (internal_array_lds[i].rs2_paddr == data_paddr_0)) begin      //if using rs2 check if bus_in is for rs2
+            if (internal_array_lds[i].valid) begin
+                if (!internal_array_lds[i].rs1_ready && internal_array_lds[i].use_prs1) begin
+                    if (internal_array_lds[i].rs1_paddr == data_paddr_0) begin
                         data_t = data_in_0;
                         idx_rep[i] = '1;
-                        //rs2_rep[i] = '1;
-                        //replace = '1;
-                        //internal_array_lds[i].rs2_data = data_in;
-                       // internal_array_lds[i].rs2_ready = data_in;
-                end
-                else if (!internal_array_lds[i].rs2_ready && internal_array_lds[i].use_prs2 && (internal_array_lds[i].rs2_paddr == data_paddr_1)) begin      //if using rs2 check if bus_in is for rs2
+                        rs1_rep[i] = '1;
+                    end else if (internal_array_lds[i].rs1_paddr == data_paddr_1) begin
                         data_t = data_in_1;
                         idx_rep[i] = '1;
-                        //rs2_rep[i] = '1;
-                        //replace = '1;
-                        //internal_array_lds[i].rs2_data = data_in;
-                       // internal_array_lds[i].rs2_ready = data_in;
-                end
-                else if (!internal_array_lds[i].rs2_ready && internal_array_lds[i].use_prs2 && (internal_array_lds[i].rs2_paddr == data_paddr_2)) begin      //if using rs2 check if bus_in is for rs2
+                        rs1_rep[i] = '1;
+                    end else if (internal_array_lds[i].rs1_paddr == data_paddr_2) begin
                         data_t = data_in_2;
                         idx_rep[i] = '1;
-                        //rs2_rep[i] = '1;
-                        //replace = '1;
-                        //internal_array_lds[i].rs2_data = data_in;
-                       // internal_array_lds[i].rs2_ready = data_in;
-                end
-                else if (!internal_array_lds[i].rs2_ready && internal_array_lds[i].use_prs2 && (internal_array_lds[i].rs2_paddr == data_paddr_3)) begin      //if using rs2 check if bus_in is for rs2
+                        rs1_rep[i] = '1;
+                    end else if (internal_array_lds[i].rs1_paddr == data_paddr_3) begin
                         data_t = data_in_3;
                         idx_rep[i] = '1;
-                        //rs2_rep[i] = '1;
-                        //replace = '1;
-                        //internal_array_lds[i].rs2_data = data_in;
-                       // internal_array_lds[i].rs2_ready = data_in;
+                        rs1_rep[i] = '1;
+                    end
                 end
+
+                if (!internal_array_lds[i].rs2_ready && internal_array_lds[i].use_prs2) begin
+                    if (internal_array_lds[i].rs2_paddr == data_paddr_0) begin
+                        data_t = data_in_0;
+                        idx_rep[i] = '1;
+                        rs2_rep[i] = '1;
+                    end else if (internal_array_lds[i].rs2_paddr == data_paddr_1) begin
+                        data_t = data_in_1;
+                        idx_rep[i] = '1;
+                        rs2_rep[i] = '1;
+                    end else if (internal_array_lds[i].rs2_paddr == data_paddr_2) begin
+                        data_t = data_in_2;
+                        idx_rep[i] = '1;
+                        rs2_rep[i] = '1;
+                    end else if (internal_array_lds[i].rs2_paddr == data_paddr_3) begin
+                        data_t = data_in_3;
+                        idx_rep[i] = '1;
+                        rs2_rep[i] = '1;
+                    end
+                end 
+
             end
         end
     end
@@ -174,9 +185,14 @@ import rv32i_types::*;
 
             for (integer i = 0; i < DEPTH; i++) begin
                 if (idx_rep[i]) begin
-                    internal_array_lds[i].rs2_data <= data_t;
-                    internal_array_lds[i].rs2_ready <= '1;
-                    
+                    if (rs2_rep[i]) begin   //rs2 replace
+                        internal_array_lds[i].rs2_data <= data_t;
+                        internal_array_lds[i].rs2_ready <= '1;
+                    end 
+                    if (rs1_rep[i]) begin      //rs1 replace
+                        internal_array_lds[i].rs1_data <= data_t;
+                        internal_array_lds[i].rs1_ready <= '1;
+                    end
                 end 
             end 
             

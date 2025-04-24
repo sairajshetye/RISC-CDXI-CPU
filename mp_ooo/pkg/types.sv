@@ -353,6 +353,7 @@ package rv32i_types;
     typedef struct packed {
         //valid, value
         logic           valid;
+        logic           committed;
         logic   [31:0]  value;
     } prf_t;
 

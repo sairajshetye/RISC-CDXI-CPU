@@ -468,7 +468,7 @@ import rv32i_types::*;
 
     always_comb begin
         lds_deq = '0;
-        if (ufp_resp[1] && inst_out_lds.valid) begin
+        if (ufp_resp[1] && inst_out_lds_q.valid) begin
             //wb_inst_out[3] = inst_out_lds;
             wb_inst_out[3] = '0;
             prf_we[3] = inst_out_lds_q.regf_we;
@@ -500,7 +500,7 @@ import rv32i_types::*;
 
         
         if (rob_out.ld_store == '1 && !ufp_resp[1]) begin   //if rob commit is a ld store
-            if (inst_out_lds.rob_idx == rob_head_idx) begin //if load or store at head of queue is the commit inst from the rob
+            if (inst_out_lds_q.rob_idx == rob_head_idx) begin //if load or store at head of queue is the commit inst from the rob
                 //trigger the memory
                 ufp_addr[1] = inst_out_lds_q.dmem_addr;
                 ufp_rmask[1] = inst_out_lds_q.dmem_rmask;
@@ -768,6 +768,7 @@ import rv32i_types::*;
     prf prf (
         .clk(clk),
         .rst(rst),
+        .flush(flush),
         .regf_we_0(prf_we[0]),
         .regf_we_1(prf_we[1]),
         .regf_we_2(prf_we[2]),
@@ -776,6 +777,7 @@ import rv32i_types::*;
         .rd_v_1(wb_data_out[1]),
         .rd_v_2(wb_data_out[2]),
         .rd_v_3(wb_data_out[3]),
+        .aregf_we(aregf_we),
         .rs1_s(prs1_s), 
         .rs2_s(prs2_s), 
         .rd_s_0(p_addr_out_wb[0]),
