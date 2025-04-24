@@ -15,6 +15,7 @@ import rv32i_types::*;
     //output  dp_is_stage_reg_t       inst_out_lds_trans,
     output  logic                   valid_rdata,
     output  logic                   lds_stall,
+    output  logic                   really_full,
 
     input   logic   [6:0]  data_paddr_0, //from intfunct 
     input   logic   [31:0]     data_in_0,    //from intfunct  
@@ -77,7 +78,16 @@ import rv32i_types::*;
 
         lds_stall = full;
         valid_rdata = ~empty;
-
+        really_full = '1;
+        for (integer i = 0; i < DEPTH; i++) begin
+            // if we are loading, then index 0 is technically valid but we havent put anything there
+            if ((i == 0) && enq) begin
+                really_full &= '1;
+            end
+            else begin
+                really_full &= internal_array_lds[i].valid;
+            end
+        end
         // if (!empty) begin
         //     deq = ready_deq;
         // end

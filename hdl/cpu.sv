@@ -319,7 +319,7 @@ import rv32i_types::*;
         .rst(rst || flush),
         .enq(rq_enq),
         // .deq(rq_deq),
-        .deq(!dispatch_stall_mult && !dispatch_stall_int && !really_full_mult && !really_full_int && !really_full_br), // && !really_full_mult && !really_full_int
+        .deq(!dispatch_stall_mult && !dispatch_stall_int && !really_full_mult && !really_full_int && !really_full_br && !really_full_mem), // && !really_full_mult && !really_full_int
         .inst_in_r(ra_dp_reg_next),
         .inst_out_r(ra_dp_inst_out),
         .valid_rdata(rq_valid_rdata),
@@ -447,6 +447,7 @@ import rv32i_types::*;
         .inst_out_lds(inst_out_lds_q),
         .valid_rdata(valid_rdata_lds),
         .lds_stall(lds_stall),
+        .really_full(really_full_mem),
 
         .data_paddr_0(p_addr_out_wb[0]), // input
         .data_paddr_1(p_addr_out_wb[1]), // input
@@ -790,7 +791,7 @@ import rv32i_types::*;
         // rs1, rs2
 
         // check both arf and prf -> which one
-        if (ra_dp_inst_out.use_prs1 && prs1_v_comb.valid) begin // using phys address and already there
+        if (ra_dp_inst_out.use_prs1 && prs1_v_comb.valid ) begin // using phys address and already there
             rs1_rdata = prs1_v_comb.value;
             rs1_ready = '1;
         end
@@ -812,7 +813,7 @@ import rv32i_types::*;
             rs1_ready = '0;
         end
 
-        if (ra_dp_inst_out.use_prs2 && prs2_v_comb.valid) begin // using phys address and already there
+        if (ra_dp_inst_out.use_prs2 && prs2_v_comb.valid ) begin // using phys address and already there
             rs2_rdata = prs2_v_comb.value;
             rs2_ready = '1;
         end
