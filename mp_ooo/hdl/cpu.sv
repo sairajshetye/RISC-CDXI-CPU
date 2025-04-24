@@ -862,8 +862,8 @@ import rv32i_types::*;
 
     arbiter arbiter(
         .clk(clk), // input
-        .rst(rst || flush), // input
-
+        .rst(rst), // input
+        .flush(flush),
         .bmem_raddr(bmem_raddr), // input
         .bmem_rdata(bmem_rdata), // input
         .bmem_rvalid(bmem_rvalid), // input
@@ -924,7 +924,7 @@ import rv32i_types::*;
     cache_mod icache(
         .clk(clk), // input
         .rst(rst), // input
-
+        .flush(flush),
         .ufp_addr(ufp_addr[0]), // input
         .ufp_rmask(ufp_rmask[0]), // input
         .ufp_wmask(ufp_wmask[0]), // input
