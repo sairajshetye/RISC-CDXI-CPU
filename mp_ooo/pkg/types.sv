@@ -203,7 +203,7 @@ package rv32i_types;
         logic           rs2_ready;
 
         logic    [3:0]  rob_idx;
-        //logic           rob_overflow;
+        logic           rob_overflow;
 
         logic    [6:0]  rd_paddr;
 
@@ -265,7 +265,7 @@ package rv32i_types;
         logic    [31:0] rd_data;
 
         logic    [3:0]  rob_idx;
-        //logic           rob_overflow;
+        logic           rob_overflow;
 
         rfvi_packet_t       rfvi_monitor_vals;
 

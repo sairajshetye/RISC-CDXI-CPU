@@ -37,6 +37,7 @@ import rv32i_types::*;
     output  logic                   decode_stall,
     output  logic                   deq,
     output  logic [PTR_SIZE-1:0]    rob_tail_idx,
+    output  logic [PTR_SIZE-1:0]    rob_head_idx,
     output  logic                   rob_overflow,
     output  logic                   aregf_we,
     output  logic [4:0]             ard_s,
@@ -72,7 +73,7 @@ import rv32i_types::*;
         //valid_rdata = ~empty;
 
         rob_tail_idx = tail[PTR_SIZE-1:0]; // in rename and allocate, set inst rob idx field to this tail
-        //rob_overflow = tail[PTR_SIZE];
+        rob_overflow = tail[PTR_SIZE];
 
         // if (rob[head[PTR_SIZE-1:0]].ld_store) begin
         //     deq = lds_deq;

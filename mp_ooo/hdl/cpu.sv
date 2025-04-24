@@ -69,13 +69,10 @@ import rv32i_types::*;
     logic       rs1_renamed, rs2_renamed;
     logic       rename_we;
     logic       rs1_ready, rs2_ready;
-    logic [3:0]    rob_idx_ld;
+    
     logic           rob_overflow;
-    logic [6:0]    p_addr_out_wb;
+   
 
-    logic prf_we, ld_status;
-    status_t status_n;
-    logic [31:0] wb_data_out;
 
     //logic big_valid;
 
@@ -292,6 +289,8 @@ import rv32i_types::*;
         .p_addr(p_addr_out), // FL
         .rob_idx(rob_tail_idx),
         .rob_overflow(rob_overflow),
+        .fl_head(head_out),
+        
         // from RAT
         .rs1_renamed(rs1_renamed), 
         .rs2_renamed(rs2_renamed),
@@ -769,24 +768,28 @@ import rv32i_types::*;
     prf prf (
         .clk(clk),
         .rst(rst),
-        .enq(rob_enq),
-        .ld_status(ld_status),
-        .status_in(status_n), // '0
-        .ld_branch_res('0),
-        .rob_idx_ld(rob_idx_ld),
-        .rfvi_monitor_vals(rfvi_monitor_vals),
-        .branch_res_in(not_taken), // '0
-        .rob_in(rob_entry),
-        .rob_idx_in('0),
-        .rob_out(rob_out),
-        .valid_rdata(rob_valid_rdata),
-        .alloc_stall(rob_stall),
-        .deq(fl_enq),
-        .rob_tail_idx(rob_tail_idx),
-        .rob_overflow(rob_overflow),
-        .aregf_we(aregf_we),
-        .ard_s(ard_s),
-        .p_addr_ret(p_addr_ret)
+        .regf_we_0(prf_we[0]),
+        .regf_we_1(prf_we[1]),
+        .regf_we_2(prf_we[2]),
+        .regf_we_3(prf_we[3]),
+        .rd_v_0(wb_data_out[0]),
+        .rd_v_1(wb_data_out[1]),
+        .rd_v_2(wb_data_out[2]),
+        .rd_v_3(wb_data_out[3]),
+        .rs1_s(prs1_s), 
+        .rs2_s(prs2_s), 
+        .rd_s_0(p_addr_out_wb[0]),
+        .rd_s_1(p_addr_out_wb[1]),
+        .rd_s_2(p_addr_out_wb[2]),
+        .rd_s_3(p_addr_out_wb[3]),
+        .commit_rs(p_addr_ret),
+        .prs1_v(prs1_v), 
+        .prs2_v(prs2_v),
+        .prs1_v_comb(prs1_v_comb),
+        .prs2_v_comb(prs2_v_comb),
+        .free_we(fl_enq),
+        .rd_s_free(fl_data_in),
+        .commit_prs(commit_prs)
     );
     
     always_comb begin

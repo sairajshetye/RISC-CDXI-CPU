@@ -14,6 +14,7 @@ import rv32i_types::*;
     // input   logic           res_stall,
     // input   logic           rob_stall,
     input   logic           rq_stall,
+    input   logic   [7:0]   fl_head,
     // output to ROB + dispatch, RAT
     //output  [4:0]   rd_s,
     output  logic           enq,
@@ -121,7 +122,7 @@ import rv32i_types::*;
 
         // new
         ra_dp.rob_idx = rob_idx;
-        //ra_dp.rob_overflow = rob_overflow;
+        ra_dp.rob_overflow = rob_overflow;
         ra_dp.use_prs1 = rs1_renamed; // inputs from RAT
         ra_dp.rs1_paddr = rs1_renamed ? rs1_paddr : 7'h7E;
         ra_dp.rs1_ready = '0; // not ready
