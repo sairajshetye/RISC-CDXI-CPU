@@ -67,7 +67,7 @@ import rv32i_types::*;
         else if (flush) begin
             ignore <= '1;
         end
-        else if (cache_read) begin
+        else if (cache_read | cache_write) begin // or with write?
             ignore <= '0;
         end
 
