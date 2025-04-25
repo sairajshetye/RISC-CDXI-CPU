@@ -83,6 +83,10 @@
             end
         end
 
+        if (dut.monitor_order == 119334) begin
+            $display("END: time=%0t areg_value=0x%0h", $time, dut.rat_arf_1.data[13].value);
+        end
+
         // if (|test_dupe) begin
         //     $display("YOOO time=%0t add=0x%0h", $time, dupe_add);
         // end
