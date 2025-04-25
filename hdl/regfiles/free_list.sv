@@ -28,6 +28,8 @@ import rv32i_types::*;
 
     logic [WIDTH-1:0] internal_array [DEPTH];
 
+    logic in_array [DEPTH];
+
     logic full;
     logic empty;
 
@@ -78,22 +80,42 @@ import rv32i_types::*;
         if (rst) begin
             for (integer i = 0; i < DEPTH; i++) begin
                 internal_array[i] <= 7'(unsigned'(i)); 
+                in_array[i] <= '1;
             end
             tail <= {1'b1, {(PTR_SIZE){1'b0}}};
             head <= 8'b0001;
         end else begin
 
             if (enq && deq) begin
-                internal_array[tail[PTR_SIZE-1:0]] <= p_addr_in;
-                tail <= (tail + 4'b0001);
+                
+                if (!in_array[p_addr_in]) begin
+                    internal_array[tail[PTR_SIZE-1:0]] <= p_addr_in;
+                    in_array[p_addr_in] <= '1;
+                    tail <= (tail + 4'b0001);
+                end
+                in_array[internal_array[head[PTR_SIZE-1:0]]] <= '0;
+                //tail <= (tail + 4'b0001);
                 head <= (head + 4'b0001);
             end else if (enq && !full) begin
-                internal_array[tail[PTR_SIZE-1:0]] <= p_addr_in; 
+                if (!in_array[p_addr_in]) begin
+                    internal_array[tail[PTR_SIZE-1:0]] <= p_addr_in;
+                    in_array[p_addr_in] <= '1;
+                
                 tail <= (tail + 4'b0001);
+                end
             end else if (deq && !empty) begin
+                in_array[internal_array[head[PTR_SIZE-1:0]]] <= '0;
                 head <= (head + 4'b0001);
+
             end
         if (flush) begin
+            foreach (internal_array[i]) begin
+                if (i <= integer'(head) && i >= integer'(fl_head)) begin
+                    in_array[internal_array[i]] <= '0;
+
+                end
+            end
+
                 head <= fl_head;
             end
         end

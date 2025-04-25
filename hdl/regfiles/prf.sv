@@ -82,7 +82,7 @@ import rv32i_types::*;
 
             if (flush) begin
                 for (integer i = 0; i < DEPTH; i++) begin
-                    if (data[i].valid && !data[i].committed && !(aregf_we && integer'(commit_rs) == i)) begin
+                    if (data[i].valid && !data[i].committed) begin
                         data[i].valid <= '0;
                         data[i].committed <= '0;
                         data[i].value <= '0;
