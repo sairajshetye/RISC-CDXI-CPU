@@ -82,7 +82,7 @@ import rv32i_types::*;
 
             if (flush) begin
                 for (integer i = 0; i < DEPTH; i++) begin
-                    if (i[PTR_SIZE-1:0] != commit_rs && aregf_we) begin
+                    if (PTR_SIZE'(unsigned'(i)) != commit_rs && aregf_we) begin
                         if (data[i].valid && !data[i].committed) begin
                             data[i].valid <= '0;
                             data[i].committed <= '0;
