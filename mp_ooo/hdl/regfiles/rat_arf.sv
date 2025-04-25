@@ -114,7 +114,7 @@ import rv32i_types::*;
                     //data[rd_s].renamed_ret <= '0;
                     data[rd_s].renamed_ret <= '0;
                     
-                end else begin
+                end else begin 
                     data[rd_s].renamed_ret <= data[rd_s].renamed;
                 end
             end
