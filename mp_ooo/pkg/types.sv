@@ -343,7 +343,7 @@ package rv32i_types;
         //valid, renamed, p_addr, value
         logic           valid;
         logic           renamed; // not renamed = 0, renamed = 1
-        //logic           p_addr_valid;
+        logic           renamed_ret;
         logic   [6:0]   p_addr;
         logic   [6:0]   p_addr_ret; // retirement
         logic   [31:0]  value;
@@ -353,6 +353,7 @@ package rv32i_types;
     typedef struct packed {
         //valid, value
         logic           valid;
+        logic           committed;
         logic   [31:0]  value;
     } prf_t;
 

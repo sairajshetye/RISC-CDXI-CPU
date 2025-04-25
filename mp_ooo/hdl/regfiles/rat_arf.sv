@@ -45,7 +45,7 @@ import rv32i_types::*;
             for (integer i = 0; i < 32; i++) begin
                 data[i].valid <= '1; // Always valid = 1 -> not used right now, use later?
                 data[i].renamed <= '0;
-                //data[i].renamed_ret <= '0;
+                data[i].renamed_ret <= '0;
                 data[i].p_addr <= '0;
                 data[i].p_addr_ret <= '0;
                 data[i].value <= '0;
@@ -63,7 +63,7 @@ import rv32i_types::*;
                 if ((data[rd_s].p_addr_ret != p_addr_ret) && (data[rd_s].p_addr_ret != '0)) begin // if old != new
                     fl_enq <= '1;
                     fl_data_in <= data[rd_s].p_addr_ret;
-                    data[rd_s].renamed <= '0;
+                    //data[rd_s].renamed <= '0;
                     //data[rd_s].p_addr <= '0;
                 end
                 else begin
@@ -71,14 +71,22 @@ import rv32i_types::*;
                     fl_data_in <= '0;
                 end
 
-                data[rd_s].p_addr_ret <= p_addr_ret; // allows for rolling back (later?)
-                data[rd_s].value <= rd_v;
+                //data[rd_s].p_addr_ret <= p_addr_ret; // allows for rolling back (later?)
+                ///data[rd_s].value <= rd_v;
                 //data[rd_s].renamed_ret <= data[rd_s].renamed;
             end
             for (integer i = 0; i < 32; i++) begin
                 if (i != integer'(rd_s)) begin
                     data[i].p_addr <= data[i].p_addr_ret;
-                    //data[i].renamed <= data[i].renamed_ret;
+                    data[i].renamed <= data[i].renamed_ret;
+                    data[i].renamed_ret <= '0;
+                end else begin
+                    if ((data[rd_s].p_addr_ret != p_addr_ret) && (data[rd_s].p_addr_ret != '0)) begin
+                        data[rd_s].renamed <= '0;
+                        data[rd_s].renamed_ret <= '0;
+                        data[rd_s].p_addr_ret <= p_addr_ret;
+                        data[rd_s].value <= rd_v;
+                    end
                 end
             end
         end else begin
@@ -91,6 +99,7 @@ import rv32i_types::*;
                 if ((data[rd_s].p_addr_ret != p_addr_ret) && (data[rd_s].p_addr_ret != '0)) begin // if old != new
                     fl_enq <= '1;
                     fl_data_in <= data[rd_s].p_addr_ret;
+                    //data[rd_s].renamed_ret <= '0;
                     //data[rd_s].renamed <= '0;
                     //data[rd_s].p_addr <= '0;
                 end
@@ -101,7 +110,13 @@ import rv32i_types::*;
 
                 data[rd_s].p_addr_ret <= p_addr_ret; // allows for rolling back (later?)
                 data[rd_s].value <= rd_v;
-                //data[rd_s].renamed_ret <= data[rd_s].renamed;
+                if ((data[rd_s].p_addr_ret != p_addr_ret) && (data[rd_s].p_addr_ret != '0)) begin
+                    //data[rd_s].renamed_ret <= '0;
+                    data[rd_s].renamed_ret <= '0;
+                    
+                end else begin 
+                    data[rd_s].renamed_ret <= data[rd_s].renamed;
+                end
             end
             if (rename_we && (rd_rename != 5'd0)) begin // write renamed + p_addr
                 data[rd_rename].renamed <= '1; // mark 1 = renamed
@@ -185,7 +200,7 @@ import rv32i_types::*;
                     //ars1_v <= (rs1_s != 5'd0) ? rd_v : '0;
                     ars1_v_comb.valid = data[rs1_s].valid;
                     ars1_v_comb.renamed = data[rs1_s].renamed;
-                    //ars1_v_comb.renamed_ret = data[rs1_s].renamed_ret;
+                    ars1_v_comb.renamed_ret = data[rs1_s].renamed_ret;
                     ars1_v_comb.p_addr = data[rs1_s].p_addr;
                     ars1_v_comb.p_addr_ret = data[rs1_s].p_addr_ret;
                     ars1_v_comb.value = rd_v;
@@ -198,7 +213,7 @@ import rv32i_types::*;
             else begin
                 ars1_v_comb.valid = '1;
                 ars1_v_comb.renamed = '0;
-               // ars1_v_comb.renamed_ret = '0;
+                ars1_v_comb.renamed_ret = '0;
                 ars1_v_comb.p_addr = '0;
                 ars1_v_comb.p_addr_ret = '0;
                 ars1_v_comb.value = '0;
@@ -208,7 +223,7 @@ import rv32i_types::*;
                     //ars2_v <= (rs2_s != 5'd0) ? rd_v : '0;
                     ars2_v_comb.valid = data[rs2_s].valid;
                     ars2_v_comb.renamed = data[rs2_s].renamed;
-                    //ars2_v_comb.renamed_ret = data[rs2_s].renamed_ret;
+                    ars2_v_comb.renamed_ret = data[rs2_s].renamed_ret;
                     ars2_v_comb.p_addr = data[rs2_s].p_addr;
                     ars2_v_comb.p_addr_ret = data[rs2_s].p_addr_ret;
                     ars2_v_comb.value = rd_v;
@@ -220,7 +235,7 @@ import rv32i_types::*;
             else begin
                 ars2_v_comb.valid = '1;
                 ars2_v_comb.renamed = '0;
-                //ars2_v_comb.renamed_ret = '0;
+                ars2_v_comb.renamed_ret = '0;
                 ars2_v_comb.p_addr = '0;
                 ars2_v_comb.p_addr_ret = '0;
                 ars2_v_comb.value = '0;
