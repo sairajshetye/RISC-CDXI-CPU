@@ -99,7 +99,7 @@ import rv32i_types::*;
                 if ((data[rd_s].p_addr_ret != p_addr_ret) && (data[rd_s].p_addr_ret != '0)) begin // if old != new
                     fl_enq <= '1;
                     fl_data_in <= data[rd_s].p_addr_ret;
-                    data[rd_s].renamed_ret <= '0;
+                    //data[rd_s].renamed_ret <= '0;
                     //data[rd_s].renamed <= '0;
                     //data[rd_s].p_addr <= '0;
                 end
@@ -110,7 +110,13 @@ import rv32i_types::*;
 
                 data[rd_s].p_addr_ret <= p_addr_ret; // allows for rolling back (later?)
                 data[rd_s].value <= rd_v;
-                data[rd_s].renamed_ret <= data[rd_s].renamed;
+                if ((data[rd_s].p_addr_ret != p_addr_ret) && (data[rd_s].p_addr_ret != '0)) begin
+                    //data[rd_s].renamed_ret <= '0;
+                    data[rd_s].renamed_ret <= '0;
+                    
+                end else begin
+                    data[rd_s].renamed_ret <= data[rd_s].renamed;
+                end
             end
             if (rename_we && (rd_rename != 5'd0)) begin // write renamed + p_addr
                 data[rd_rename].renamed <= '1; // mark 1 = renamed

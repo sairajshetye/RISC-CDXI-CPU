@@ -50,22 +50,22 @@ import rv32i_types::*;
                 data[i].value <= '0;
             end
         end else begin
-            if (regf_we_0 && (rd_s_0 != 7'd0)) begin // write to PRF     && (rd_s != 5'd0)
+            if (regf_we_0 && (rd_s_0 != 7'd0) && !flush) begin // write to PRF     && (rd_s != 5'd0)
                 data[rd_s_0].valid <= '1;
                 data[rd_s_0].value <= rd_v_0;
             end
 
-            if (regf_we_1 && (rd_s_1 != 7'd0)) begin // write to PRF     && (rd_s != 5'd0)
+            if (regf_we_1 && (rd_s_1 != 7'd0) && !flush) begin // write to PRF     && (rd_s != 5'd0)
                 data[rd_s_1].valid <= '1;
                 data[rd_s_1].value <= rd_v_1;
             end
 
-            if (regf_we_2 && (rd_s_2 != 7'd0)) begin // write to PRF     && (rd_s != 5'd0)
+            if (regf_we_2 && (rd_s_2 != 7'd0) && !flush) begin // write to PRF     && (rd_s != 5'd0)
                 data[rd_s_2].valid <= '1;
                 data[rd_s_2].value <= rd_v_2;
             end
 
-            if (regf_we_3 && (rd_s_3 != 7'd0)) begin // write to PRF     && (rd_s != 5'd0)
+            if (regf_we_3 && (rd_s_3 != 7'd0) && !flush) begin // write to PRF     && (rd_s != 5'd0)
                 data[rd_s_3].valid <= '1;
                 data[rd_s_3].value <= rd_v_3;
             end
