@@ -126,9 +126,18 @@ import rv32i_types::*;
         if (empty) begin
             p_addr_out = '0;
         end else begin
-            p_addr_out = internal_array[head[PTR_SIZE-1:0]];
+            if (deq)
+                p_addr_out = internal_array[head[PTR_SIZE-1:0]];
+            else
+                p_addr_out = '0;
         end
-        head_out = head;
+
+        if (deq) begin
+            head_out = head + 1'b1;
+        end
+        else begin 
+            head_out = head;
+        end
     end
 
 endmodule : free_list
