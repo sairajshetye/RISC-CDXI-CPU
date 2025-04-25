@@ -70,22 +70,22 @@
         //         end
         //     end
         // end
-        for (integer i = 0; i < 32; i++) begin
-            for (integer j = 0; j < 32; j++) begin
-                if (dut.rat_arf_1.data[i].p_addr == 7'd75 && dut.rat_arf_1.data[j].p_addr == 7'd75 && i != j) begin
-                    //$display("YOOO time=%0t fl_value=0x%0h", $time, dut.free_list.enq, dut.free_list.p_addr_in, dut.free_list.head[6:0], dut.free_list.tail[6:0]);
-                    test <= '1;
-                    //dupe_add <= dupe_add + 1'b1;
-                    if (test != '1) begin
-                        $display("YOOO time=%0t value=0x%0h index1=0x%0h index2=0x%0h head=0x%0h", $time, dut.free_list.internal_array[i], i, j, dut.free_list.head[6:0]);
-                    end
-                end
-            end
-        end
+        // for (integer i = 0; i < 32; i++) begin
+        //     for (integer j = 0; j < 32; j++) begin
+        //         if (dut.rat_arf_1.data[i].p_addr == dut.rat_arf_1.data[j].p_addr && i != j && dut.rat_arf_1.data[j].p_addr != '0) begin
+        //             //$display("YOOO time=%0t fl_value=0x%0h", $time, dut.free_list.enq, dut.free_list.p_addr_in, dut.free_list.head[6:0], dut.free_list.tail[6:0]);
+        //             test <= '1;
+        //             //dupe_add <= dupe_add + 1'b1;
+        //             if (test != '1) begin
+        //                 $display("YOOO time=%0t value=0x%0h index1=0x%0h index2=0x%0h head=0x%0h", $time, dut.rat_arf_1.data[i].p_addr, i, j, dut.free_list.head[6:0]);
+        //             end
+        //         end
+        //     end
+        // end
 
-        if (dut.monitor_order == 119334) begin
-            $display("END: time=%0t areg_value=0x%0h", $time, dut.rat_arf_1.data[13].value);
-        end
+        // if (dut.monitor_order == 119334) begin
+        //     $display("END: time=%0t areg_value=0x%0h", $time, dut.rat_arf_1.data[13].value);
+        // end
 
         // if (|test_dupe) begin
         //     $display("YOOO time=%0t add=0x%0h", $time, dupe_add);
