@@ -122,6 +122,8 @@ import rv32i_types::*;
     //logic [6:0]     commit_rs;
     prf_t           commit_prs;
 
+    logic [31:0]    dmem_rdata_extended;
+
     
 
     // always_ff @ (posedge clk) begin
@@ -466,9 +468,22 @@ import rv32i_types::*;
 
     );
 
+    always_comb 
+    begin
+        unique case (inst_out_lds_q.funct3)
+            load_f3_lb : dmem_rdata_extended = {{24{ufp_rdata_data[7 +8 *inst_out_lds_q.dmem_addr_saved[1:0]]}}, ufp_rdata_data[8 *inst_out_lds_q.dmem_addr_saved[1:0] +: 8 ]};
+            load_f3_lbu: dmem_rdata_extended = {{24{1'b0}}                          , ufp_rdata_data[8 *inst_out_lds_q.dmem_addr_saved[1:0] +: 8 ]};
+            load_f3_lh : dmem_rdata_extended = {{16{ufp_rdata_data[15+16*inst_out_lds_q.dmem_addr_saved[1]  ]}}, ufp_rdata_data[16*inst_out_lds_q.dmem_addr_saved[1]   +: 16]};
+            load_f3_lhu: dmem_rdata_extended = {{16{1'b0}}                          , ufp_rdata_data[16*inst_out_lds_q.dmem_addr_saved[1]   +: 16]};
+            load_f3_lw : dmem_rdata_extended = ufp_rdata_data;
+            default    : dmem_rdata_extended = '0;
+        endcase
+    end
+
+
     always_comb begin
         lds_deq = '0;
-        if (ufp_resp[1] && inst_out_lds.valid) begin
+        if (ufp_resp[1] && inst_out_lds_q.valid) begin
             //wb_inst_out[3] = inst_out_lds;
             wb_inst_out[3] = '0;
             prf_we[3] = inst_out_lds_q.regf_we;
@@ -478,11 +493,11 @@ import rv32i_types::*;
             p_addr_out_wb[3] = inst_out_lds_q.rd_paddr;
             rfvi_monitor_vals[3] = inst_out_lds_q.rfvi_monitor_vals;
             lds_deq = '1;
-            rfvi_monitor_vals[3].monitor_rd_wdata = ufp_rdata_data; 
+            rfvi_monitor_vals[3].monitor_rd_wdata = dmem_rdata_extended; 
             rfvi_monitor_vals[3].monitor_mem_rdata = ufp_rdata_data;
             //rfvi_monitor_vals[3].monitor_rs2_rdata = inst_out_lds_q.rs2_data;
            // rfvi_monitor_vals[3].monitor_mem_wdata = inst_out_lds_q.dmem_wdata;
-            wb_data_out[3] = ufp_rdata_data;    //????
+            wb_data_out[3] = dmem_rdata_extended;    //????
             ufp_addr[1] = '0;
             ufp_rmask[1] = '0;
             ufp_wmask[1] = '0;
@@ -500,7 +515,7 @@ import rv32i_types::*;
 
         
         if (rob_out.ld_store == '1 && !ufp_resp[1]) begin   //if rob commit is a ld store
-            if (inst_out_lds.rob_idx == rob_head_idx) begin //if load or store at head of queue is the commit inst from the rob
+            if (inst_out_lds_q.rob_idx == rob_head_idx) begin //if load or store at head of queue is the commit inst from the rob
                 //trigger the memory
                 ufp_addr[1] = inst_out_lds_q.dmem_addr;
                 ufp_rmask[1] = inst_out_lds_q.dmem_rmask;
@@ -768,6 +783,7 @@ import rv32i_types::*;
     prf prf (
         .clk(clk),
         .rst(rst),
+        .flush(flush),
         .regf_we_0(prf_we[0]),
         .regf_we_1(prf_we[1]),
         .regf_we_2(prf_we[2]),
@@ -776,6 +792,7 @@ import rv32i_types::*;
         .rd_v_1(wb_data_out[1]),
         .rd_v_2(wb_data_out[2]),
         .rd_v_3(wb_data_out[3]),
+        .aregf_we(aregf_we),
         .rs1_s(prs1_s), 
         .rs2_s(prs2_s), 
         .rd_s_0(p_addr_out_wb[0]),
@@ -845,8 +862,8 @@ import rv32i_types::*;
 
     arbiter arbiter(
         .clk(clk), // input
-        .rst(rst || flush), // input
-
+        .rst(rst), // input
+        .flush(flush),
         .bmem_raddr(bmem_raddr), // input
         .bmem_rdata(bmem_rdata), // input
         .bmem_rvalid(bmem_rvalid), // input
@@ -907,7 +924,7 @@ import rv32i_types::*;
     cache_mod icache(
         .clk(clk), // input
         .rst(rst), // input
-
+        .flush(flush),
         .ufp_addr(ufp_addr[0]), // input
         .ufp_rmask(ufp_rmask[0]), // input
         .ufp_wmask(ufp_wmask[0]), // input
