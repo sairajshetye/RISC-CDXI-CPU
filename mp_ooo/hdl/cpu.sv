@@ -752,7 +752,7 @@ import rv32i_types::*;
         .head_out(head_out)
     );
 
-    rat_arf rat_arf_1 (
+    rat_arf2 rat_arf_1 (
         .clk(clk),
         .rst(rst),
         .flush(flush),

@@ -37,6 +37,24 @@ import rv32i_types::*;
     arf_reg_t       data [32]; // 32 arch regs: valid, renamed, p_addr, value
     logic           transparent_1, transparent_2;
 
+    logic    [6:0]  debug_p_addr [32];
+    logic    [6:0]  debug_p_addr_ret [32];
+    logic    [0:0]  debug_renamed [32];
+
+
+
+    always_comb begin
+        for (integer i = 0; i < 32; i++) begin
+            debug_p_addr[i] = data[i].p_addr;
+            debug_renamed[i] = data[i].renamed;
+            debug_p_addr_ret[i] = data[i].p_addr_ret;
+        end
+
+    end
+
+
+
+
     assign transparent_1 = regf_we && (rd_s == rs1_s) && (rs1_s != 5'd0);
     assign transparent_2 = regf_we && (rd_s == rs2_s) && (rs2_s != 5'd0);
 
@@ -60,7 +78,7 @@ import rv32i_types::*;
                 //data[rd_s].renamed <= '0; // when commited, can un-rename
                 //data[rd_s].p_addr <= '0; // un renames
                 // sent to free list
-                if ((data[rd_s].p_addr_ret != p_addr_ret) && (data[rd_s].p_addr_ret != '0)) begin // if old != new
+                if (data[rd_s].renamed && (data[rd_s].p_addr_ret != p_addr_ret) && (data[rd_s].p_addr_ret != '0)) begin // if old != new
                     fl_enq <= '1;
                     fl_data_in <= data[rd_s].p_addr_ret;
                     //data[rd_s].renamed <= '0;
@@ -81,7 +99,7 @@ import rv32i_types::*;
                     data[i].renamed <= data[i].renamed_ret;
                     data[i].renamed_ret <= '0;
                 end else begin
-                    if ((data[rd_s].p_addr_ret != p_addr_ret) && (data[rd_s].p_addr_ret != '0)) begin
+                    if (data[rd_s].renamed && (data[rd_s].p_addr_ret != p_addr_ret) && (data[rd_s].p_addr_ret != '0)) begin
                         data[rd_s].renamed <= '0;
                         data[rd_s].renamed_ret <= '0;
                         data[rd_s].p_addr_ret <= p_addr_ret;
@@ -96,7 +114,7 @@ import rv32i_types::*;
                 //data[rd_s].renamed <= '0; // when commited, can un-rename
                 //data[rd_s].p_addr <= '0; // un renames
                 // sent to free list
-                if ((data[rd_s].p_addr_ret != p_addr_ret) && (data[rd_s].p_addr_ret != '0)) begin // if old != new
+                if (data[rd_s].renamed && (data[rd_s].p_addr_ret != p_addr_ret) && (data[rd_s].p_addr_ret != '0)) begin // if old != new
                     fl_enq <= '1;
                     fl_data_in <= data[rd_s].p_addr_ret;
                     //data[rd_s].renamed_ret <= '0;
@@ -110,7 +128,7 @@ import rv32i_types::*;
 
                 data[rd_s].p_addr_ret <= p_addr_ret; // allows for rolling back (later?)
                 data[rd_s].value <= rd_v;
-                if ((data[rd_s].p_addr_ret != p_addr_ret) && (data[rd_s].p_addr_ret != '0)) begin
+                if (data[rd_s].renamed && (data[rd_s].p_addr_ret != p_addr_ret) && (data[rd_s].p_addr_ret != '0)) begin
                     //data[rd_s].renamed_ret <= '0;
                     data[rd_s].renamed_ret <= '0;
                     

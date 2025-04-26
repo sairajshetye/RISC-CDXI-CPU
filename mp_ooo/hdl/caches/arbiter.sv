@@ -67,7 +67,7 @@ import rv32i_types::*;
         else if (flush) begin
             ignore <= '1;
         end
-        else if (cache_read | cache_write) begin // or with write?
+        else if (cache_read | cache_write && !bmem_rvalid) begin // or with write?
             ignore <= '0;
         end
 
@@ -94,7 +94,7 @@ import rv32i_types::*;
             bmem_read_next = '0;
         end
         else if (!got_response) begin
-            if (cache_read && !check) begin
+            if (cache_read && !check && !ignore) begin // DO WE NEED !IGNORE HERE??
                 check_next = '1;
                 bmem_read_next = '1;
             end
