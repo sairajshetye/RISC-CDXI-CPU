@@ -137,8 +137,8 @@ import rv32i_types::*;
                 if (free_reg) begin
                     //data[rd_s].renamed_ret <= '0;
                     data[rd_s].renamed_ret <= '0;
-                    //data[rd_rename].p_addr <= '0;
-                    //data[rd_rename].renamed <= '0;
+                    data[rd_rename].p_addr <= '0;
+                    data[rd_rename].renamed <= '0;
                    // data[rd_s].p_addr_ret <= '0;
 
                     
