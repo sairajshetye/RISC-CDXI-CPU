@@ -258,7 +258,7 @@ import rv32i_types::*;
             for (integer i = 0; i < DEPTH; i++) begin
                 if (idx_rep[i]) begin
                     if (rs2_rep[i]) begin   //rs2 replace
-                        if (PTR_SIZE'(unsigned'(i)) <= output_idx) begin
+                        if (PTR_SIZE'(unsigned'(i)) <= output_idx && remove) begin
                             if ((i+1) < (DEPTH)) begin
                                 station[i+1].rs2_data <= data_t[i][1];
                                 station[i+1].rs2_ready <= '1;
@@ -269,7 +269,7 @@ import rv32i_types::*;
                         end
                     end 
                     if (rs1_rep[i]) begin      //rs1 replace
-                        if (PTR_SIZE'(unsigned'(i)) <= output_idx) begin
+                        if (PTR_SIZE'(unsigned'(i)) <= output_idx && remove) begin
                             if ((i+1) < (DEPTH)) begin
                                 station[i+1].rs1_data <= data_t[i][0];
                                 station[i+1].rs1_ready <= '1;
