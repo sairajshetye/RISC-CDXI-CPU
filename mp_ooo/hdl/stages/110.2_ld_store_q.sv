@@ -51,7 +51,7 @@ import rv32i_types::*;
 
     //logic [WIDTH-1:0] inst_in_reg;
     always_comb begin
-        if (tail == 4'b1111) begin
+        if (tail == {1'b0, {PTR_SIZE{1'b1}}}) begin //4'b1111
             tail_next = '0;
         end else begin
             tail_next = tail + 1'b1;

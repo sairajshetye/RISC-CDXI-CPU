@@ -244,7 +244,7 @@ import rv32i_types::*;
     );
 
     inst_q #(
-        .DEPTH      (8)
+        .DEPTH      (4)
     ) inst_q(
         .clk(clk),
         .rst(rst || flush),
@@ -271,7 +271,7 @@ import rv32i_types::*;
     );
 
     decode_q #(
-        .DEPTH      (8)
+        .DEPTH      (4)
     ) decode_q(
         .clk(clk),
         .rst(rst || flush),
@@ -315,7 +315,7 @@ import rv32i_types::*;
     );
 
     rename_q #(
-        .DEPTH      (8)
+        .DEPTH      (4)
     ) rename_q(
         .clk(clk),
         .rst(rst || flush),
@@ -439,7 +439,7 @@ import rv32i_types::*;
 
 
     lds_q #(
-        .DEPTH      (8)
+        .DEPTH      (4)
     ) ld_store_q(
         .clk(clk),
         .rst(rst || flush),
