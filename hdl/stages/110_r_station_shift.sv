@@ -38,7 +38,8 @@ import rv32i_types::*;
     logic [PTR_SIZE_RSTATION-1:0] output_idx;
     logic [PTR_SIZE_RSTATION-1:0] open_idx;
 
-    logic   [WIDTH-1:0]     data_t [DEPTH][2];
+    logic   [WIDTH-1:0]     data_t_rs1 [DEPTH];
+    logic   [WIDTH-1:0]     data_t_rs2 [DEPTH];
     logic   [DEPTH-1:0]     idx_rep; 
     logic   [DEPTH-1:0]     rs1_rep, rs2_rep;   //0 for rs1, 2 for rs2
     logic                   remove;
@@ -124,10 +125,14 @@ import rv32i_types::*;
         end
 
 
+        // for (integer i = 0; i < DEPTH; i++) begin
+        //     for (integer j = 0; j < 2; j++) begin
+        //         data_t[i][j] = '0;
+        //     end
+        // end
         for (integer i = 0; i < DEPTH; i++) begin
-            for (integer j = 0; j < 2; j++) begin
-                data_t[i][j] = '0;
-            end
+            data_t_rs1[i] = '0;
+            data_t_rs2[i] = '0;
         end
         // data_t[0] = '0;
         // data_t[1] = '0;
@@ -142,19 +147,19 @@ import rv32i_types::*;
             if (station[i].valid) begin
                 if (!station[i].rs1_ready && station[i].use_prs1) begin
                    if (station[i].rs1_paddr == data_paddr_0 && (data_paddr_0 != '0)) begin
-                        data_t[i][0] = data_in_0;
+                        data_t_rs1[i] = data_in_0;
                         idx_rep[i] = '1;
                         rs1_rep[i] = '1;
                     end else if (station[i].rs1_paddr == data_paddr_1 && (data_paddr_1 != '0)) begin
-                        data_t[i][0] = data_in_1;
+                        data_t_rs1[i] = data_in_1;
                         idx_rep[i] = '1;
                         rs1_rep[i] = '1;
                     end else if (station[i].rs1_paddr == data_paddr_2 && (data_paddr_2 != '0)) begin
-                        data_t[i][0] = data_in_2;
+                        data_t_rs1[i] = data_in_2;
                         idx_rep[i] = '1;
                         rs1_rep[i] = '1;
                     end else  if (station[i].rs1_paddr == data_paddr_3 && (data_paddr_3 != '0)) begin
-                        data_t[i][0] = data_in_3;
+                        data_t_rs1[i] = data_in_3;
                         idx_rep[i] = '1;
                         rs1_rep[i] = '1;
                     end
@@ -163,19 +168,19 @@ import rv32i_types::*;
 
                 if (!station[i].rs2_ready && station[i].use_prs2 ) begin
                     if (station[i].rs2_paddr == data_paddr_0 && (data_paddr_0 != '0)) begin
-                        data_t[i][1] = data_in_0;
+                        data_t_rs2[i] = data_in_0;
                         idx_rep[i] = '1;
                         rs2_rep[i] = '1;
                     end else if (station[i].rs2_paddr == data_paddr_1 && (data_paddr_1 != '0)) begin
-                        data_t[i][1] = data_in_1;
+                        data_t_rs2[i] = data_in_1;
                         idx_rep[i] = '1;
                         rs2_rep[i] = '1;
                     end else if (station[i].rs2_paddr == data_paddr_2 && (data_paddr_2 != '0)) begin
-                        data_t[i][1] = data_in_2;
+                        data_t_rs2[i] = data_in_2;
                         idx_rep[i] = '1;
                         rs2_rep[i] = '1;
                     end else if (station[i].rs2_paddr == data_paddr_3 && (data_paddr_3 != '0)) begin
-                        data_t[i][1] = data_in_3;
+                        data_t_rs2[i] = data_in_3;
                         idx_rep[i] = '1;
                         rs2_rep[i] = '1;
                     end
@@ -261,22 +266,22 @@ import rv32i_types::*;
                     if (rs2_rep[i]) begin   //rs2 replace
                         if (PTR_SIZE_RSTATION'(unsigned'(i)) <= output_idx && remove) begin
                             if ((i+1) < (DEPTH)) begin
-                                station[i+1].rs2_data <= data_t[i][1];
+                                station[i+1].rs2_data <= data_t_rs2[i];
                                 station[i+1].rs2_ready <= '1;
                             end
                         end else begin 
-                            station[i].rs2_data <= data_t[i][1];
+                            station[i].rs2_data <= data_t_rs2[i];
                             station[i].rs2_ready <= '1;
                         end
                     end 
                     if (rs1_rep[i]) begin      //rs1 replace
                         if (PTR_SIZE_RSTATION'(unsigned'(i)) <= output_idx && remove) begin
                             if ((i+1) < (DEPTH)) begin
-                                station[i+1].rs1_data <= data_t[i][0];
+                                station[i+1].rs1_data <= data_t_rs1[i];
                                 station[i+1].rs1_ready <= '1;
                             end
                         end else begin 
-                            station[i].rs1_data <= data_t[i][0];
+                            station[i].rs1_data <= data_t_rs1[i];
                             station[i].rs1_ready <= '1;
                         end
                     end

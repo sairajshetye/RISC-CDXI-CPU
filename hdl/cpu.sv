@@ -370,7 +370,7 @@ import rv32i_types::*;
     );
 
     r_station_shift  #(
-        .DEPTH      (R_STATION_DEPTH),
+        .DEPTH      (R_STATION_MULT_DEPTH),
         .PTR_SIZE   (GLOBAL_PTR_SIZE)
     ) station_mult(
         .clk(clk), // input
@@ -393,7 +393,7 @@ import rv32i_types::*;
     );
 
     r_station_shift  #(
-        .DEPTH      (R_STATION_DEPTH),
+        .DEPTH      (R_STATION_INT_DEPTH),
         .PTR_SIZE   (GLOBAL_PTR_SIZE)
     ) station_int(
         .clk(clk), // input
@@ -416,7 +416,7 @@ import rv32i_types::*;
     );
 
     r_station_shift  #(
-        .DEPTH      (R_STATION_DEPTH),
+        .DEPTH      (R_STATION_BR_DEPTH),
         .PTR_SIZE   (GLOBAL_PTR_SIZE)
     ) station_br(
         .clk(clk), // input
@@ -447,7 +447,7 @@ import rv32i_types::*;
 
 
     lds_q #(
-        .DEPTH      (Q_DEPTH),
+        .DEPTH      (R_STATION_LDS_Q_DEPTH),
         .PTR_SIZE   (GLOBAL_PTR_SIZE)
     ) ld_store_q(
         .clk(clk),
