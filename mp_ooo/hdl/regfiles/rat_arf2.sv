@@ -36,8 +36,8 @@ import rv32i_types::*;
     logic           free_reg;
     logic           transparent_free_1, transparent_free_2;
 
-    logic    [6:0]  debug_p_addr [32];
-    logic    [6:0]  debug_p_addr_ret [32];
+    logic    [PTR_SIZE-1:0]  debug_p_addr [32];
+    logic    [PTR_SIZE-1:0]  debug_p_addr_ret [32];
     logic    [0:0]  debug_renamed [32];
 
 

@@ -35,7 +35,7 @@ import rv32i_types::*;
     logic               prf_we              [4]; 
     logic               ld_status           [4];
     status_t            status_n            [4];
-    logic   [3:0]       rob_idx_ld          [4];
+    logic   [ROB_PTR_SIZE-1:0]       rob_idx_ld          [4];
     logic   [GLOBAL_PTR_SIZE-1:0]       p_addr_out_wb       [4];
     logic   [31:0]      wb_data_out         [4];
     rfvi_packet_t       rfvi_monitor_vals   [4];
@@ -58,8 +58,8 @@ import rv32i_types::*;
 
     logic [GLOBAL_PTR_SIZE-1:0] fl_data_in, p_addr_out; // free list
 
-    logic [3:0] rob_tail_idx, rob_head_idx;
-    logic [6:0] rs1_paddr, rs2_paddr;
+    logic [ROB_PTR_SIZE-1:0] rob_tail_idx, rob_head_idx;
+    logic [GLOBAL_PTR_SIZE-1:0] rs1_paddr, rs2_paddr;
 
     logic [4:0] rat_rs1, rat_rs2;
 
@@ -286,7 +286,8 @@ import rv32i_types::*;
     );
 
     rename_alloc #(
-        .PTR_SIZE     (GLOBAL_PTR_SIZE)
+        .PTR_SIZE     (GLOBAL_PTR_SIZE),
+        .ROB_PTR_SIZE (ROB_PTR_SIZE)
     ) rename_alloc_1(
         .id_ex(id_ex_inst_out), // comes from decode queue
         // inputs from RAT, FL, stalls?
@@ -646,7 +647,8 @@ import rv32i_types::*;
 
 
     writeback #(
-        .PTR_SIZE   (GLOBAL_PTR_SIZE)
+        .PTR_SIZE   (GLOBAL_PTR_SIZE),
+        .ROB_PTR_SIZE (ROB_PTR_SIZE)
     ) wb_int(
         .inst_in_wb(wb_inst_out[0]), // in
         .prf_regf_we(prf_we[0]), // out
@@ -660,7 +662,8 @@ import rv32i_types::*;
     );
 
     writeback #(
-        .PTR_SIZE   (GLOBAL_PTR_SIZE)
+        .PTR_SIZE   (GLOBAL_PTR_SIZE),
+        .ROB_PTR_SIZE (ROB_PTR_SIZE)
     ) wb_mult(
         .inst_in_wb(wb_inst_out[1]), // d
         .prf_regf_we(prf_we[1]), // d
@@ -674,7 +677,8 @@ import rv32i_types::*;
     );
 
     br_writeback #(
-        .PTR_SIZE   (GLOBAL_PTR_SIZE)
+        .PTR_SIZE   (GLOBAL_PTR_SIZE),
+        .ROB_PTR_SIZE (ROB_PTR_SIZE)
     ) wb_br(
         .inst_in_wb(wb_inst_out[2]), // d
         .prf_regf_we(prf_we[2]), // d

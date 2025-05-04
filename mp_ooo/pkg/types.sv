@@ -1,5 +1,14 @@
 package rv32i_types;
 
+
+    // GLOBAL PARAMETERS
+
+    parameter integer FREE_LIST_PRF_DEPTH = 128; 
+    parameter integer GLOBAL_PTR_SIZE = $clog2(FREE_LIST_PRF_DEPTH);
+    parameter integer Q_DEPTH = 8;
+    parameter integer R_STATION_DEPTH = 4;
+    parameter integer ROB_DEPTH = 16;
+    parameter integer ROB_PTR_SIZE = $clog2(ROB_DEPTH);
     
     typedef enum logic {
         rs1_out = 1'b0,
@@ -188,24 +197,24 @@ package rv32i_types;
         //logic   [31:0]  rd_v;
         logic           regf_we;
         logic           is_br;
-        logic [7:0]     head;    //change if not 128 phys regs
+        logic [GLOBAL_PTR_SIZE:0]     head;    //change if not 128 phys regs
         logic           is_store;
         logic           is_load;
         logic           use_rd;
         // what else? - 391 bits
         // logic             rs1_data
         logic           use_prs1;
-        logic    [6:0]  rs1_paddr;
+        logic    [GLOBAL_PTR_SIZE-1:0]  rs1_paddr;
         logic           rs1_ready;
 
         logic           use_prs2;
-        logic    [6:0]  rs2_paddr;
+        logic    [GLOBAL_PTR_SIZE-1:0]  rs2_paddr;
         logic           rs2_ready;
 
-        logic    [3:0]  rob_idx;
+        logic    [ROB_PTR_SIZE-1:0]  rob_idx;
         logic           rob_overflow;
 
-        logic    [6:0]  rd_paddr;
+        logic    [GLOBAL_PTR_SIZE-1:0]  rd_paddr;
 
         // logic           deq;
 
@@ -244,7 +253,7 @@ package rv32i_types;
         //logic   [31:0]  rd_v;
         logic           regf_we;
         logic           is_br;
-        logic [7:0]     head;    //change if not 128 phys regs
+        logic [GLOBAL_PTR_SIZE:0]     head;    //change if not 128 phys regs
         logic           is_store;
         logic           is_load;
         logic           use_rd;
@@ -252,19 +261,19 @@ package rv32i_types;
         branch_t        branch_taken;
         // logic             rs1_data
         logic           use_prs1;
-        logic    [6:0]  rs1_paddr;
+        logic    [GLOBAL_PTR_SIZE-1:0]  rs1_paddr;
         logic           rs1_ready;
         logic    [31:0] rs1_data;
 
         logic           use_prs2;
-        logic    [6:0]  rs2_paddr;
+        logic    [GLOBAL_PTR_SIZE-1:0]  rs2_paddr;
         logic           rs2_ready;
         logic    [31:0] rs2_data;
 
-        logic    [6:0]  rd_paddr;
+        logic    [GLOBAL_PTR_SIZE-1:0]  rd_paddr;
         logic    [31:0] rd_data;
 
-        logic    [3:0]  rob_idx;
+        logic    [ROB_PTR_SIZE-1:0]  rob_idx;
         logic           rob_overflow;
 
         rfvi_packet_t       rfvi_monitor_vals;
@@ -300,7 +309,7 @@ package rv32i_types;
         //logic   [31:0]  rd_v;
         logic           regf_we;
         logic           is_br;
-        logic [7:0]     head;    //change if not 128 phys regs
+        logic [GLOBAL_PTR_SIZE:0]     head;    //change if not 128 phys regs
         logic           is_store;
         logic           is_load;
         logic           use_rd;
@@ -308,19 +317,19 @@ package rv32i_types;
         branch_t        branch_taken;
         // logic             rs1_data
         logic           use_prs1;
-        logic    [6:0]  rs1_paddr;
+        logic    [GLOBAL_PTR_SIZE-1:0]  rs1_paddr;
         logic           rs1_ready;
         logic    [31:0] rs1_data;
 
         logic           use_prs2;   //using 
-        logic    [6:0]  rs2_paddr;
+        logic    [GLOBAL_PTR_SIZE-1:0]  rs2_paddr;
         logic           rs2_ready;
         logic    [31:0] rs2_data;
 
-        logic    [6:0]  rd_paddr;
+        logic    [GLOBAL_PTR_SIZE-1:0]  rd_paddr;
         logic    [31:0] rd_data;
 
-        logic    [3:0]  rob_idx;
+        logic    [ROB_PTR_SIZE-1:0]  rob_idx;
         logic           rob_overflow;
 
         logic   [31:0]  dmem_addr;
@@ -344,8 +353,8 @@ package rv32i_types;
         logic           valid;
         logic           renamed; // not renamed = 0, renamed = 1
         logic           renamed_ret;
-        logic   [6:0]   p_addr;
-        logic   [6:0]   p_addr_ret; // retirement
+        logic   [GLOBAL_PTR_SIZE-1:0]   p_addr;
+        logic   [GLOBAL_PTR_SIZE-1:0]   p_addr_ret; // retirement
         logic   [31:0]  value;
     } arf_reg_t;
 
@@ -463,13 +472,13 @@ package rv32i_types;
         status_t status;
         logic [6:0] opcode;
         logic       use_rd;
-        logic [6:0] rd_paddr;
+        logic [GLOBAL_PTR_SIZE-1:0] rd_paddr;
         logic [4:0] rd_addr;
         branch_t br_pred;
         branch_t br_result;
         logic [31:0] pc_next;
         logic ld_store; //'0 for no, '1 if either load or store
-        logic [7:0] fl_head;
+        logic [GLOBAL_PTR_SIZE:0] fl_head;
         //logic [63:0] order;
 
         rfvi_packet_t       rfvi_monitor_vals;
@@ -534,14 +543,6 @@ package rv32i_types;
     typedef enum logic [6:0] {
         funct7_mult = 7'b0000001
     } reg_funct7_vals;
-
-    // GLOBAL PARAMETERS
-
-    localparam integer FREE_LIST_PRF_DEPTH = 128; 
-    localparam integer GLOBAL_PTR_SIZE = $clog2(FREE_LIST_PRF_DEPTH);
-    localparam integer Q_DEPTH = 8;
-    localparam integer R_STATION_DEPTH = 4;
-    localparam integer ROB_DEPTH = 16;
 
 
 
