@@ -535,6 +535,14 @@ package rv32i_types;
         funct7_mult = 7'b0000001
     } reg_funct7_vals;
 
+    // GLOBAL PARAMETERS
+
+    localparam integer FREE_LIST_PRF_DEPTH = 128; 
+    localparam integer GLOBAL_PTR_SIZE = $clog2(FREE_LIST_PRF_DEPTH);
+    localparam integer Q_DEPTH = 8;
+    localparam integer R_STATION_DEPTH = 4;
+    localparam integer ROB_DEPTH = 16;
+
 
 
 endpackage : rv32i_types

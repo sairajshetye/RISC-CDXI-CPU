@@ -1,7 +1,7 @@
 module prf
 import rv32i_types::*;
  #(
-            parameter               DEPTH     = 128,
+            parameter               DEPTH     = 64,
             parameter               PTR_SIZE  = $clog2(DEPTH),
             parameter               WIDTH     = 32
 

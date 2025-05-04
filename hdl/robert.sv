@@ -2,7 +2,8 @@ module robert
 import rv32i_types::*;
  #(
             parameter               DEPTH     = 16,
-            parameter               PTR_SIZE  = $clog2(DEPTH)
+            parameter               PTR_SIZE_ROB  = $clog2(DEPTH),
+            parameter               PTR_SIZE  = 6
 
 )(
     input   logic                   clk,
@@ -22,11 +23,11 @@ import rv32i_types::*;
     input   logic [31:0]            br_pc_next,
     //input   logic [63:0]            order_out_wb,
     input   rob_entry_t             rob_in,
-    input   logic [PTR_SIZE-1:0]    rob_idx_in,     //read idx
-    input   logic [PTR_SIZE-1:0]    rob_idx_ld_0,     //for ld status
-    input   logic [PTR_SIZE-1:0]    rob_idx_ld_1,     //for ld status
-    input   logic [PTR_SIZE-1:0]    rob_idx_ld_2,     //for ld status
-    input   logic [PTR_SIZE-1:0]    rob_idx_ld_3,     //for ld status
+    input   logic [PTR_SIZE_ROB-1:0]    rob_idx_in,     //read idx
+    input   logic [PTR_SIZE_ROB-1:0]    rob_idx_ld_0,     //for ld status
+    input   logic [PTR_SIZE_ROB-1:0]    rob_idx_ld_1,     //for ld status
+    input   logic [PTR_SIZE_ROB-1:0]    rob_idx_ld_2,     //for ld status
+    input   logic [PTR_SIZE_ROB-1:0]    rob_idx_ld_3,     //for ld status
     input   rfvi_packet_t           rfvi_monitor_vals_0,
     input   rfvi_packet_t           rfvi_monitor_vals_1,
     input   rfvi_packet_t           rfvi_monitor_vals_2,
@@ -36,12 +37,12 @@ import rv32i_types::*;
     output  logic                   alloc_stall,
     output  logic                   decode_stall,
     output  logic                   deq,
-    output  logic [PTR_SIZE-1:0]    rob_tail_idx,
-    output  logic [PTR_SIZE-1:0]    rob_head_idx,
+    output  logic [PTR_SIZE_ROB-1:0]    rob_tail_idx,
+    output  logic [PTR_SIZE_ROB-1:0]    rob_head_idx,
     output  logic                   rob_overflow,
     output  logic                   aregf_we,
     output  logic [4:0]             ard_s,
-    output  logic [6:0]             p_addr_ret,
+    output  logic [PTR_SIZE-1:0]             p_addr_ret,
     output logic flush
 
 );
@@ -49,9 +50,9 @@ import rv32i_types::*;
     logic valid_op;
     logic valid_enq;
     logic valid_deq;
-    logic [PTR_SIZE:0] head;
-    logic [PTR_SIZE:0] tail;
-    logic [PTR_SIZE:0] tail_full;
+    logic [PTR_SIZE_ROB:0] head;
+    logic [PTR_SIZE_ROB:0] tail;
+    logic [PTR_SIZE_ROB:0] tail_full;
 
     rob_entry_t rob[DEPTH];
 
@@ -64,21 +65,21 @@ import rv32i_types::*;
 
     always_comb begin
 
-        full_next = (head[PTR_SIZE] != tail_full[PTR_SIZE] && head[PTR_SIZE-1:0] == (tail_full[PTR_SIZE-1:0])); 
-        full = (head[PTR_SIZE] != tail[PTR_SIZE] && head[PTR_SIZE-1:0] == (tail[PTR_SIZE-1:0])); 
+        full_next = (head[PTR_SIZE_ROB] != tail_full[PTR_SIZE_ROB] && head[PTR_SIZE_ROB-1:0] == (tail_full[PTR_SIZE_ROB-1:0])); 
+        full = (head[PTR_SIZE_ROB] != tail[PTR_SIZE_ROB] && head[PTR_SIZE_ROB-1:0] == (tail[PTR_SIZE_ROB-1:0])); 
         empty = (head == tail);
 
         alloc_stall = full;
         decode_stall = full_next;
         //valid_rdata = ~empty;
 
-        rob_tail_idx = tail[PTR_SIZE-1:0]; // in rename and allocate, set inst rob idx field to this tail
-        rob_overflow = tail[PTR_SIZE];
+        rob_tail_idx = tail[PTR_SIZE_ROB-1:0]; // in rename and allocate, set inst rob idx field to this tail
+        rob_overflow = tail[PTR_SIZE_ROB];
 
-        // if (rob[head[PTR_SIZE-1:0]].ld_store) begin
+        // if (rob[head[PTR_SIZE_ROB-1:0]].ld_store) begin
         //     deq = lds_deq;
         // end else begin
-            deq = (rob[head[PTR_SIZE-1:0]].status == done && rob[head[PTR_SIZE-1:0]].valid && !empty);
+            deq = (rob[head[PTR_SIZE_ROB-1:0]].status == done && rob[head[PTR_SIZE_ROB-1:0]].valid && !empty);
         // end
     end
 
@@ -101,20 +102,20 @@ import rv32i_types::*;
         end else begin
             if (enq && deq) begin
                 if (full) begin
-                    rob[tail[PTR_SIZE-1:0]] <= rob_in;
+                    rob[tail[PTR_SIZE_ROB-1:0]] <= rob_in;
                 end
                 else begin
-                    rob[tail[PTR_SIZE-1:0]] <= rob_in;
-                    rob[head[PTR_SIZE-1:0]] <= '0;
+                    rob[tail[PTR_SIZE_ROB-1:0]] <= rob_in;
+                    rob[head[PTR_SIZE_ROB-1:0]] <= '0;
                 end
-                // rob[head[PTR_SIZE-1:0]].valid <= '0;
+                // rob[head[PTR_SIZE_ROB-1:0]].valid <= '0;
                 tail <= (tail + 4'b0001);
                 head <= (head + 4'b0001);
             end else if (enq && !full) begin
-                rob[tail[PTR_SIZE-1:0]] <= rob_in; 
+                rob[tail[PTR_SIZE_ROB-1:0]] <= rob_in; 
                 tail <= (tail + 4'b0001);
             end else if (deq && !empty) begin
-                rob[head[PTR_SIZE-1:0]] <= '0;
+                rob[head[PTR_SIZE_ROB-1:0]] <= '0;
                 head <= (head + 4'b0001);
             end
         end
@@ -202,15 +203,15 @@ import rv32i_types::*;
             valid_rdata <= '0;
             rob_head_idx <= '0;
         end else begin
-            if (rob[head[PTR_SIZE-1:0]].status == done) begin
+            if (rob[head[PTR_SIZE_ROB-1:0]].status == done) begin
                 // if (ld_status_3) begin
                     aregf_we <= '1;
                 // end else begin
-                //     aregf_we <= (rob[head[PTR_SIZE-1:0]].ld_store) ? '0 : '1;
+                //     aregf_we <= (rob[head[PTR_SIZE_ROB-1:0]].ld_store) ? '0 : '1;
                 // end
-                ard_s <= rob[head[PTR_SIZE-1:0]].rd_addr;
-                p_addr_ret <= rob[head[PTR_SIZE-1:0]].rd_paddr;
-                valid_rdata <= rob[head[PTR_SIZE-1:0]].valid;
+                ard_s <= rob[head[PTR_SIZE_ROB-1:0]].rd_addr;
+                p_addr_ret <= rob[head[PTR_SIZE_ROB-1:0]].rd_paddr;
+                valid_rdata <= rob[head[PTR_SIZE_ROB-1:0]].valid;
             end
             else begin
                 aregf_we <= '0;
@@ -218,14 +219,14 @@ import rv32i_types::*;
                 p_addr_ret <= '0;
                 valid_rdata <= '0;
             end
-            if (rob[head[PTR_SIZE-1:0]].br_pred != rob[head[PTR_SIZE-1:0]].br_result) begin
+            if (rob[head[PTR_SIZE_ROB-1:0]].br_pred != rob[head[PTR_SIZE_ROB-1:0]].br_result) begin
                 flush <= '1;
                 
             end else begin
                 flush <= '0; //???
             end
-            rob_out <= rob[head[PTR_SIZE-1:0]];
-            rob_head_idx <= head[PTR_SIZE-1:0];
+            rob_out <= rob[head[PTR_SIZE_ROB-1:0]];
+            rob_head_idx <= head[PTR_SIZE_ROB-1:0];
             
         end
     end

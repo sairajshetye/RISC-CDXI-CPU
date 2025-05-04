@@ -1,10 +1,12 @@
 module rename_alloc
 import rv32i_types::*;
-(
+ #(
+            parameter               PTR_SIZE = 6
+)(
     input id_ex_stage_reg_t id_ex, // comes from decode queue
 
     // inputs from RAT, FL, stalls?
-    input   logic   [6:0]   p_addr,
+    input   logic   [PTR_SIZE-1:0]   p_addr,
     input   logic   [3:0]   rob_idx,
     input   logic           rob_overflow,
     // from RAT
@@ -14,7 +16,7 @@ import rv32i_types::*;
     // input   logic           res_stall,
     // input   logic           rob_stall,
     input   logic           rq_stall,
-    input   logic   [7:0]   fl_head,
+    input   logic   [PTR_SIZE:0]   fl_head,
     // output to ROB + dispatch, RAT
     //output  [4:0]   rd_s,
     output  logic           enq,
