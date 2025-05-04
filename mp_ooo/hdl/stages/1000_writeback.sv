@@ -2,8 +2,9 @@ module writeback
 import rv32i_types::*;
 #(
             parameter               DEPTH     = 16,
-            parameter               PTR_SIZE  = $clog2(DEPTH),
-            parameter               WIDTH     = 32
+            parameter               PTR_SIZE_WB  = $clog2(DEPTH),
+            parameter               WIDTH     = 32,
+            parameter               PTR_SIZE = 6
 
 )(
     input dp_is_stage_reg_t inst_in_wb,
@@ -21,7 +22,7 @@ import rv32i_types::*;
 
 
     //output wb to res stations
-    output   logic   [6:0]           p_addr_out,     //to res station + prf
+    output   logic   [PTR_SIZE-1:0]           p_addr_out,     //to res station + prf
 
     output   logic   [WIDTH-1:0]        data_out,    //to all
 

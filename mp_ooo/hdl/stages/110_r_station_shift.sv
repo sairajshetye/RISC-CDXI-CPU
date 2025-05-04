@@ -2,8 +2,9 @@ module r_station_shift
 import rv32i_types::*;
  #(
             parameter               DEPTH     = 8,
-            parameter               PTR_SIZE  = $clog2(DEPTH),
-            parameter               WIDTH     = 32
+            parameter               PTR_SIZE_RSTATION  = $clog2(DEPTH),
+            parameter               WIDTH     = 32,
+            parameter               PTR_SIZE  = 6
 
 )(
     input   logic                   clk,
@@ -16,13 +17,13 @@ import rv32i_types::*;
     output  logic                   dispatch_stall,
     output  logic                   really_full,
 
-    input   logic   [6:0]  data_paddr_0, //from intfunct 
+    input   logic   [PTR_SIZE-1:0]  data_paddr_0, //from intfunct 
     input   logic   [31:0]     data_in_0,    //from intfunct  
-    input   logic   [6:0]  data_paddr_1, //from mult 
+    input   logic   [PTR_SIZE-1:0]  data_paddr_1, //from mult 
     input   logic   [31:0]     data_in_1,    //from mult
-    input   logic   [6:0]  data_paddr_2, //from br
+    input   logic   [PTR_SIZE-1:0]  data_paddr_2, //from br
     input   logic   [31:0]     data_in_2,    //from br
-    input   logic   [6:0]  data_paddr_3, //from ld
+    input   logic   [PTR_SIZE-1:0]  data_paddr_3, //from ld
     input   logic   [31:0]     data_in_3    //from ld
 
 );
@@ -34,8 +35,8 @@ import rv32i_types::*;
 
     logic quit;
 
-    logic [PTR_SIZE-1:0] output_idx;
-    logic [PTR_SIZE-1:0] open_idx;
+    logic [PTR_SIZE_RSTATION-1:0] output_idx;
+    logic [PTR_SIZE_RSTATION-1:0] open_idx;
 
     logic   [WIDTH-1:0]     data_t [DEPTH][2];
     logic   [DEPTH-1:0]     idx_rep; 
@@ -76,25 +77,25 @@ import rv32i_types::*;
             if (station[i].valid && !funct_unit_busy && !quit) begin
                 if (station[i].valid && station[i].use_prs1 && station[i].use_prs2) begin
                     if (station[i].rs1_ready && station[i].rs2_ready) begin
-                        output_idx = PTR_SIZE'(unsigned'(i));
+                        output_idx = PTR_SIZE_RSTATION'(unsigned'(i));
                         quit = '1;
                         remove = '1;
                     end
                 end else if (station[i].valid && station[i].use_prs1 && !station[i].use_prs2) begin
                     if (station[i].rs1_ready) begin
-                        output_idx = PTR_SIZE'(unsigned'(i));
+                        output_idx = PTR_SIZE_RSTATION'(unsigned'(i));
                         quit = '1;
                         remove = '1;
                     end
                 end else if (station[i].valid && station[i].use_prs2 && !station[i].use_prs1) begin
                     if (station[i].rs2_ready) begin
-                        output_idx = PTR_SIZE'(unsigned'(i));
+                        output_idx = PTR_SIZE_RSTATION'(unsigned'(i));
                         quit = '1;
                         remove = '1;
                     end
                 end else if (station[i].valid && !station[i].use_prs2 && !station[i].use_prs1) begin
                     //if (station[i].rs2_ready) begin
-                    output_idx = PTR_SIZE'(unsigned'(i));
+                    output_idx = PTR_SIZE_RSTATION'(unsigned'(i));
                     quit = '1;
                     remove = '1;
                     //end
@@ -109,14 +110,14 @@ import rv32i_types::*;
             if (!quit) begin
                 if (station[i].valid) begin
                     if (remove) begin 
-                        open_idx = PTR_SIZE'(unsigned'(i));
+                        open_idx = PTR_SIZE_RSTATION'(unsigned'(i));
                         quit = '1;
                     end else begin
-                        open_idx = PTR_SIZE'(unsigned'(i-1));
+                        open_idx = PTR_SIZE_RSTATION'(unsigned'(i-1));
                         quit = '1;
                     end
                 end else if (empty) begin
-                    open_idx = PTR_SIZE'(unsigned'(DEPTH-1));
+                    open_idx = PTR_SIZE_RSTATION'(unsigned'(DEPTH-1));
                     quit = '1;
                 end
             end
@@ -248,7 +249,7 @@ import rv32i_types::*;
             end
             for (integer i = 1; i < DEPTH; i++) begin
                 if (remove) begin 
-                    if (PTR_SIZE'(unsigned'(i)) <= output_idx) begin
+                    if (PTR_SIZE_RSTATION'(unsigned'(i)) <= output_idx) begin
                         station[i] <= station[i-1];
                     end
                 end
@@ -258,7 +259,7 @@ import rv32i_types::*;
             for (integer i = 0; i < DEPTH; i++) begin
                 if (idx_rep[i]) begin
                     if (rs2_rep[i]) begin   //rs2 replace
-                        if (PTR_SIZE'(unsigned'(i)) <= output_idx && remove) begin
+                        if (PTR_SIZE_RSTATION'(unsigned'(i)) <= output_idx && remove) begin
                             if ((i+1) < (DEPTH)) begin
                                 station[i+1].rs2_data <= data_t[i][1];
                                 station[i+1].rs2_ready <= '1;
@@ -269,7 +270,7 @@ import rv32i_types::*;
                         end
                     end 
                     if (rs1_rep[i]) begin      //rs1 replace
-                        if (PTR_SIZE'(unsigned'(i)) <= output_idx && remove) begin
+                        if (PTR_SIZE_RSTATION'(unsigned'(i)) <= output_idx && remove) begin
                             if ((i+1) < (DEPTH)) begin
                                 station[i+1].rs1_data <= data_t[i][0];
                                 station[i+1].rs1_ready <= '1;
