@@ -3,12 +3,12 @@ package rv32i_types;
 
     // GLOBAL PARAMETERS
 
-    parameter integer FREE_LIST_PRF_DEPTH = 128; 
-    parameter integer GLOBAL_PTR_SIZE = $clog2(FREE_LIST_PRF_DEPTH);
-    parameter integer Q_DEPTH = 8;
-    parameter integer R_STATION_DEPTH = 4;
-    parameter integer ROB_DEPTH = 16;
-    parameter integer ROB_PTR_SIZE = $clog2(ROB_DEPTH);
+    localparam integer FREE_LIST_PRF_DEPTH = 64; 
+    localparam integer GLOBAL_PTR_SIZE = $clog2(FREE_LIST_PRF_DEPTH);
+    localparam integer Q_DEPTH = 8;
+    localparam integer R_STATION_DEPTH = 4;
+    localparam integer ROB_DEPTH = 16;
+    localparam integer ROB_PTR_SIZE = $clog2(ROB_DEPTH);
     
     typedef enum logic {
         rs1_out = 1'b0,
