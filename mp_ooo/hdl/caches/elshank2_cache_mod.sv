@@ -1,4 +1,11 @@
-module cache_mod (
+module cache_mod
+import rv32i_types::*;
+#(
+        parameter           SETS        = 16,
+        parameter           SETS_SIZE   = $clog2(SETS),
+        parameter           TAG_SIZE    = 32-SETS_SIZE-5,
+        parameter           OFFSET_SIZE = 5 
+)(
     input   logic           clk,
     input   logic           rst,
     input   logic           flush,
@@ -27,9 +34,9 @@ module cache_mod (
         write_back
     } state, state_next;
 
-    logic   [22:0]  tag;
-    logic   [3:0]   set;
-    logic   [4:0]   offset;
+    logic   [TAG_SIZE-1:0]      tag;
+    logic   [SETS_SIZE-1:0]     set;
+    logic   [OFFSET_SIZE-1:0]   offset;
 
     logic   [31:0]  ufp_addr_reg;
     logic   [31:0]  ufp_addr_reg2;
@@ -47,10 +54,10 @@ module cache_mod (
     logic   [255:0] data_d_in [4];
     logic   [255:0] data_d_out [4];
     logic   [31:0]  data_wmask [4];
-    logic   [4:0]   data_offset;
+    //logic   [4:0]   data_offset;
 
-    logic   [22:0]  tag_d_in [4];
-    logic   [22:0]  tag_d_out [4];
+    logic   [TAG_SIZE-1:0]  tag_d_in [4];
+    logic   [TAG_SIZE-1:0]  tag_d_out [4];
 
     logic   [3:0]   valid_d_in;
     logic   [3:0]   valid_d_out;
@@ -83,19 +90,19 @@ module cache_mod (
     logic [255:0] lb_data;
     logic [31:0] lb_addr_reg;
     logic [31:0] lb_addr;
-    logic [22:0] lb_tag;
+    logic [TAG_SIZE-1:0] lb_tag;
     logic [3:0] lb_set;
 
     assign lb_tag = lb_addr_reg[31:9];
     assign lb_set = lb_addr_reg[8:5];
 
 
-    assign tag = ufp_addr_reg[31:9];
-    assign set = ufp_addr_reg[8:5];
-    assign offset = ufp_addr_reg[4:0];
+    assign tag = ufp_addr_reg[31:OFFSET_SIZE+SETS_SIZE];
+    assign set = ufp_addr_reg[OFFSET_SIZE+SETS_SIZE-1:OFFSET_SIZE];
+    assign offset = ufp_addr_reg[OFFSET_SIZE-1:0];
 
     generate for (genvar i = 0; i < 4; i++) begin : arrays
-        mp_cache_data_array data_array (
+        mp_cache_data_array_i data_array (
             .clk0       (clk),
             //.rst0       (rst),
             .csb0       (csb_s), // always select?
@@ -113,7 +120,7 @@ module cache_mod (
             //.dout1      (data_mem_out[i])
 
         );
-        mp_cache_tag_array tag_array (
+        mp_cache_tag_array_i tag_array (
             .clk0       (clk),
             //.rst0       (rst),
             .csb0       (csb_s),
