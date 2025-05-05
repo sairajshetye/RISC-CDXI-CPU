@@ -447,7 +447,7 @@ import rv32i_types::*;
 
 
     lds_q #(
-        .DEPTH      (Q_DEPTH),
+        .DEPTH      (R_STATION_DEPTH),
         .PTR_SIZE   (GLOBAL_PTR_SIZE)
     ) ld_store_q(
         .clk(clk),
