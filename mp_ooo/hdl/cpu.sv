@@ -605,7 +605,8 @@ import rv32i_types::*;
 
     multiply_divide_unit funct_mult(
         .clk(clk),
-        .rst(!rst ),    //add flush somehow
+        .rst(!rst),    //add flush somehow
+        .flush(flush),
         .rs_out(dp_is_out_mult),
         //.pre_wb_mult_stall(mult_wb_stall),
         //.rs1_v(),

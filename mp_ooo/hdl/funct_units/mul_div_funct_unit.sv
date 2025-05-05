@@ -13,6 +13,7 @@ import rv32i_types::*;
 (   
     input logic clk, 
     input logic rst,
+    input logic flush,
     input dp_is_stage_reg_t rs_out,           //only use inst (change to be just that?)
     //input logic pre_wb_mult_stall,
     //input logic [RS1_DATA_SIZE-1:0] rs1_v,        //rs1 read data
@@ -440,7 +441,7 @@ import rv32i_types::*;
     end
 
      always_comb begin
-        if (!rst) begin
+        if (!rst || flush) begin
             out_inst = '0;
             out_inst.rfvi_monitor_vals = '0;
         end else if (rs_reg.valid && (funct_mult_done) ) begin
@@ -466,7 +467,7 @@ import rv32i_types::*;
 
     always_ff @(posedge clk) begin
         //funct_mult_done = '0;
-        if (!rst) begin
+        if (!rst || flush) begin
             counter <= 0;
             //funct_unit_busy <= '0;
             //done <= '0;
