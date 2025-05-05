@@ -24,12 +24,17 @@ import rv32i_types::*;
 
 );  
     logic [2:0] funct3;
-    logic [RS1_DATA_SIZE+RS2_DATA_SIZE-1:0] product;
+    // logic [RS1_DATA_SIZE+RS2_DATA_SIZE-1:0] product;
     logic [65:0] product_mulhsu;
-    logic div_en, mult_en, div_tc, mult_tc;
+    // logic div_en, mult_en, div_tc, mult_tc;
+    logic div_en, mult_en, mult_tc;
     
-    logic div0, div0_tc;
-    logic [RS1_DATA_SIZE-1:0] quotient, quotient_tc, remainder, remainder_tc;
+    // logic div0, div0_tc;
+    logic div0;
+    // logic [RS1_DATA_SIZE-1:0] quotient, quotient_tc, remainder, remainder_tc;
+    // logic [RS1_DATA_SIZE-1:0] quotient, remainder, remainder_tc;
+    // logic [RS1_DATA_SIZE-1:0] quotient, remainder;
+    logic [32:0] quotient, remainder;
     
 
     logic [2:0] out_select;
@@ -105,7 +110,7 @@ import rv32i_types::*;
             mult_en = '0;
             mult_tc = '0;
             div_en = '0;
-            div_tc = '0;
+            // div_tc = '0;
             out_select = 3'b000;
             overflow = '0;
 
@@ -127,7 +132,7 @@ import rv32i_types::*;
                 mult_en = '1;
                 mult_tc = '1;
                 div_en = '0;
-                div_tc = '0;
+                // div_tc = '0;
                 out_select = 3'b001;
             end
             md_MULH : begin      //MUL High, signed x signed
@@ -138,7 +143,7 @@ import rv32i_types::*;
                 mult_en = '1;
                 mult_tc = '1;
                 div_en = '0;
-                div_tc = '0;
+                // div_tc = '0;
                 out_select = 3'b010;
             end
             md_MULHSU : begin      //MUL High (S)(U), signed x unsigned
@@ -147,7 +152,7 @@ import rv32i_types::*;
                 mult_en = '1;
                 mult_tc = '1;   //?
                 div_en = '0;
-                div_tc = '0;
+                // div_tc = '0;
                 out_select = 3'b010;
                 rs1_v_extended = rs1_v_e;
                 rs2_v_extended = {1'b0, rs2_v_e[31:0]};
@@ -160,7 +165,7 @@ import rv32i_types::*;
                 mult_en = '1;
                 mult_tc = '0;
                 div_en = '0;
-                div_tc = '0;
+                // div_tc = '0;
                 out_select = 3'b010;
             end
             md_DIV : begin      //DIV
@@ -173,8 +178,10 @@ import rv32i_types::*;
                 if ((rs2_v_e[31:0] == -32'b1) && (rs1_v_e[31:0] == -'d2147483648)) begin //signed overflow
                     mult_en = '0;
                     mult_tc = '0;
-                    div_en = '0;
-                    div_tc = '1;
+                    // div_en = '0;
+                    // div_tc = '1;
+                    div_en = '1;
+
                     out_select = 3'b100;
                     overflow = '1;
                     
@@ -182,8 +189,10 @@ import rv32i_types::*;
                 end else begin
                     mult_en = '0;
                     mult_tc = '0;
-                    div_en = '0;
-                    div_tc = '1;
+                    // div_en = '0;
+                    // div_tc = '1;
+                    div_en = '1;
+
                     out_select = 3'b100;
                 end
             end
@@ -195,7 +204,7 @@ import rv32i_types::*;
                 mult_en = '0;
                 mult_tc = '0;
                 div_en = '1;
-                div_tc = '0;
+                // div_tc = '0;
                 out_select = 3'b101;
             end
             md_REM : begin      //Remainder
@@ -206,15 +215,19 @@ import rv32i_types::*;
                 if ((rs2_v_e[31:0] == -32'b1) && (rs1_v_e[31:0] == -'d2147483648)) begin //signed overflow
                     mult_en = '0;
                     mult_tc = '0;
-                    div_en = '0;
-                    div_tc = '1;
+                    // div_en = '0;
+                    // div_tc = '1;
+                    div_en = '1;
+
                     out_select = 3'b110;
                     overflow = '1;
                 end else begin
                     mult_en = '0;
                     mult_tc = '0;
-                    div_en = '0;
-                    div_tc = '1;
+                    // div_en = '0;
+                    // div_tc = '1;
+                    div_en = '1;
+
                     out_select = 3'b110;
                 end
             end
@@ -226,7 +239,7 @@ import rv32i_types::*;
                 mult_en = '0;
                 mult_tc = '0;
                 div_en = '1;
-                div_tc = '0;
+                // div_tc = '0;
                 out_select = 3'b111;
             end
             default : begin
@@ -235,7 +248,7 @@ import rv32i_types::*;
                 mult_en = '0;
                 mult_tc = '0;
                 div_en = '0;
-                div_tc = '0;
+                // div_tc = '0;
                 rs1_v_extended = '0;
                 rs1_v_extended = '0;
                 out_select = '0;
@@ -244,21 +257,21 @@ import rv32i_types::*;
         end
 
     end
-    DW_mult_pipe #(
-        .a_width(RS1_DATA_SIZE), 
-        .b_width(RS2_DATA_SIZE), 
-        .num_stages(NUM_STAGES),
-        .rst_mode(RESET_MODE)
-        ) mult (
-        .clk(clk), 
-        .rst_n(rst), //active low
-        .en(mult_en),    //enable
-        .tc(mult_tc),   //two's complement 
-        .a(rs1_v_extended[31:0]),
-        .b(rs2_v_extended[31:0]), 
-        .product(product) 
+    // DW_mult_pipe #(
+    //     .a_width(RS1_DATA_SIZE), 
+    //     .b_width(RS2_DATA_SIZE), 
+    //     .num_stages(NUM_STAGES),
+    //     .rst_mode(RESET_MODE)
+    //     ) mult (
+    //     .clk(clk), 
+    //     .rst_n(rst), //active low
+    //     .en(mult_en),    //enable
+    //     .tc(mult_tc),   //two's complement 
+    //     .a(rs1_v_extended[31:0]),
+    //     .b(rs2_v_extended[31:0]), 
+    //     .product(product) 
 
-    );
+    // );
 
     DW_mult_pipe #(
         .a_width(33), 
@@ -277,38 +290,55 @@ import rv32i_types::*;
     );
 
     DW_div_pipe #(
-        .a_width(RS1_DATA_SIZE), 
-        .b_width(RS2_DATA_SIZE), 
-        .tc_mode(ZERO),      //two's complement 
+        .a_width(33), 
+        .b_width(33), 
+        .tc_mode(ONE),      //two's complement 
         .num_stages(NUM_STAGES),
         .rst_mode(RESET_MODE)
     ) div (
         .clk(clk),
         .rst_n(rst),    //active low
         .en(div_en),     //enable
-        .a(rs1_v_extended[31:0]),
-        .b(rs2_v_extended[31:0]),
+        .a(rs1_v_extended),
+        .b(rs2_v_extended),
         .quotient(quotient),
         .remainder(remainder),
         .divide_by_0(div0)
     );
 
-    DW_div_pipe #(
-        .a_width(RS1_DATA_SIZE), 
-        .b_width(RS2_DATA_SIZE), 
-        .tc_mode(ONE),      //two's complement 
-        .num_stages(NUM_STAGES),
-        .rst_mode(RESET_MODE)
-    ) div_signed (
-        .clk(clk),
-        .rst_n(rst),    //active low
-        .en(div_tc),     //enable
-        .a(rs1_v_extended[31:0]),
-        .b(rs2_v_extended[31:0]),
-        .quotient(quotient_tc),
-        .remainder(remainder_tc),
-        .divide_by_0(div0_tc)
-    );
+    // DW_div_pipe #(
+    //     .a_width(RS1_DATA_SIZE), 
+    //     .b_width(RS2_DATA_SIZE), 
+    //     .tc_mode(ZERO),      //two's complement 
+    //     .num_stages(NUM_STAGES),
+    //     .rst_mode(RESET_MODE)
+    // ) div (
+    //     .clk(clk),
+    //     .rst_n(rst),    //active low
+    //     .en(div_en),     //enable
+    //     .a(rs1_v_extended[31:0]),
+    //     .b(rs2_v_extended[31:0]),
+    //     .quotient(quotient),
+    //     .remainder(remainder),
+    //     .divide_by_0(div0)
+    // );
+
+    // DW_div_pipe #(
+    //     .a_width(RS1_DATA_SIZE), 
+    //     .b_width(RS2_DATA_SIZE), 
+    //     .tc_mode(ONE),      //two's complement 
+    //     .num_stages(NUM_STAGES),
+    //     .rst_mode(RESET_MODE)
+    // ) div_signed (
+    //     .clk(clk),
+    //     .rst_n(rst),    //active low
+    //     .en(div_tc),     //enable
+    //     .a(rs1_v_extended[31:0]),
+    //     .b(rs2_v_extended[31:0]),
+    //     .quotient(quotient_tc),
+    //     .remainder(remainder_tc),
+    //     .divide_by_0(div0_tc)
+    // );
 
     /* out_select
 
@@ -329,14 +359,14 @@ import rv32i_types::*;
                 out = '0;
             end
             3'b001 : begin  //mult low bits, signed
-                out = product[31:0];
+                out = product_mulhsu[31:0];
             end
             3'b010 : begin  //mult high bits
             if (funct3 == md_MULHSU) begin
                 out = product_mulhsu[63:32];
             end
             else begin
-                out = product[63:32];
+                out = product_mulhsu[63:32];
             end
             end
             3'b011 : begin //signed divison overflow
@@ -349,16 +379,17 @@ import rv32i_types::*;
                 end
             end
             3'b100 : begin  //div signed
-                if (!div0_tc && !overflow) begin
-                    if ((rs1_v_extended[32] == 1'b1) && (rs2_v_extended[32] == 1'b1)) begin
-                        out = {1'b0, quotient_tc[30:0]};
-                    end else if ((rs1_v_extended[32] == 1'b0) && (rs2_v_extended[32] == 1'b0)) begin
-                        out = {1'b0, quotient_tc[30:0]};
-                     end else if ((quotient_tc != '0)) begin
-                        out = {1'b1, quotient_tc[30:0]};
-                    end else begin
-                        out = quotient_tc[31:0];
-                    end
+                if (!div0 && !overflow) begin
+                    // if ((rs1_v_extended[32] == 1'b1) && (rs2_v_extended[32] == 1'b1)) begin
+                    //     out = {1'b0, quotient_tc[30:0]};
+                    // end else if ((rs1_v_extended[32] == 1'b0) && (rs2_v_extended[32] == 1'b0)) begin
+                    //     out = {1'b0, quotient_tc[30:0]};
+                    //  end else if ((quotient_tc != '0)) begin
+                    //     out = {1'b1, quotient_tc[30:0]};
+                    // end else begin
+                    //     out = quotient_tc[31:0];
+                    // end
+                    out = quotient[31:0];
                 end else if (overflow) begin
                     out = rs1_v_extended[31:0];      //quoteint = dividend
                 end
@@ -378,16 +409,17 @@ import rv32i_types::*;
                 if (overflow) begin
                         out = '0;   //rem is 0
                     end
-                else if (!div0_tc) begin
-                    if (remainder_tc != '0) begin
-                        if ((rs1_v_extended[32] == 1'b1)) begin
-                            out = {1'b1, remainder_tc[30:0]};
-                        end else begin
-                            out = {1'b0, remainder_tc[30:0]};
-                        end
+                else if (!div0) begin
+                    if (remainder != '0) begin
+                        // if ((rs1_v_extended[32] == 1'b1)) begin
+                        //     out = {1'b1, remainder_tc[30:0]};
+                        // end else begin
+                        //     out = {1'b0, remainder_tc[30:0]};
+                        // end
+                        out = remainder[31:0];
                     end
                     else begin
-                        out = remainder_tc[31:0];
+                        out = remainder[31:0];
                     end
                 end else begin //div by 0, rem = dividend
                         out = rs1_v_extended[31:0];
@@ -464,7 +496,7 @@ import rv32i_types::*;
            
         
         end 
-        else if (mult_en | div_en | div_tc) begin
+        else if (mult_en | div_en) begin
             counter <= counter + 1;
             //funct_unit_busy <= '1;
             funct_mult_done <= '0;
