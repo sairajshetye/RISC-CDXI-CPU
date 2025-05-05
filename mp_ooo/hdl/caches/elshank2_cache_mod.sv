@@ -34,7 +34,7 @@ import rv32i_types::*;
         write_back
     } state, state_next;
 
-    logic   [TAG_SIZE-1:0]      tag;
+    logic   [TAG_SIZE-1:0]      tag; // param
     logic   [SETS_SIZE-1:0]     set;
     logic   [OFFSET_SIZE-1:0]   offset;
 
