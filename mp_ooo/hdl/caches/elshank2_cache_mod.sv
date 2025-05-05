@@ -35,7 +35,7 @@ import rv32i_types::*;
     } state, state_next;
 
     logic   [TAG_SIZE-1:0]      tag; // param
-    logic   [SETS_SIZE-1:0]     set;
+    logic   [SETS_SIZE-1:0]     set; // param
     logic   [OFFSET_SIZE-1:0]   offset;
 
     logic   [31:0]  ufp_addr_reg;
