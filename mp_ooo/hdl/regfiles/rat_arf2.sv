@@ -1,6 +1,8 @@
 module rat_arf2
 import rv32i_types::*;
-(
+#(
+            parameter               PTR_SIZE = 6
+)(
     input   logic           clk,
     input   logic           rst,
     input   logic           flush,
@@ -9,16 +11,16 @@ import rv32i_types::*;
     input   logic   [4:0]   rs1_s, rs2_s, rd_s,
     input   logic           rename_we,
     input   logic   [4:0]   rd_rename,
-    input   logic   [6:0]   p_addr, // speculative (rat)
-    input   logic   [6:0]   p_addr_ret, // (rrf)
+    input   logic   [PTR_SIZE-1:0]   p_addr, // speculative (rat)
+    input   logic   [PTR_SIZE-1:0]   p_addr_ret, // (rrf)
 
     // RAT read
     input   logic   [4:0]   rat_rs1, rat_rs2,
     output  logic           rs1_renamed, rs2_renamed,
-    output  logic   [6:0]   rs1_paddr, rs2_paddr,
+    output  logic   [PTR_SIZE-1:0]   rs1_paddr, rs2_paddr,
 
     output  logic           fl_enq,
-    output  logic   [6:0]   fl_data_in,
+    output  logic   [PTR_SIZE-1:0]   fl_data_in,
 
     output   arf_reg_t       ars1_v_comb, ars2_v_comb
 );
@@ -34,8 +36,8 @@ import rv32i_types::*;
     logic           free_reg;
     logic           transparent_free_1, transparent_free_2;
 
-    logic    [6:0]  debug_p_addr [32];
-    logic    [6:0]  debug_p_addr_ret [32];
+    logic    [PTR_SIZE-1:0]  debug_p_addr [32];
+    logic    [PTR_SIZE-1:0]  debug_p_addr_ret [32];
     logic    [0:0]  debug_renamed [32];
 
 

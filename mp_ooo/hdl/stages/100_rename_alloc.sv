@@ -1,20 +1,23 @@
 module rename_alloc
 import rv32i_types::*;
-(
+ #(
+            parameter               PTR_SIZE = 6,
+            parameter               ROB_PTR_SIZE = 3
+)(
     input id_ex_stage_reg_t id_ex, // comes from decode queue
 
     // inputs from RAT, FL, stalls?
-    input   logic   [6:0]   p_addr,
-    input   logic   [3:0]   rob_idx,
+    input   logic   [PTR_SIZE-1:0]   p_addr,
+    input   logic   [ROB_PTR_SIZE-1:0]   rob_idx,
     input   logic           rob_overflow,
     // from RAT
     input   logic           rs1_renamed, rs2_renamed,
-    input   logic   [6:0]   rs1_paddr, rs2_paddr,
+    input   logic   [PTR_SIZE-1:0]   rs1_paddr, rs2_paddr,
 
     // input   logic           res_stall,
     // input   logic           rob_stall,
     input   logic           rq_stall,
-    input   logic   [7:0]   fl_head,
+    input   logic   [PTR_SIZE:0]   fl_head,
     // output to ROB + dispatch, RAT
     //output  [4:0]   rd_s,
     output  logic           enq,
@@ -37,7 +40,7 @@ import rv32i_types::*;
     // - dequeue the free list -> read from free list (comb read)
     // take the addr from the free list and put that into the RAT entry
     logic   [4:0]   rd_s;
-    logic   [6:0]   prd_s; 
+    logic   [PTR_SIZE-1:0]   prd_s; 
 
     //logic           rs1_renamed, rs2_renamed;
     //logic   [6:0]   rs1_paddr, rs2_paddr;
@@ -124,10 +127,10 @@ import rv32i_types::*;
         ra_dp.rob_idx = rob_idx;
         ra_dp.rob_overflow = rob_overflow;
         ra_dp.use_prs1 = rs1_renamed; // inputs from RAT
-        ra_dp.rs1_paddr = rs1_renamed ? rs1_paddr : 7'h7E;
+        ra_dp.rs1_paddr = rs1_renamed ? rs1_paddr : '1;
         ra_dp.rs1_ready = '0; // not ready
         ra_dp.use_prs2 = rs2_renamed;
-        ra_dp.rs2_paddr = rs2_renamed ? rs2_paddr : 7'h7E;
+        ra_dp.rs2_paddr = rs2_renamed ? rs2_paddr : '1;
         ra_dp.rs2_ready = '0;
         ra_dp.rd_paddr = prd_s;
         ra_dp.useless = '0;

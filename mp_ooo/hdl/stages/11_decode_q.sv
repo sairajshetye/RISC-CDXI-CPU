@@ -99,16 +99,16 @@ import rv32i_types::*;
                         internal_array_d[tail[PTR_SIZE-1:0]] <= inst_in_d; 
                     end
                     // inst_out_d <= inst_in_d;
-                    tail <= (tail + 4'b0001);
-                    head <= (head + 4'b0001);
+                    tail <= (PTR_SIZE+1)'(tail + 1);
+                    head <= (PTR_SIZE+1)'(head + 1);
                 end else if (enq && !full) begin
                     inst_out_d <= '0;
                     internal_array_d[tail[PTR_SIZE-1:0]] <= inst_in_d; 
-                    tail <= (tail + 4'b0001);
+                    tail <= (PTR_SIZE+1)'(tail + 1);
                 end else if (deq && !empty) begin
                     inst_out_d <= internal_array_d[head[PTR_SIZE-1:0]];
                     internal_array_d[head[PTR_SIZE-1:0]] <= '0;
-                    head <= (head + 4'b0001);
+                    head <= (PTR_SIZE+1)'(head + 1);
                 end
             //end
         end

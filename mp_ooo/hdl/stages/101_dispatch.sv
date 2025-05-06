@@ -1,6 +1,8 @@
 module dispatch
 import rv32i_types::*;
-(
+#(
+            parameter               PTR_SIZE = 6
+)(
     input ra_dp_stage_reg_t ra_dp, // comes from decode queue
 
     // stalls ?
@@ -20,13 +22,13 @@ import rv32i_types::*;
     input logic          rs1_ready, rs2_ready,
 
     // FORWARD FROM THE BUS
-    input logic [6:0]    data_paddr_0,
+    input logic [PTR_SIZE-1:0]    data_paddr_0,
     input logic [31:0]   data_in_0,
-    input logic [6:0]    data_paddr_1,
+    input logic [PTR_SIZE-1:0]    data_paddr_1,
     input logic [31:0]   data_in_1,
-    input logic [6:0]    data_paddr_2,
+    input logic [PTR_SIZE-1:0]    data_paddr_2,
     input logic [31:0]   data_in_2,
-    input logic [6:0]    data_paddr_3,
+    input logic [PTR_SIZE-1:0]    data_paddr_3,
     input logic [31:0]   data_in_3,
 
 

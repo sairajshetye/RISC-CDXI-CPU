@@ -2,8 +2,9 @@ module free_list
 import rv32i_types::*;
  #(
             parameter               DEPTH     = 128,
-            parameter               PTR_SIZE  = $clog2(DEPTH),
-            parameter               WIDTH     = 7
+            parameter               PTR_SIZE_FL  = $clog2(DEPTH),
+            parameter               WIDTH     = 7,
+            parameter               PTR_SIZE = 6
 
 )(
     input   logic                   clk,
@@ -11,22 +12,22 @@ import rv32i_types::*;
     input   logic                   enq,
     input   logic                   deq,
     input   logic                   flush,
-    input   logic   [7:0]           fl_head,
-    input   logic   [WIDTH-1:0]     p_addr_in, // there are 128 physical registers
-    output  logic   [WIDTH-1:0]     p_addr_out,
+    input   logic   [PTR_SIZE:0]           fl_head,
+    input   logic   [PTR_SIZE-1:0]     p_addr_in, // there are 2^(PTR_SIZE) physical registers
+    output  logic   [PTR_SIZE-1:0]     p_addr_out,
     output  logic                   valid_rdata,
     output  logic                   fl_stall,
-    output  logic   [PTR_SIZE:0]    head_out
+    output  logic   [PTR_SIZE_FL:0]    head_out
 
 );
 
     logic valid_op;
     logic valid_enq;
     logic valid_deq;
-    logic [PTR_SIZE:0] head;
-    logic [PTR_SIZE:0] tail;
+    logic [PTR_SIZE_FL:0] head;
+    logic [PTR_SIZE_FL:0] tail;
 
-    logic [WIDTH-1:0] internal_array [DEPTH];
+    logic [PTR_SIZE_FL-1:0] internal_array [DEPTH];
 
     logic in_array [DEPTH];
 
@@ -59,7 +60,7 @@ import rv32i_types::*;
         // the fifo is empty
         // deq by itself should not be allowed since empty
 
-        full = (head[PTR_SIZE] != tail[PTR_SIZE] && head[PTR_SIZE-1:0] == tail[PTR_SIZE-1:0]); 
+        full = (head[PTR_SIZE_FL] != tail[PTR_SIZE_FL] && head[PTR_SIZE_FL-1:0] == tail[PTR_SIZE_FL-1:0]); 
         empty = (head == tail);
         
         fl_stall = empty;
@@ -79,33 +80,33 @@ import rv32i_types::*;
     always_ff @(posedge clk) begin
         if (rst) begin
             for (integer i = 0; i < DEPTH; i++) begin
-                internal_array[i] <= 7'(unsigned'(i)); 
+                internal_array[i] <= (PTR_SIZE_FL)'(unsigned'(i)); 
                 in_array[i] <= '1;
             end
-            tail <= {1'b1, {(PTR_SIZE){1'b0}}};
-            head <= 8'b0001;
+            tail <= {1'b1, {(PTR_SIZE_FL){1'b0}}};
+            head <= (PTR_SIZE_FL+1)'(1);
         end else begin
 
             if (enq && deq) begin
                 
                 if (!in_array[p_addr_in]) begin
-                    internal_array[tail[PTR_SIZE-1:0]] <= p_addr_in;
+                    internal_array[tail[PTR_SIZE_FL-1:0]] <= p_addr_in;
                     in_array[p_addr_in] <= '1;
-                    tail <= (tail + 4'b0001);
+                    tail <= (PTR_SIZE_FL+1)'(tail + 1);
                 end
-                in_array[internal_array[head[PTR_SIZE-1:0]]] <= '0;
+                in_array[internal_array[head[PTR_SIZE_FL-1:0]]] <= '0;
                 //tail <= (tail + 4'b0001);
-                head <= (head + 4'b0001);
+                head <= (PTR_SIZE_FL+1)'(head + 1);
             end else if (enq && !full) begin
                 if (!in_array[p_addr_in]) begin
-                    internal_array[tail[PTR_SIZE-1:0]] <= p_addr_in;
+                    internal_array[tail[PTR_SIZE_FL-1:0]] <= p_addr_in;
                     in_array[p_addr_in] <= '1;
                 
-                tail <= (tail + 4'b0001);
+                tail <= (PTR_SIZE_FL+1)'(tail + 1);
                 end
             end else if (deq && !empty) begin
-                in_array[internal_array[head[PTR_SIZE-1:0]]] <= '0;
-                head <= (head + 4'b0001);
+                in_array[internal_array[head[PTR_SIZE_FL-1:0]]] <= '0;
+                head <= (PTR_SIZE_FL+1)'(head + 1);
 
             end
         if (flush) begin
@@ -127,7 +128,7 @@ import rv32i_types::*;
             p_addr_out = '0;
         end else begin
             if (deq)
-                p_addr_out = internal_array[head[PTR_SIZE-1:0]];
+                p_addr_out = internal_array[head[PTR_SIZE_FL-1:0]];
             else
                 p_addr_out = '0;
         end
