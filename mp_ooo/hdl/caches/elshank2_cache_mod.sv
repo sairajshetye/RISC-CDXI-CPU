@@ -3,8 +3,10 @@ import rv32i_types::*;
 #(
         parameter           SETS        = 16,
         parameter           SETS_SIZE   = $clog2(SETS),
-        parameter           TAG_SIZE    = 32-SETS_SIZE-5,
-        parameter           OFFSET_SIZE = 5 
+        parameter           DATA_SIZE   = 32,
+        parameter           OFFSET_SIZE = 5, 
+        parameter           TAG_SIZE    = DATA_SIZE-SETS_SIZE-OFFSET_SIZE,
+        parameter           NUM_WAYS    = 4
 )(
     input   logic           clk,
     input   logic           rst,
@@ -44,29 +46,29 @@ import rv32i_types::*;
     logic   [3:0]   ufp_wmask_reg;
     logic   [31:0]  ufp_wdata_reg;
     
-    logic   [3:0]   web_way_data;
-    logic   [3:0]   web_way_data_cache;
-    logic   [3:0]   web_way_tag;
-    logic   [3:0]   web_way_valid;
-    logic   [3:0]   web_way_dirty;
+    logic   [NUM_WAYS-1:0]   web_way_data;
+    logic   [NUM_WAYS-1:0]   web_way_data_cache;
+    logic   [NUM_WAYS-1:0]   web_way_tag;
+    logic   [NUM_WAYS-1:0]   web_way_valid;
+    logic   [NUM_WAYS-1:0]   web_way_dirty;
 
-    logic   [3:0]   data_addr; // index addr[8:5]
-    logic   [255:0] data_d_in [4];
-    logic   [255:0] data_d_out [4];
-    logic   [31:0]  data_wmask [4];
+    logic   [SETS_SIZE-1:0]   data_addr; // index addr[8:5]
+    logic   [255:0] data_d_in [NUM_WAYS];
+    logic   [255:0] data_d_out [NUM_WAYS];
+    logic   [31:0]  data_wmask [NUM_WAYS];
     //logic   [4:0]   data_offset;
 
-    logic   [TAG_SIZE-1:0]  tag_d_in [4];
-    logic   [TAG_SIZE-1:0]  tag_d_out [4];
+    logic   [TAG_SIZE-1:0]  tag_d_in [NUM_WAYS];
+    logic   [TAG_SIZE-1:0]  tag_d_out [NUM_WAYS];
 
-    logic   [3:0]   valid_d_in;
-    logic   [3:0]   valid_d_out;
+    logic   [NUM_WAYS-1:0]   valid_d_in;
+    logic   [NUM_WAYS-1:0]   valid_d_out;
 
-    logic   [3:0]   dirty_d_in;
-    logic   [3:0]   dirty_d_out;
+    logic   [NUM_WAYS-1:0]   dirty_d_in;
+    logic   [NUM_WAYS-1:0]   dirty_d_out;
 
     logic   [255:0] data_mem_in;
-    logic   [255:0] data_mem_out [4];
+    logic   [255:0] data_mem_out [NUM_WAYS];
 
     logic           lru_web;
     logic   [2:0]   lru_in;
@@ -91,17 +93,17 @@ import rv32i_types::*;
     logic [31:0] lb_addr_reg;
     logic [31:0] lb_addr;
     logic [TAG_SIZE-1:0] lb_tag;
-    logic [3:0] lb_set;
+    logic [SETS_SIZE-1:0] lb_set;
 
-    assign lb_tag = lb_addr_reg[31:9];
-    assign lb_set = lb_addr_reg[8:5];
+    assign lb_tag = lb_addr_reg[31:OFFSET_SIZE+SETS_SIZE];
+    assign lb_set = lb_addr_reg[OFFSET_SIZE+SETS_SIZE-1:OFFSET_SIZE];
 
 
     assign tag = ufp_addr_reg[31:OFFSET_SIZE+SETS_SIZE];
     assign set = ufp_addr_reg[OFFSET_SIZE+SETS_SIZE-1:OFFSET_SIZE];
     assign offset = ufp_addr_reg[OFFSET_SIZE-1:0];
 
-    generate for (genvar i = 0; i < 4; i++) begin : arrays
+    generate for (genvar i = 0; i < NUM_WAYS; i++) begin : arrays
         mp_cache_data_array_i data_array (
             .clk0       (clk),
             //.rst0       (rst),
@@ -129,7 +131,10 @@ import rv32i_types::*;
             .din0       (tag_d_in[i]),
             .dout0      (tag_d_out[i])
         );
-        sp_ff_array valid_array (
+        sp_ff_array #(
+            .S_INDEX    (SETS_SIZE),
+            .WIDTH      (1)
+        ) valid_array (
             .clk0       (clk),
             .rst0       (rst),
             .csb0       (csb_s),
@@ -138,7 +143,10 @@ import rv32i_types::*;
             .din0       (valid_d_in[i]),
             .dout0      (valid_d_out[i])
         );
-        sp_ff_array dirty_array (
+        sp_ff_array #(
+            .S_INDEX    (SETS_SIZE),
+            .WIDTH      (1)
+        ) dirty_array (
             .clk0       (clk),
             .rst0       (rst),
             .csb0       (csb_s),
@@ -150,6 +158,7 @@ import rv32i_types::*;
     end endgenerate
 
     sp_ff_array #(
+        .S_INDEX    (SETS_SIZE),
         .WIDTH      (3)
     ) lru_array (
         .clk0       (clk),
@@ -245,7 +254,7 @@ import rv32i_types::*;
                 ufp_resp = '0;
                 if (|ufp_wmask && (ufp_rmask == 4'b0000)) begin // valid CPU request
                     csb_s = '0;
-                    data_addr = ufp_addr[8:5];
+                    data_addr = ufp_addr[OFFSET_SIZE+SETS_SIZE-1:OFFSET_SIZE];
                     state_next = compare;
                 end
                 else if (|ufp_rmask && (ufp_wmask == 4'b0000)) begin // valid CPU request
@@ -253,12 +262,12 @@ import rv32i_types::*;
 
                     // CHECK TO SEE IF LINE BUFFER AND UFP ADDR MATCH (TAG TOO?) IF SO, SEND RESP AND BACK TO IDLE
                     // i use ufp_addr directly for tag and set since tag/set are a clock cycle late in register
-                    if (lb_tag == ufp_addr_reg2[31:9] && lb_set == ufp_addr_reg2[8:5]) begin
+                    if (lb_tag == ufp_addr_reg2[31:OFFSET_SIZE+SETS_SIZE] && lb_set == ufp_addr_reg2[OFFSET_SIZE+SETS_SIZE-1:OFFSET_SIZE]) begin
                         ufp_rdata = lb_data_reg;
                         ufp_resp = '1;
                         state_next = idle;
                     end else begin
-                        data_addr = ufp_addr[8:5];
+                        data_addr = ufp_addr[OFFSET_SIZE+SETS_SIZE-1:OFFSET_SIZE];
                         state_next = compare;
                     end
                 end
