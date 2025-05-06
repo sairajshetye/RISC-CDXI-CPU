@@ -223,7 +223,7 @@ module cache_mod (
         lru_web = '1;
         ufp_rdata = 'x;
         way_hit = '0; // or '0?
-        csb_s = '0;
+        csb_s = '1;
 
         dfp_read = '0;
         dfp_write = '0;
@@ -234,7 +234,7 @@ module cache_mod (
         lb_addr = '0;
         unique case (state)
             idle: begin
-                //csb_s = '1;
+                //csb_s = '0;
                 ufp_resp = '0;
                 if (|ufp_wmask && (ufp_rmask == 4'b0000)) begin // valid CPU request
                     csb_s = '0;
@@ -258,7 +258,7 @@ module cache_mod (
             end
             compare: begin
                 //hit = 1'b0;
-                //csb_s = '0;
+                csb_s = '0;
                 data_addr = set;
                 //if (valid) begin
                 hit = 1'b0;
@@ -345,6 +345,7 @@ module cache_mod (
             end
             write_back: begin
                 // read from data, tag array, send to memory
+                csb_s = '0;
                 data_addr = set;
                 dfp_write = '1;
                 dfp_addr = {tag_d_out[lru_decode], set, 5'b00000};

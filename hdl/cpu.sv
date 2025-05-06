@@ -35,8 +35,8 @@ import rv32i_types::*;
     logic               prf_we              [4]; 
     logic               ld_status           [4];
     status_t            status_n            [4];
-    logic   [3:0]       rob_idx_ld          [4];
-    logic   [6:0]       p_addr_out_wb       [4];
+    logic   [ROB_PTR_SIZE-1:0]       rob_idx_ld          [4];
+    logic   [GLOBAL_PTR_SIZE-1:0]       p_addr_out_wb       [4];
     logic   [31:0]      wb_data_out         [4];
     rfvi_packet_t       rfvi_monitor_vals   [4];
 
@@ -54,12 +54,12 @@ import rv32i_types::*;
 
     //logic [31:0] rs1_v, rs2_v;
     logic [4:0] rs1_s, rs2_s;
-    logic [6:0] prs1_s, prs2_s;
+    logic [GLOBAL_PTR_SIZE-1:0] prs1_s, prs2_s;
 
-    logic [6:0] fl_data_in, p_addr_out; // free list
+    logic [GLOBAL_PTR_SIZE-1:0] fl_data_in, p_addr_out; // free list
 
-    logic [3:0] rob_tail_idx, rob_head_idx;
-    logic [6:0] rs1_paddr, rs2_paddr;
+    logic [ROB_PTR_SIZE-1:0] rob_tail_idx, rob_head_idx;
+    logic [GLOBAL_PTR_SIZE-1:0] rs1_paddr, rs2_paddr;
 
     logic [4:0] rat_rs1, rat_rs2;
 
@@ -117,7 +117,7 @@ import rv32i_types::*;
 
     logic           aregf_we;
     logic [4:0]     ard_s;
-    logic [6:0]     p_addr_ret;
+    logic [GLOBAL_PTR_SIZE-1:0]     p_addr_ret;
     
     //logic [6:0]     commit_rs;
     prf_t           commit_prs;
@@ -156,7 +156,7 @@ import rv32i_types::*;
     logic [63:0] order_reg;
 
 
-    logic   [7:0]    head_out;
+    logic   [GLOBAL_PTR_SIZE:0]    head_out;
 
     assign ufp_wdata[0] = '0;
     assign ufp_wmask[0] = '0;
@@ -244,7 +244,7 @@ import rv32i_types::*;
     );
 
     inst_q #(
-        .DEPTH      (8)
+        .DEPTH      (Q_DEPTH)
     ) inst_q(
         .clk(clk),
         .rst(rst || flush),
@@ -271,7 +271,7 @@ import rv32i_types::*;
     );
 
     decode_q #(
-        .DEPTH      (8)
+        .DEPTH      (Q_DEPTH)
     ) decode_q(
         .clk(clk),
         .rst(rst || flush),
@@ -285,7 +285,10 @@ import rv32i_types::*;
         .dq_stall_next(dq_stall_next)
     );
 
-    rename_alloc rename_alloc_1 (
+    rename_alloc #(
+        .PTR_SIZE     (GLOBAL_PTR_SIZE),
+        .ROB_PTR_SIZE (ROB_PTR_SIZE)
+    ) rename_alloc_1(
         .id_ex(id_ex_inst_out), // comes from decode queue
         // inputs from RAT, FL, stalls?
         .p_addr(p_addr_out), // FL
@@ -315,7 +318,7 @@ import rv32i_types::*;
     );
 
     rename_q #(
-        .DEPTH      (8)
+        .DEPTH      (Q_DEPTH)
     ) rename_q(
         .clk(clk),
         .rst(rst || flush),
@@ -330,7 +333,9 @@ import rv32i_types::*;
     );
 
 
-    dispatch dispatch(
+    dispatch #(
+        .PTR_SIZE      (GLOBAL_PTR_SIZE)
+    ) dispatch(
         .ra_dp(ra_dp_inst_out), // comes from rename queue, input
 
         .dispatch_stall_mult('0), // input
@@ -365,7 +370,8 @@ import rv32i_types::*;
     );
 
     r_station_shift  #(
-        .DEPTH      (4)
+        .DEPTH      (R_STATION_MULT_DEPTH),
+        .PTR_SIZE   (GLOBAL_PTR_SIZE)
     ) station_mult(
         .clk(clk), // input
         .rst(rst || flush), // input
@@ -387,7 +393,8 @@ import rv32i_types::*;
     );
 
     r_station_shift  #(
-        .DEPTH      (4)
+        .DEPTH      (R_STATION_INT_DEPTH),
+        .PTR_SIZE   (GLOBAL_PTR_SIZE)
     ) station_int(
         .clk(clk), // input
         .rst(rst || flush), // input
@@ -409,7 +416,8 @@ import rv32i_types::*;
     );
 
     r_station_shift  #(
-        .DEPTH      (4)
+        .DEPTH      (R_STATION_BR_DEPTH),
+        .PTR_SIZE   (GLOBAL_PTR_SIZE)
     ) station_br(
         .clk(clk), // input
         .rst(rst || flush), // input
@@ -439,7 +447,8 @@ import rv32i_types::*;
 
 
     lds_q #(
-        .DEPTH      (8)
+        .DEPTH      (R_STATION_LDS_Q_DEPTH),
+        .PTR_SIZE   (GLOBAL_PTR_SIZE)
     ) ld_store_q(
         .clk(clk),
         .rst(rst || flush),
@@ -596,7 +605,8 @@ import rv32i_types::*;
 
     multiply_divide_unit funct_mult(
         .clk(clk),
-        .rst(!rst ),    //add flush somehow
+        .rst(!rst),    //add flush somehow
+        .flush(flush),
         .rs_out(dp_is_out_mult),
         //.pre_wb_mult_stall(mult_wb_stall),
         //.rs1_v(),
@@ -637,7 +647,10 @@ import rv32i_types::*;
 
 
 
-    writeback wb_int (
+    writeback #(
+        .PTR_SIZE   (GLOBAL_PTR_SIZE),
+        .ROB_PTR_SIZE (ROB_PTR_SIZE)
+    ) wb_int(
         .inst_in_wb(wb_inst_out[0]), // in
         .prf_regf_we(prf_we[0]), // out
         .ld_status(ld_status[0]), // out
@@ -649,7 +662,10 @@ import rv32i_types::*;
         //.deq(wb_deq)
     );
 
-    writeback wb_mult (
+    writeback #(
+        .PTR_SIZE   (GLOBAL_PTR_SIZE),
+        .ROB_PTR_SIZE (ROB_PTR_SIZE)
+    ) wb_mult(
         .inst_in_wb(wb_inst_out[1]), // d
         .prf_regf_we(prf_we[1]), // d
         .ld_status(ld_status[1]), // d
@@ -661,7 +677,10 @@ import rv32i_types::*;
         //.deq(wb_deq)
     );
 
-    br_writeback wb_br (
+    br_writeback #(
+        .PTR_SIZE   (GLOBAL_PTR_SIZE),
+        .ROB_PTR_SIZE (ROB_PTR_SIZE)
+    ) wb_br(
         .inst_in_wb(wb_inst_out[2]), // d
         .prf_regf_we(prf_we[2]), // d
         .ld_status(ld_status[2]), // d
@@ -692,7 +711,8 @@ import rv32i_types::*;
 
 
      robert #(
-        .DEPTH      (16)
+        .DEPTH      (ROB_DEPTH),
+        .PTR_SIZE   (GLOBAL_PTR_SIZE)
     ) robert(
         .clk(clk),
         .rst(rst || flush),
@@ -737,7 +757,8 @@ import rv32i_types::*;
 
 
     free_list #(
-        .DEPTH      (128)
+        .DEPTH      (FREE_LIST_PRF_DEPTH),
+        .PTR_SIZE   (GLOBAL_PTR_SIZE)
     ) free_list(
         .clk(clk),
         .rst(rst),
@@ -752,7 +773,9 @@ import rv32i_types::*;
         .head_out(head_out)
     );
 
-    rat_arf2 rat_arf_1 (
+    rat_arf2 #(
+        .PTR_SIZE   (GLOBAL_PTR_SIZE)
+    ) rat_arf_1(
         .clk(clk),
         .rst(rst),
         .flush(flush),
@@ -780,7 +803,9 @@ import rv32i_types::*;
 
     );
 
-    prf prf (
+    prf #(
+        .DEPTH      (FREE_LIST_PRF_DEPTH)
+    ) prf(
         .clk(clk),
         .rst(rst),
         .flush(flush),
