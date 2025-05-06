@@ -65,7 +65,7 @@ import rv32i_types::*;
     
 
     always_ff @(posedge clk) begin
-        if (!rst) begin
+        if (!rst || flush) begin
             funct3 <= '0;
             //rs1_vi <= '0;
             //rs2_vi <= '0;
