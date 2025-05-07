@@ -7,6 +7,7 @@ import rv32i_types::*;
 )(
     input   logic                   clk,
     input   logic                   rst,
+    input   logic                   flush,
     input   logic                   enq, // comb fetch
     input   logic                   deq, // decode q is not full
     input   if_id_stage_reg_t     inst_in,
@@ -78,10 +79,14 @@ import rv32i_types::*;
 
     always_ff @(posedge clk) begin
         if (rst) begin
-            inst_out <= '0;
+            inst_out.valid <= '0;
             for (integer i = 0; i < DEPTH; i++) begin
                 internal_array[i] <= '0;
             end
+            tail <= '0;
+            head <= '0;
+        end else if (flush) begin
+            inst_out.valid <= '0;
             tail <= '0;
             head <= '0;
         end else begin

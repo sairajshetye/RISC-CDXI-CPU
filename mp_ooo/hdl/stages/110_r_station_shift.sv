@@ -9,6 +9,7 @@ import rv32i_types::*;
 )(
     input   logic                   clk,
     input   logic                   rst,
+    input   logic                   flush,
     input   logic                   funct_unit_busy,
     input   logic                   load_station,
     input   dp_is_stage_reg_t       inst_in,
@@ -243,7 +244,12 @@ import rv32i_types::*;
                 station[i] <= '0;
             end
             inst_out <= '0;
-        end else begin
+         end else if (flush) begin
+            for (integer i = 0; i < DEPTH; i++) begin
+                station[i].valid <= '0;
+            end
+            inst_out.valid <= '0;
+         end else begin
             inst_out <= '0;
 
              // MAKE RES STATION INTO A SHIFT REGISTER

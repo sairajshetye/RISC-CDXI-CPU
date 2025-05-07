@@ -142,7 +142,7 @@ import rv32i_types::*;
 
     logic [31:0] rs1_rdata, rs2_rdata;
 
-    logic valid_output_mult, valid_output_int, valid_output_br, valid_output_mem;
+    // logic valid_output_mult, valid_output_int, valid_output_br, valid_output_mem;
 
     logic valid_rdata_mult, valid_rdata_int, valid_rdata_br, valid_rdata_mem;
     logic dones, done_stall;
@@ -247,7 +247,8 @@ import rv32i_types::*;
         .DEPTH      (Q_DEPTH)
     ) inst_q(
         .clk(clk),
-        .rst(rst || flush),
+        .rst(rst),
+        .flush(flush),
         .enq(iq_enq),
         .deq(!dq_stall && !dq_stall_next),
         .inst_in(if_id_reg_next),
@@ -274,7 +275,8 @@ import rv32i_types::*;
         .DEPTH      (Q_DEPTH)
     ) decode_q(
         .clk(clk),
-        .rst(rst || flush),
+        .rst(rst),
+        .flush(flush),
         .enq(dq_enq),
         // .deq(dq_deq && !(decode_stall | rob_stall)),
         .deq(!rq_stall && !rob_stall && !decode_stall && !rq_stall_next && !lds_stall && !fl_stall),
@@ -321,7 +323,8 @@ import rv32i_types::*;
         .DEPTH      (Q_DEPTH)
     ) rename_q(
         .clk(clk),
-        .rst(rst || flush),
+        .rst(rst),
+        .flush(flush),
         .enq(rq_enq),
         // .deq(rq_deq),
         .deq(!dispatch_stall_mult && !dispatch_stall_int && !really_full_mult && !really_full_int && !really_full_br && !really_full_mem && !lds_stall), // && !really_full_mult && !really_full_int
@@ -338,9 +341,9 @@ import rv32i_types::*;
     ) dispatch(
         .ra_dp(ra_dp_inst_out), // comes from rename queue, input
 
-        .dispatch_stall_mult('0), // input
-        .dispatch_stall_int('0), // input
-        .dispatch_stall_br('0), // input
+        // .dispatch_stall_mult('0), // input
+        // .dispatch_stall_int('0), // input
+        // .dispatch_stall_br('0), // input
         //.dispatch_stall_mem('0), // input
 
         .load_station_mult(load_station_mult), // output
@@ -362,10 +365,10 @@ import rv32i_types::*;
         .data_in_2(wb_data_out[2]), // input
         .data_in_3(wb_data_out[3]),
 
-        .dp_is(dp_is_inst_out), // output
-        .valid_output_mult(valid_output_mult), // output
-        .valid_output_int(valid_output_int), // output
-        .valid_output_br(valid_output_br)
+        .dp_is(dp_is_inst_out) // output
+        // .valid_output_mult(valid_output_mult), // output
+        // .valid_output_int(valid_output_int), // output
+        // .valid_output_br(valid_output_br)
 
     );
 
@@ -374,7 +377,8 @@ import rv32i_types::*;
         .PTR_SIZE   (GLOBAL_PTR_SIZE)
     ) station_mult(
         .clk(clk), // input
-        .rst(rst || flush), // input
+        .rst(rst), // input
+        .flush(flush), // input
         .funct_unit_busy(funct_mult_busy), // input
         .load_station(load_station_mult),
         .inst_in(dp_is_inst_out), // input
@@ -397,7 +401,8 @@ import rv32i_types::*;
         .PTR_SIZE   (GLOBAL_PTR_SIZE)
     ) station_int(
         .clk(clk), // input
-        .rst(rst || flush), // input
+        .rst(rst), // input
+        .flush(flush), // input
         .funct_unit_busy(funct_int_busy), // input
         .load_station(load_station_int),
         .inst_in(dp_is_inst_out), // input
@@ -420,7 +425,8 @@ import rv32i_types::*;
         .PTR_SIZE   (GLOBAL_PTR_SIZE)
     ) station_br(
         .clk(clk), // input
-        .rst(rst || flush), // input
+        .rst(rst), // input
+        .flush(flush), // input
         .funct_unit_busy(funct_br_busy), // input
         .load_station(load_station_br),
         .inst_in(dp_is_inst_out), // input
@@ -451,7 +457,8 @@ import rv32i_types::*;
         .PTR_SIZE   (GLOBAL_PTR_SIZE)
     ) ld_store_q(
         .clk(clk),
-        .rst(rst || flush),
+        .rst(rst),
+        .flush(flush),
         .enq(load_station_mem),
         .ready_deq(lds_deq),
         .inst_in_lds(dp_is_inst_out),
@@ -715,7 +722,8 @@ import rv32i_types::*;
         .PTR_SIZE   (GLOBAL_PTR_SIZE)
     ) robert(
         .clk(clk),
-        .rst(rst || flush),
+        .rst(rst),
+        .flush_in(flush),
         .enq(rob_enq),
         //.lds_deq(lds_deq),
         .ld_status_0(ld_status[0]),
