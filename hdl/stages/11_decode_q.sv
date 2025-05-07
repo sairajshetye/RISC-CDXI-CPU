@@ -7,6 +7,7 @@ import rv32i_types::*;
 )(
     input   logic                   clk,
     input   logic                   rst,
+    input   logic                   flush,
     input   logic                   enq,
     input   logic                   deq,
     input   id_ex_stage_reg_t     inst_in_d,
@@ -82,6 +83,10 @@ import rv32i_types::*;
             for (integer i = 0; i < DEPTH; i++) begin
                 internal_array_d[i] <= '0;
             end
+            tail <= '0;
+            head <= '0;
+        end else if (flush) begin
+            inst_out_d.valid <= '0;
             tail <= '0;
             head <= '0;
         end else begin
