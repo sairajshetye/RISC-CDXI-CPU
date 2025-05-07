@@ -4,6 +4,7 @@ import rv32i_types::*;
         parameter INST_SIZE = 3,
         parameter RS1_DATA_SIZE = 32,
         parameter RS2_DATA_SIZE = 32,
+        parameter STALL_MODE = 0,
         parameter RESET_MODE = 0,
         parameter ONE = 1,
         parameter ZERO = 0,
@@ -278,10 +279,11 @@ import rv32i_types::*;
         .a_width(33), 
         .b_width(33), 
         .num_stages(NUM_STAGES),
-        .rst_mode(RESET_MODE)
+        .rst_mode(RESET_MODE),
+        .stall_mode(STALL_MODE)
     ) mult_mulhsu (
         .clk(clk), 
-        .rst_n(rst), //active low
+        .rst_n('0), //active low
         .en(mult_en),    //enable
         .tc(mult_tc),   //two's complement 
         .a(rs1_v_extended),
@@ -295,10 +297,11 @@ import rv32i_types::*;
         .b_width(33), 
         .tc_mode(ONE),      //two's complement 
         .num_stages(NUM_STAGES),
-        .rst_mode(RESET_MODE)
+        .rst_mode(RESET_MODE),
+        .stall_mode(STALL_MODE)
     ) div (
         .clk(clk),
-        .rst_n(rst),    //active low
+        .rst_n('0),    //active low
         .en(div_en),     //enable
         .a(rs1_v_extended),
         .b(rs2_v_extended),
