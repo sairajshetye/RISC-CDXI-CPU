@@ -8,6 +8,7 @@ import rv32i_types::*;
 )(
     input   logic                   clk,
     input   logic                   rst,
+    input   logic                   flush_in,
     input   logic                   enq,
     //input   logic                   lds_deq,
     input   logic                   ld_status_0,
@@ -99,6 +100,12 @@ import rv32i_types::*;
             end
             tail <= '0;
             head <= '0;
+        end else if (flush_in) begin
+            for (integer i = 0; i < DEPTH; i++) begin
+                rob[i].valid <= '0;
+            end
+            tail <= '0;
+            head <= '0;
         end else begin
             if (enq && deq) begin
                 if (full) begin
@@ -185,7 +192,7 @@ import rv32i_types::*;
     // end
 
     always_ff @ (posedge clk) begin
-        if (rst) begin
+        if (rst || flush_in) begin
             rob_out <= '0;
             aregf_we <= '0;
             ard_s <= '0;

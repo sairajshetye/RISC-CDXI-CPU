@@ -5,10 +5,10 @@ import rv32i_types::*;
 )(
     input ra_dp_stage_reg_t ra_dp, // comes from decode queue
 
-    // stalls ?
-    input  logic            dispatch_stall_mult,
-    input  logic            dispatch_stall_int,
-    input logic             dispatch_stall_br,
+    // stalls ? (useless)
+    // input  logic            dispatch_stall_mult,
+    // input  logic            dispatch_stall_int,
+    // input logic             dispatch_stall_br,
     //input logic             dispatch_stall_mem,
 
     // output enq/load to RS
@@ -32,10 +32,10 @@ import rv32i_types::*;
     input logic [31:0]   data_in_3,
 
 
-    output dp_is_stage_reg_t dp_is,
-    output logic             valid_output_mult,
-    output logic             valid_output_int,
-    output logic             valid_output_br
+    output dp_is_stage_reg_t dp_is
+    // output logic             valid_output_mult,
+    // output logic             valid_output_int,
+    // output logic             valid_output_br
 );
 
 
@@ -136,22 +136,22 @@ import rv32i_types::*;
         end
         
  
-        if (dispatch_stall_mult) begin 
-            valid_output_mult = '0;
-        end else begin
-            valid_output_mult = '1;
-        end
+        // if (dispatch_stall_mult) begin 
+        //     valid_output_mult = '0;
+        // end else begin
+        //     valid_output_mult = '1;
+        // end
 
-        if (dispatch_stall_int) begin 
-            valid_output_int = '0;
-        end else begin
-            valid_output_int = '1;
-        end
-        if (dispatch_stall_br) begin
-            valid_output_br = '0;
-        end else begin
-            valid_output_br = '1;
-        end
+        // if (dispatch_stall_int) begin 
+        //     valid_output_int = '0;
+        // end else begin
+        //     valid_output_int = '1;
+        // end
+        // if (dispatch_stall_br) begin
+        //     valid_output_br = '0;
+        // end else begin
+        //     valid_output_br = '1;
+        // end
 
         dp_is.rfvi_monitor_vals = ra_dp.rfvi_monitor_vals;
 
