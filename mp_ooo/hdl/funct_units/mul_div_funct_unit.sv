@@ -8,7 +8,7 @@ import rv32i_types::*;
         parameter RESET_MODE = 0,
         parameter ONE = 1,
         parameter ZERO = 0,
-        parameter NUM_STAGES = 5
+        parameter NUM_STAGES = 35
 
 )
 (   

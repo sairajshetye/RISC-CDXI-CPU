@@ -163,60 +163,62 @@ import rv32i_types::*;
         load_station_int = '0;
         load_station_br = '0;
         load_station_mem = '0;
-        unique case (ra_dp.opcode)
-                op_b_lui    : begin
-                    load_station_mult = '0;
-                    load_station_int = '1;
-                end
-                op_b_auipc  : begin
-                    load_station_mult = '0;
-                    load_station_int = '1;
-                end
-                op_b_jal    : begin
-                    load_station_mult = '0;
-                    load_station_int = '0;
-                    load_station_br = '1;
-                end
-                op_b_jalr   : begin
-                    load_station_mult = '0;
-                    load_station_int = '0;
-                    load_station_br = '1;
-                end
-                op_b_br     : begin
-                    load_station_mult = '0;
-                    load_station_int = '0;
-                    load_station_br = '1;
-                end
-                op_b_load   : begin
-                    load_station_mult = '0;
-                    load_station_int = '0;
-                    load_station_mem = '1;
-
-                end
-                op_b_store  : begin
-                    load_station_mult = '0;
-                    load_station_int = '0;
-                    load_station_mem = '1;
-                end
-                op_b_imm    : begin
-                    load_station_mult = '0;
-                    load_station_int = '1;
-                end
-                op_b_reg    : begin
-                    // This is the opcode of the extension RV32M Multiply Instructions
-                    if (ra_dp.funct7 == funct7_mult) begin 
-                        load_station_mult = '1;
-                        load_station_int = '0;
-                    end else begin // otherwise normal register instructions
+        if(ra_dp.valid) begin
+            unique case (ra_dp.opcode)
+                    op_b_lui    : begin
                         load_station_mult = '0;
                         load_station_int = '1;
                     end
-                end
-                default     : begin
-                    load_station_mult = '0;
-                    load_station_int = '0;
-                end
-        endcase
+                    op_b_auipc  : begin
+                        load_station_mult = '0;
+                        load_station_int = '1;
+                    end
+                    op_b_jal    : begin
+                        load_station_mult = '0;
+                        load_station_int = '0;
+                        load_station_br = '1;
+                    end
+                    op_b_jalr   : begin
+                        load_station_mult = '0;
+                        load_station_int = '0;
+                        load_station_br = '1;
+                    end
+                    op_b_br     : begin
+                        load_station_mult = '0;
+                        load_station_int = '0;
+                        load_station_br = '1;
+                    end
+                    op_b_load   : begin
+                        load_station_mult = '0;
+                        load_station_int = '0;
+                        load_station_mem = '1;
+
+                    end
+                    op_b_store  : begin
+                        load_station_mult = '0;
+                        load_station_int = '0;
+                        load_station_mem = '1;
+                    end
+                    op_b_imm    : begin
+                        load_station_mult = '0;
+                        load_station_int = '1;
+                    end
+                    op_b_reg    : begin
+                        // This is the opcode of the extension RV32M Multiply Instructions
+                        if (ra_dp.funct7 == funct7_mult) begin 
+                            load_station_mult = '1;
+                            load_station_int = '0;
+                        end else begin // otherwise normal register instructions
+                            load_station_mult = '0;
+                            load_station_int = '1;
+                        end
+                    end
+                    default     : begin
+                        load_station_mult = '0;
+                        load_station_int = '0;
+                    end
+            endcase
+        end
     end
 
 endmodule : dispatch
