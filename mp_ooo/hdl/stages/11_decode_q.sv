@@ -90,7 +90,7 @@ import rv32i_types::*;
             tail <= '0;
             head <= '0;
         end else begin
-            inst_out_d <= '0;
+            inst_out_d.valid <= '0;
             //if (inst_in_d.valid) begin
                 if (enq && deq) begin
                     // internal_array_d[tail[PTR_SIZE-1:0]] <= inst_in_d;
@@ -107,12 +107,12 @@ import rv32i_types::*;
                     tail <= (PTR_SIZE+1)'(tail + 1);
                     head <= (PTR_SIZE+1)'(head + 1);
                 end else if (enq && !full) begin
-                    inst_out_d <= '0;
+                    inst_out_d.valid <= '0;
                     internal_array_d[tail[PTR_SIZE-1:0]] <= inst_in_d; 
                     tail <= (PTR_SIZE+1)'(tail + 1);
                 end else if (deq && !empty) begin
                     inst_out_d <= internal_array_d[head[PTR_SIZE-1:0]];
-                    internal_array_d[head[PTR_SIZE-1:0]] <= '0;
+                    internal_array_d[head[PTR_SIZE-1:0]].valid <= '0;
                     head <= (PTR_SIZE+1)'(head + 1);
                 end
             //end
