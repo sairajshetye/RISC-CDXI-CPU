@@ -244,7 +244,7 @@ import rv32i_types::*;
     );
 
     inst_q #(
-        .DEPTH      (Q_DEPTH)
+        .DEPTH      (INST_Q_DEPTH)
     ) inst_q(
         .clk(clk),
         .rst(rst),
@@ -272,7 +272,7 @@ import rv32i_types::*;
     );
 
     decode_q #(
-        .DEPTH      (Q_DEPTH)
+        .DEPTH      (DECODE_Q_DEPTH)
     ) decode_q(
         .clk(clk),
         .rst(rst),
@@ -320,7 +320,7 @@ import rv32i_types::*;
     );
 
     rename_q #(
-        .DEPTH      (Q_DEPTH)
+        .DEPTH      (RENAME_Q_DEPTH)
     ) rename_q(
         .clk(clk),
         .rst(rst),
@@ -530,26 +530,26 @@ import rv32i_types::*;
             rfvi_monitor_vals[3] = '0;
 
         
-        if (rob_out.ld_store == '1 && !ufp_resp[1]) begin   //if rob commit is a ld store
-            if (inst_out_lds_q.rob_idx == rob_head_idx) begin //if load or store at head of queue is the commit inst from the rob
-                //trigger the memory
-                ufp_addr[1] = inst_out_lds_q.dmem_addr;
-                ufp_rmask[1] = inst_out_lds_q.dmem_rmask;
-                ufp_wmask[1] = inst_out_lds_q.dmem_wmask;
-                ufp_wdata[1] = inst_out_lds_q.dmem_wdata;
-            end else begin
+            if (inst_out_lds_q.valid && rob_out.ld_store == '1 && !ufp_resp[1]) begin   //if rob commit is a ld store
+                if (inst_out_lds_q.rob_idx == rob_head_idx) begin //if load or store at head of queue is the commit inst from the rob
+                    //trigger the memory
+                    ufp_addr[1] = inst_out_lds_q.dmem_addr;
+                    ufp_rmask[1] = inst_out_lds_q.dmem_rmask;
+                    ufp_wmask[1] = inst_out_lds_q.dmem_wmask;
+                    ufp_wdata[1] = inst_out_lds_q.dmem_wdata;
+                end else begin
+                    ufp_addr[1] = '0;
+                    ufp_rmask[1] = '0;
+                    ufp_wmask[1] = '0;
+                    ufp_wdata[1] = '0;
+                end
+            end
+            else begin
                 ufp_addr[1] = '0;
                 ufp_rmask[1] = '0;
                 ufp_wmask[1] = '0;
                 ufp_wdata[1] = '0;
             end
-        end
-        else begin
-            ufp_addr[1] = '0;
-            ufp_rmask[1] = '0;
-            ufp_wmask[1] = '0;
-            ufp_wdata[1] = '0;
-        end
 
         //make this in ff to hold? idk
         

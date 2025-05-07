@@ -185,12 +185,12 @@ import rv32i_types::*;
         end else if (flush) begin
             inst_out_lds.valid <= '0;
             for (integer i = 0; i < DEPTH; i++) begin
-                internal_array_lds[i] <= '0;
+                internal_array_lds[i].valid <= '0;
             end
             tail <= '0;
             head <= '0;
         end else begin
-            inst_out_lds <= '0;
+            inst_out_lds.valid <= '0;
 
             for (integer i = 0; i < DEPTH; i++) begin
                 if (idx_rep[i]) begin
@@ -231,7 +231,7 @@ import rv32i_types::*;
                     end
                 end
             end else begin
-                inst_out_lds <= '0;
+                inst_out_lds.valid <= '0;
             end
             //if (inst_in_wb.valid) begin
                 if (enq && deq) begin
@@ -246,7 +246,7 @@ import rv32i_types::*;
                     end else begin
                         //inst_out_lds <= internal_array_lds[head[PTR_SIZE_LDS_Q-1:0]];
                         internal_array_lds[tail[PTR_SIZE_LDS_Q-1:0]] <= inst_in_lds; 
-                        internal_array_lds[head[PTR_SIZE_LDS_Q-1:0]] <= '0;
+                        internal_array_lds[head[PTR_SIZE_LDS_Q-1:0]].valid <= '0;
                     end
                     tail <= (tail + 1'b1);
                     head <= (head + 1'b1);
@@ -256,7 +256,7 @@ import rv32i_types::*;
                     tail <= (tail + 1'b1);
                 end else if (deq && !empty) begin
                     //inst_out_lds <= internal_array_lds[head_next[PTR_SIZE_LDS_Q-1:0]];
-                    internal_array_lds[head[PTR_SIZE_LDS_Q-1:0]] <= '0;
+                    internal_array_lds[head[PTR_SIZE_LDS_Q-1:0]].valid <= '0;
                     head <= (head + 1'b1);
                 end
                 

@@ -5,6 +5,9 @@ package rv32i_types;
 
     localparam integer FREE_LIST_PRF_DEPTH = 64; 
     localparam integer GLOBAL_PTR_SIZE = $clog2(FREE_LIST_PRF_DEPTH);
+    localparam integer INST_Q_DEPTH = 4;
+    localparam integer DECODE_Q_DEPTH = 4;
+    localparam integer RENAME_Q_DEPTH = 4;
     localparam integer Q_DEPTH = 4;
     localparam integer R_STATION_INT_DEPTH = 4;
     localparam integer R_STATION_MULT_DEPTH = 2;
