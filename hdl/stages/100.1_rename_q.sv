@@ -7,6 +7,7 @@ import rv32i_types::*;
 )(
     input   logic                   clk,
     input   logic                   rst,
+    input   logic                   flush,
     input   logic                   enq,
     input   logic                   deq,
     input   ra_dp_stage_reg_t       inst_in_r,
@@ -84,6 +85,10 @@ import rv32i_types::*;
             end
             tail <= '0;
             head <= '0;
+        end else if (flush) begin
+            inst_out_r <= '0;
+            tail <= '0;
+            head <= '0;
         end else begin
             inst_out_r <= '0;
             //if (inst_in_r.valid) begin
@@ -113,20 +118,5 @@ import rv32i_types::*;
         end
     
     end
-
-    // always_ff @ (posedge clk) begin
-    //     if (rst) begin
-    //         inst_out_r <= '0;
-    //     end
-    //     else if (in_out) begin
-    //         inst_out_r <= inst_in_r;
-    //     end
-    //     else if (empty) begin
-    //         inst_out_r <= '0;
-    //     end 
-    //     else begin
-    //         inst_out_r <= internal_array_r[head[PTR_SIZE-1:0]];
-    //     end
-    // end
 
 endmodule : rename_q

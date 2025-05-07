@@ -9,6 +9,7 @@ import rv32i_types::*;
 )(
     input   logic                   clk,
     input   logic                   rst,
+    input   logic                   flush,
     input   logic                   enq,
     input   logic                   ready_deq,
     input   dp_is_stage_reg_t       inst_in_lds,
@@ -176,6 +177,13 @@ import rv32i_types::*;
         if (rst) begin
             inst_out_lds <= '0;
             //inst_out_lds_trans <= '0;
+            for (integer i = 0; i < DEPTH; i++) begin
+                internal_array_lds[i] <= '0;
+            end
+            tail <= '0;
+            head <= '0;
+        end else if (flush) begin
+            inst_out_lds.valid <= '0;
             for (integer i = 0; i < DEPTH; i++) begin
                 internal_array_lds[i] <= '0;
             end
