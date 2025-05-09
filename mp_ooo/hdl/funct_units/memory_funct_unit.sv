@@ -1,9 +1,9 @@
 module load_store_unit
 import rv32i_types::*;
 (
-    // input dp_is_stage_reg_t id_ex,
-    input dp_is_stage_reg_t id_ex_load,
-    input dp_is_stage_reg_t id_ex_store,
+    input dp_is_stage_reg_t id_ex,
+    // input dp_is_stage_reg_t id_ex_load,
+    // input dp_is_stage_reg_t id_ex_store,
     // input logic use_load,
     // input logic use_store,
     //input logic [31:0] rs1_v,
@@ -49,37 +49,37 @@ import rv32i_types::*;
     logic unsigned [31:0] bu;
     logic [31:0] rs1_v, rs2_v;
 
-    dp_is_stage_reg_t id_ex;
+    // dp_is_stage_reg_t id_ex;
 
-    always_comb begin
-        // if (use_store && id_ex_store.valid) begin 
-        //     id_ex = id_ex_store;
-        // end else if (use_load && id_ex_load.valid) begin
-        //     id_ex = id_ex_load;
-        // end else if (id_ex_load.valid) begin
-        //     id_ex = id_ex_load;
-        // end else if (id_ex_store.valid) begin
-        //     id_ex = id_ex_store;
-        // end else begin
-        //     id_ex = '0;
-        // end
+    // always_comb begin
+    //     // if (use_store && id_ex_store.valid) begin 
+    //     //     id_ex = id_ex_store;
+    //     // end else if (use_load && id_ex_load.valid) begin
+    //     //     id_ex = id_ex_load;
+    //     // end else if (id_ex_load.valid) begin
+    //     //     id_ex = id_ex_load;
+    //     // end else if (id_ex_store.valid) begin
+    //     //     id_ex = id_ex_store;
+    //     // end else begin
+    //     //     id_ex = '0;
+    //     // end
 
-        if (id_ex_load.valid && id_ex_store.valid) begin
-            if (id_ex_load.order < id_ex_store.order) begin
-                id_ex = id_ex_load;
-            end else if (id_ex_load.order> id_ex_store.order) begin
-                id_ex = id_ex_store;
-            end
-        end else if (id_ex_load.valid) begin
-            id_ex = id_ex_load;
-        end else if (id_ex_store.valid) begin
-            id_ex = id_ex_store;
-        end else begin
-            id_ex = '0;
-        end
+    //     if (id_ex_load.valid && id_ex_store.valid) begin
+    //         if (id_ex_load.order < id_ex_store.order) begin
+    //             id_ex = id_ex_load;
+    //         end else if (id_ex_load.order> id_ex_store.order) begin
+    //             id_ex = id_ex_store;
+    //         end
+    //     end else if (id_ex_load.valid) begin
+    //         id_ex = id_ex_load;
+    //     end else if (id_ex_store.valid) begin
+    //         id_ex = id_ex_store;
+    //     end else begin
+    //         id_ex = '0;
+    //     end
 
-        // id_ex = id_ex_load;
-    end
+    //     // id_ex = id_ex_load;
+    // end
 
     assign as =   signed'(a);
     assign bs =   signed'(b);

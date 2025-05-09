@@ -79,8 +79,8 @@ import rv32i_types::*;
         // INSTRUCTION THAT IS GOING TO BE REMOVED
         quit_search = '0;
         // Find all the loads we can choose from
-        load_end_idx = DEPTH-1;
-        for (integer i = DEPTH-1; i >= 0; i--) begin
+        load_end_idx = PTR_SIZE_RSTATION'(DEPTH-1);
+        for (integer i = 0; i <= DEPTH-1; i++) begin
             if (station[i].is_load && !quit_search) begin
                 load_end_idx = PTR_SIZE_RSTATION'(unsigned'(i));
             end else begin
@@ -89,8 +89,8 @@ import rv32i_types::*;
         end
 
         // Find the oldest instruction - this is the instruction we'll output
-        for (integer i = DEPTH-1; i >= load_end_idx; i--) begin
-            if (station[i].valid && !funct_unit_busy && !quit) begin
+        for (integer i = DEPTH-1; i >= 0; i--) begin
+            if (PTR_SIZE_RSTATION'(unsigned'(i)) >= load_end_idx && station[i].valid && !funct_unit_busy && !quit) begin
                 if (station[i].valid && station[i].use_prs1 && station[i].use_prs2) begin
                     if (station[i].rs1_ready && station[i].rs2_ready) begin
                         output_idx = PTR_SIZE_RSTATION'(unsigned'(i));
@@ -321,27 +321,23 @@ import rv32i_types::*;
             if (!empty && !funct_unit_busy && remove) begin
                 inst_out <= station[output_idx];
                 // station[output_idx] <= '0;
-            end 
-            
-            // else if (!funct_unit_busy && load_station) begin 
-            //     if (inst_tmp.valid) begin
-            //         if ((!inst_tmp.use_rs2) && (!inst_tmp.use_rs1)) begin
-            //             inst_out <= inst_tmp;
-            //             station[output_idx].valid <= '0;
-            //         end else if ((inst_tmp.use_rs1 && inst_tmp.rs1_ready) && (inst_tmp.use_rs2 && inst_tmp.rs2_ready)) begin
-            //             inst_out <= inst_tmp;
-            //             station[output_idx].valid <= '0;
-            //         end else if (inst_tmp.use_rs1 && inst_tmp.rs1_ready && !inst_tmp.use_rs2) begin
-            //             inst_out <= inst_tmp;
-            //             station[output_idx].valid <= '0;
-            //         end else if (inst_tmp.use_rs2 && inst_tmp.rs2_ready && !inst_tmp.use_rs1) begin
-            //             inst_out <= inst_tmp;
-            //             station[output_idx].valid <= '0;
-            //         end
-            //     end
-            // end 
-
-            else if (empty && !funct_unit_busy) begin
+            end else if (!funct_unit_busy && load_station) begin 
+                if (inst_tmp.valid) begin
+                    if ((!inst_tmp.use_rs2) && (!inst_tmp.use_rs1)) begin
+                        inst_out <= inst_tmp;
+                        station[output_idx].valid <= '0;
+                    end else if ((inst_tmp.use_rs1 && inst_tmp.rs1_ready) && (inst_tmp.use_rs2 && inst_tmp.rs2_ready)) begin
+                        inst_out <= inst_tmp;
+                        station[output_idx].valid <= '0;
+                    end else if (inst_tmp.use_rs1 && inst_tmp.rs1_ready && !inst_tmp.use_rs2) begin
+                        inst_out <= inst_tmp;
+                        station[output_idx].valid <= '0;
+                    end else if (inst_tmp.use_rs2 && inst_tmp.rs2_ready && !inst_tmp.use_rs1) begin
+                        inst_out <= inst_tmp;
+                        station[output_idx].valid <= '0;
+                    end
+                end
+            end else if (empty && !funct_unit_busy) begin
                 inst_out.valid <= '0;
             end
             else if (funct_unit_busy) begin
