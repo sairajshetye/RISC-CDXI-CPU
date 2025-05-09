@@ -52,9 +52,9 @@ import rv32i_types::*;
     dp_is_stage_reg_t id_ex;
 
     always_comb begin
-        if (use_store) begin 
+        if (use_store && id_ex_store.valid) begin 
             id_ex = id_ex_store;
-        end else if (use_load) begin
+        end else if (use_load && id_ex_load.valid) begin
             id_ex = id_ex_load;
         end else if (id_ex_store.valid) begin
             id_ex = id_ex_store;

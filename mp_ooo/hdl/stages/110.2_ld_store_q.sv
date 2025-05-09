@@ -178,6 +178,8 @@ import rv32i_types::*;
             use_this <= '0;
         end else if (ready_deq) begin
             use_this <= '1;
+        end else begin
+            use_this <= '0;
         end
     end
 
