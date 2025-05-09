@@ -6,7 +6,9 @@ import rv32i_types::*;
         parameter           DATA_SIZE   = 32,
         parameter           OFFSET_SIZE = 5, 
         parameter           TAG_SIZE    = DATA_SIZE-SETS_SIZE-OFFSET_SIZE,
-        parameter           NUM_WAYS    = 4
+        parameter           NUM_WAYS    = 2,
+        parameter           PLRU        = NUM_WAYS-1,
+        parameter           LRU_D       = $clog2(NUM_WAYS)
 )(
     input   logic           clk,
     input   logic           rst,
@@ -70,22 +72,24 @@ import rv32i_types::*;
     logic   [255:0] data_mem_in;
     logic   [255:0] data_mem_out [NUM_WAYS];
 
-    logic           lru_web;
-    logic   [2:0]   lru_in;
+    logic                lru_web;
+    logic   [PLRU-1:0]   lru_in;
     //logic   [2:0]   lru_out;
 
     logic           csb_s;
     logic           debug;
 
     // control unit
-    logic           dirty;
-    logic           valid;
-    logic           hit;
-    logic   [1:0]   way_hit;
+    logic               dirty;
+    logic               valid;
+    logic               hit;
+    logic   [LRU_D-1:0] way_hit;
 
     // LRU
-    logic   [2:0]   lru_raw; 
-    logic   [1:0]   lru_decode;
+    logic   [LRU_D-1:0]     idx; // new
+    logic   [LRU_D-1:0]     idx_d; // new
+    logic   [PLRU-1:0]      lru_raw; 
+    logic   [LRU_D-1:0]     lru_decode;
 
     // Line Buffer
     logic [255:0] lb_data_reg;
@@ -159,7 +163,7 @@ import rv32i_types::*;
 
     sp_ff_array #(
         .S_INDEX    (SETS_SIZE),
-        .WIDTH      (3)
+        .WIDTH      (PLRU)
     ) lru_array (
         .clk0       (clk),
         .rst0       (rst),
@@ -225,7 +229,7 @@ import rv32i_types::*;
         // data_wmask[1] = '0;
         // data_wmask[2] = '0;
         // data_wmask[3] = '0;
-        for (integer unsigned i = 0; i < 4; i++) begin
+        for (integer unsigned i = 0; i < NUM_WAYS; i++) begin
             data_wmask[i] = '0;
             data_d_in[i] = '0;
             web_way_data[i] = '1; // active low!!
@@ -278,10 +282,10 @@ import rv32i_types::*;
                 data_addr = set;
                 //if (valid) begin
                 hit = 1'b0;
-                for (integer unsigned i = 0; i < 4; i++) begin // check all tags against our tag
+                for (integer unsigned i = 0; i < NUM_WAYS; i++) begin // check all tags against our tag
                     if ((tag == tag_d_out[i]) && valid_d_out[i]) begin
                         hit = 1'b1;
-                        way_hit = 2'(i);
+                        way_hit = LRU_D'(i);
                     end
                 end
                 if (hit) begin
@@ -383,24 +387,54 @@ import rv32i_types::*;
 
 
     // LRU Logic
+    always_comb begin
+        idx = LRU_D'(0);
+        lru_in = lru_raw;
+        for (integer i = 0; i < LRU_D; i++) begin
+            lru_in[idx] = ~way_hit[LRU_D'(unsigned'(((LRU_D-1)-i)))];
+            if (way_hit[LRU_D'(unsigned'(((LRU_D-1)-i)))]) begin
+                idx = idx + 1'b1;
+            end
+            else begin
+                idx = idx + LRU_D'(unsigned'(((NUM_WAYS/(2*(i+1))))));
+            end
+        end
+    end
+
+    always_comb begin
+        idx_d = LRU_D'(0);
+        lru_decode = LRU_D'(0);
+        for (integer i = 0; i < LRU_D; i++) begin
+            lru_decode[LRU_D'(unsigned'(((LRU_D-1)-i)))] = lru_raw[idx_d];
+            if (lru_raw[idx_d]) begin
+                idx_d = idx_d + 1'b1;
+            end
+            else begin
+                idx_d = idx_d + LRU_D'(unsigned'(((NUM_WAYS/(2*(i+1))))));
+            end
+        end
+
+    end
+
+
 
     // LRU decode - which to replace
-    always_comb begin
-        unique case (way_hit) // only accurate when want to write to LRU anyway
-            2'b11: lru_in = {lru_raw[2], 1'b0, 1'b0}; // Way A = Way 3
-            2'b10: lru_in = {lru_raw[2], 1'b1, 1'b0}; // Way B = Way 2
-            2'b01: lru_in = {1'b0, lru_raw[1], 1'b1}; // Way C = Way 1
-            2'b00: lru_in = {1'b1, lru_raw[1], 1'b1}; // Way D = Way 0
-            default: lru_in = lru_raw;
-        endcase
+    // always_comb begin
+    //     // unique case (way_hit) // only accurate when want to write to LRU anyway
+    //     //     2'b11: lru_in = {lru_raw[2], 1'b0, 1'b0}; // Way A = Way 3
+    //     //     2'b10: lru_in = {lru_raw[2], 1'b1, 1'b0}; // Way B = Way 2
+    //     //     2'b01: lru_in = {1'b0, lru_raw[1], 1'b1}; // Way C = Way 1
+    //     //     2'b00: lru_in = {1'b1, lru_raw[1], 1'b1}; // Way D = Way 0
+    //     //     default: lru_in = lru_raw;
+    //     // endcase
 
-        unique casez (lru_raw)
-            3'b0?0: lru_decode = 2'd0; // Way D = Way 0
-            3'b1?0: lru_decode = 2'd1; // Way C = Way 1
-            3'b?01: lru_decode = 2'd2; // Way B = Way 2
-            3'b?11: lru_decode = 2'd3; // Way A = Way 3
-            default: lru_decode = 2'd0; // default?
-        endcase
-    end
+    //     unique casez (lru_raw)
+    //         3'b0?0: lru_decode = 2'd0; // Way D = Way 0
+    //         3'b1?0: lru_decode = 2'd1; // Way C = Way 1
+    //         3'b?01: lru_decode = 2'd2; // Way B = Way 2
+    //         3'b?11: lru_decode = 2'd3; // Way A = Way 3
+    //         default: lru_decode = 2'd0; // default?
+    //     endcase
+    // end
 
 endmodule : cache_mod
