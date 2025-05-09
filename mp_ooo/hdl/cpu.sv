@@ -18,7 +18,7 @@ import rv32i_types::*;
     logic [31:0] pc;
     logic [31:0] pc_next;
 
-    logic iq_enq, dq_enq, rq_enq, fl_enq, rob_enq, wb_int_enq, wb_mult_enq, fl_enq_rob, decode_stall, load_stall, store_stall, load_deq, store_deq, use_load, use_store;
+    logic iq_enq, dq_enq, rq_enq, fl_enq, rob_enq, wb_int_enq, wb_mult_enq, fl_enq_rob, decode_stall, load_stall, store_stall, load_deq, store_deq;
     logic iq_deq, dq_deq, rq_deq, fl_deq; 
     logic really_full_int, really_full_mult, really_full_br, really_full_load, really_full_store;
 
@@ -453,7 +453,7 @@ import rv32i_types::*;
     // );
 
 
-    lds_q #(
+    load_q #(
         .DEPTH      (R_STATION_LDS_Q_DEPTH),
         .PTR_SIZE   (GLOBAL_PTR_SIZE)
     ) load_q(
@@ -462,7 +462,6 @@ import rv32i_types::*;
         .flush(flush),
         .enq(load_station_load), // fixed
         .ready_deq(load_deq),
-        .use_this(use_load),
         .inst_in_lds(dp_is_inst_out),
         .inst_out_lds(inst_out_load), // output
         .lds_stall(load_stall), // output
@@ -478,7 +477,7 @@ import rv32i_types::*;
         .data_in_3(wb_data_out[3]) // input
     );
 
-    lds_q #(
+    store_q #(
         .DEPTH      (R_STATION_LDS_Q_DEPTH),
         .PTR_SIZE   (GLOBAL_PTR_SIZE)
     ) store_q(
@@ -487,7 +486,6 @@ import rv32i_types::*;
         .flush(flush),
         .enq(load_station_store), // fixed
         .ready_deq(store_deq),
-        .use_this(use_store),
         .inst_in_lds(dp_is_inst_out),
         .inst_out_lds(inst_out_store),
         .lds_stall(store_stall),
@@ -507,8 +505,6 @@ import rv32i_types::*;
         // .id_ex(inst_out_lds),
         .id_ex_load(inst_out_load),
         .id_ex_store(inst_out_store),
-        .use_load(use_load),
-        .use_store(use_store),
         //.funct_unit_busy(),
         .ex_mem(inst_out_lds_q)
 
@@ -548,9 +544,12 @@ import rv32i_types::*;
             // lds_deq = '1;
 
 
-            if (inst_out_load.valid && inst_out_store.valid) begin
+            if (inst_out_load.valid && inst_out_store.valid && inst_out_load.order < inst_out_store.order) begin
                 load_deq = '1;
                 store_deq = '0;
+            end else if (inst_out_load.valid && inst_out_store.valid && inst_out_load.order > inst_out_store.order) begin
+                load_deq = '0;
+                store_deq = '1;
             end else if (inst_out_load.valid) begin
                 load_deq = '1;
                 store_deq = '0;

@@ -550,6 +550,8 @@ package rv32i_types;
         funct7_mult = 7'b0000001
     } reg_funct7_vals;
 
-
+    // function logic rob_idx_less_than(input dp_is_stage_reg_t a, b);
+    //     return (a.rob_overflow != b.rob_overflow) ? (a.rob_overflow < b.rob_overflow) : (a.rob_idx < b.rob_idx);
+    // endfunction
 
 endpackage : rv32i_types

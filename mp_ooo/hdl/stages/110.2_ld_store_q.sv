@@ -12,7 +12,6 @@ import rv32i_types::*;
     input   logic                   flush,
     input   logic                   enq,
     input   logic                   ready_deq,
-    output  logic                   use_this,
     input   dp_is_stage_reg_t       inst_in_lds,
     output  dp_is_stage_reg_t       inst_out_lds,
     //output  dp_is_stage_reg_t       inst_out_lds_trans,
@@ -172,17 +171,6 @@ import rv32i_types::*;
             end
         end
     end
-
-    always_ff @(posedge clk) begin
-        if (rst) begin
-            use_this <= '0;
-        end else if (ready_deq) begin
-            use_this <= '1;
-        end else begin
-            use_this <= '0;
-        end
-    end
-
 
     always_ff @(posedge clk) begin
         if (rst) begin

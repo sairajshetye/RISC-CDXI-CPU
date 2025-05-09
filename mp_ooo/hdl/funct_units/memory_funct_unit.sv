@@ -4,8 +4,8 @@ import rv32i_types::*;
     // input dp_is_stage_reg_t id_ex,
     input dp_is_stage_reg_t id_ex_load,
     input dp_is_stage_reg_t id_ex_store,
-    input logic use_load,
-    input logic use_store,
+    // input logic use_load,
+    // input logic use_store,
     //input logic [31:0] rs1_v,
     //input logic [31:0] rs2_v,
     //input logic [31:0] ex_mem_rd_v,
@@ -65,18 +65,18 @@ import rv32i_types::*;
         // end
 
         if (id_ex_load.valid && id_ex_store.valid) begin
-            if (id_ex_load.rob_idx < id_ex_store.rob_idx) begin
+            if (id_ex_load.order < id_ex_store.order) begin
                 id_ex = id_ex_load;
-            end else begin
+            end else if (id_ex_load.order> id_ex_store.order) begin
                 id_ex = id_ex_store;
             end
-            end else if (id_ex_load.valid) begin
-                id_ex = id_ex_load;
-            end else if (id_ex_store.valid) begin
-                id_ex = id_ex_store;
-            end else begin
-                id_ex = '0;
-            end
+        end else if (id_ex_load.valid) begin
+            id_ex = id_ex_load;
+        end else if (id_ex_store.valid) begin
+            id_ex = id_ex_store;
+        end else begin
+            id_ex = '0;
+        end
 
         // id_ex = id_ex_load;
     end
