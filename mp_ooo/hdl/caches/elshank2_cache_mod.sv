@@ -96,7 +96,7 @@ module cache_mod (
 
     generate for (genvar i = 0; i < 4; i++) begin : arrays
         mp_cache_data_array data_array (
-            .clk0       (clk),
+            .clk0       (clk && !csb_s),
             //.rst0       (rst),
             .csb0       (csb_s), // always select?
             .web0       (web_way_data[i]),
@@ -114,7 +114,7 @@ module cache_mod (
 
         );
         mp_cache_tag_array tag_array (
-            .clk0       (clk),
+            .clk0       (clk && !csb_s),
             //.rst0       (rst),
             .csb0       (csb_s),
             .web0       (web_way_tag[i]),

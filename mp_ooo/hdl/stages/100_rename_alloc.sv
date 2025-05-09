@@ -1,7 +1,15 @@
 module rename_alloc
 import rv32i_types::*;
 (
+    input   logic           clk,    //new
+    input   logic           rst,    //new
+
     input id_ex_stage_reg_t id_ex, // comes from decode queue
+
+    input   branch_t        br_pred,        //new
+    input   branch_t_state  branch_t_states,    //new
+    input   logic           set_pc_br,      //new
+    input   logic    [31:0] pc_br_pred,     //new
 
     // inputs from RAT, FL, stalls?
     input   logic   [6:0]   p_addr,
@@ -39,10 +47,20 @@ import rv32i_types::*;
     logic   [4:0]   rd_s;
     logic   [6:0]   prd_s; 
 
+    logic [31:0] prev_pc_reg;
+
     //logic           rs1_renamed, rs2_renamed;
     //logic   [6:0]   rs1_paddr, rs2_paddr;
 
     // assign deq = '0; // don't dequeue for now
+
+    always_ff @(posedge clk) begin
+        if (rst) begin
+            prev_pc_reg <= '0;
+        end else if (id_ex.valid) begin
+            prev_pc_reg <= id_ex.pc;
+        end
+    end
 
     always_comb begin
         rat_rs1 = id_ex.rs1_s;
@@ -82,12 +100,39 @@ import rv32i_types::*;
         rob_entry.use_rd = id_ex.use_rd;
         rob_entry.rd_paddr = prd_s;
         rob_entry.rd_addr = id_ex.rd_s; 
-        rob_entry.br_pred = not_taken;
+       
         rob_entry.br_result = not_taken; // should be not known CHANGE LATER
         rob_entry.rfvi_monitor_vals = '0;
-        rob_entry.pc_next = id_ex.pc_next;
+        // rob_entry.pc_next = id_ex.pc_next;
         rob_entry.ld_store = (id_ex.is_load || id_ex.is_store) ? '1 : '0;
         rob_entry.fl_head = fl_head;
+
+        //new below
+        if (id_ex.is_br && set_pc_br) begin
+            rob_entry.br_pred = br_pred;      //new
+            rob_entry.branch_t_state = branch_t_states;    //new
+            rob_entry.pc_next = pc_br_pred;
+        end else begin
+            rob_entry.br_pred = id_ex.branch_pred;      //new
+            rob_entry.branch_t_state = id_ex.branch_t_state;    //new
+            rob_entry.pc_next = id_ex.pc_next;
+        end
+        if (prev_pc_reg != (id_ex.pc + 'd4)) begin
+            rob_entry.br_pred = taken;
+            rob_entry.branch_t_state = weakly_taken;    //new
+        end else begin
+            rob_entry.br_pred = br_pred;
+        end
+
+        // if ((id_ex.pc + 'd4) != id_ex.pc_next) begin
+        //     rob_entry.br_pred = taken;
+        // end else begin
+        //     rob_entry.br_pred = br_pred;
+        // end
+        rob_entry.is_br = id_ex.is_br;  //new
+        rob_entry.need_flush = '0;      //new
+        // rob_entry.branch_t_state = branch_t_states;    //new
+        rob_entry.pc = id_ex.pc;    //new
         //rob_entry.order = id_ex.order;
     end
 
@@ -96,7 +141,7 @@ import rv32i_types::*;
         ra_dp.inst = id_ex.inst;
         ra_dp.pc = id_ex.pc;
         ra_dp.order = id_ex.order;
-        ra_dp.pc_next = id_ex.pc_next;
+        // ra_dp.pc_next = id_ex.pc_next;
         ra_dp.valid = id_ex.valid;
         ra_dp.stall = id_ex.stall;
         //ra_dp.funct3 = id_ex.funct7;???
@@ -120,7 +165,32 @@ import rv32i_types::*;
         ra_dp.is_load = id_ex.is_load;
         ra_dp.use_rd = id_ex.use_rd;
 
-        // new
+        //new below
+        if (id_ex.is_br && set_pc_br) begin
+            ra_dp.branch_pred = br_pred; //id_ex.branch_pred; //new
+            ra_dp.branch_t_state = branch_t_states;
+            ra_dp.pc_next = pc_br_pred;
+
+
+        end else begin
+            ra_dp.branch_pred = id_ex.branch_pred;
+            ra_dp.branch_t_state = id_ex.branch_t_state;
+            ra_dp.pc_next = id_ex.pc_next;
+        end
+        if (prev_pc_reg != (id_ex.pc + 'd4)) begin
+            ra_dp.branch_pred = taken;
+            ra_dp.branch_t_state = weakly_taken;
+        end else begin
+            ra_dp.branch_pred = br_pred;
+
+        end
+        // if ((id_ex.pc + 'd4) != id_ex.pc_next) begin
+        //     ra_dp.branch_pred = taken;
+        // end else begin
+        //     ra_dp.branch_pred = br_pred;
+        // end
+        // new above
+
         ra_dp.rob_idx = rob_idx;
         ra_dp.rob_overflow = rob_overflow;
         ra_dp.use_prs1 = rs1_renamed; // inputs from RAT

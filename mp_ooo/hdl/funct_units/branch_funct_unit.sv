@@ -7,7 +7,8 @@ import rv32i_types::*;
     //input logic [31:0] ex_mem_rd_v,
     //input logic [31:0] mem_wb_rd_v,
     output logic funct_unit_busy,
-    output dp_is_stage_reg_t ex_mem
+    output dp_is_stage_reg_t ex_mem,
+    output logic need_flush_fu
     //input mem_wb_stage_reg_t mem_wb, wb
 );
     
@@ -119,7 +120,7 @@ import rv32i_types::*;
             op_b_jal  : begin // uses rd, but not rs1 or rs2
                 // NOT NEEDED YET
                 regf_we = 1'b1;
-                rd_v = id_ex.pc_next;
+                rd_v = id_ex.pc + 'd4; //id_ex.pc_next; new
                 rd_s_real = id_ex.rd_s;
                 a = '0;
                 b = '0;
@@ -132,7 +133,7 @@ import rv32i_types::*;
             op_b_jalr : begin
                 // NOT NEEDED YET
                 regf_we = 1'b1;
-                rd_v = id_ex.pc_next;
+                rd_v = id_ex.pc + 'd4; //id_ex.pc_next; new
                 rd_s_real = id_ex.rd_s;
                 a = '0;
                 b = '0;
@@ -157,7 +158,7 @@ import rv32i_types::*;
                     branch_taken = taken;
                     flush = '1;     //will change based on predicted br taken or not
                 end else begin
-                    pc_next = id_ex.pc_next;
+                    pc_next = id_ex.pc + 'd4; //new
                     branch_taken = not_taken;
                     flush = '0;    
                 end
@@ -188,6 +189,17 @@ import rv32i_types::*;
     begin
         ex_mem.inst = id_ex.inst;
         ex_mem.pc = id_ex.pc;
+        if (id_ex.pc_next != pc_next && id_ex.valid) begin //new
+            need_flush_fu = '1; //new
+        end else if (!br_en && (id_ex.branch_taken == taken) && id_ex.valid) begin//new
+            need_flush_fu = '1;//new
+        end else if (br_en && (id_ex.branch_taken == not_taken) && id_ex.valid) begin//new
+            need_flush_fu = '1;//new
+        end
+        else begin  //new
+            need_flush_fu = '0; //new
+        end //new
+
         ex_mem.pc_next = pc_next;//id_ex.pc_next;
         ex_mem.order = id_ex.order;
         //ex_mem.alu_m1_sel = id_ex.alu_m1_sel;

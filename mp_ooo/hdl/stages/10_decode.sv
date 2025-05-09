@@ -3,7 +3,7 @@ import rv32i_types::*;
 (
     input if_id_stage_reg_t if_id,
     // input   logic         rq_stall,
-    input   logic        dq_stall,
+    input   logic           dq_stall,
    //input   logic [31:0]  rs1_v,
     //input   logic [31:0]  rs2_v,
     output  logic         enq,
@@ -31,6 +31,8 @@ import rv32i_types::*;
 
     logic           valid_check;
 
+    // logic [31:0] prev_pc_reg;
+
     assign funct3 = if_id.inst[14:12];
     assign funct7 = if_id.inst[31:25];
     assign opcode = if_id.inst[6:0];
@@ -49,8 +51,10 @@ import rv32i_types::*;
     assign regf_we = 1'b1; // should only write back at wb stage tho hmm and if needed
 
     //assign deq = '0; // dont dequeue from decode queue
-    
+
+
     always_comb begin // sets if we use rs1, rs2, rd
+    is_br = '0;
         unique case (opcode)
             7'b0010011: begin // b_imm
                 use_rs1 = '1;
@@ -133,7 +137,7 @@ import rv32i_types::*;
     begin
         id_ex.inst = if_id.inst;
         id_ex.pc = if_id.pc;
-        id_ex.pc_next = if_id.pc_next;
+        
         id_ex.order = if_id.order;
         //id_ex.alu_m1_sel = '0; //if_id.alu_m1_sel;
         id_ex.valid = valid_check;//if_id.valid;
@@ -183,6 +187,13 @@ import rv32i_types::*;
         id_ex.rfvi_monitor_vals.monitor_rs2_addr = rs2_s;
 
         id_ex.rfvi_monitor_vals.monitor_rd_addr = rd_s;
+
+        //new below
+        id_ex.pc_next = if_id.pc_next; //new
+        id_ex.branch_pred = not_taken;  //new
+        id_ex.branch_t_state = strongly_not_taken; //weakly_taken; //if_id.branch_t_state; //new
+
     end
+    
 
 endmodule : id_stage

@@ -6,7 +6,9 @@ import rv32i_types::*;
     input   logic           iq_stall,
     input   logic           flush,
     input   logic   [63:0]  order_br,
-    // input   logic           dq_stall,
+    input   logic           bp_flush,       //new
+    input   logic           rob_valid_rdata,//new
+    input   logic           rem_result,//new
     output  logic           enq,
     // output  logic           deq,
 
@@ -26,21 +28,44 @@ output logic done
     logic d;
     //done;
 
+
+    //new
     always_ff @(posedge clk) begin
         
         if (rst) begin
             order_reg <= '0;
             done <= '0;
-        end else if (flush) begin
-            order_reg <= order_br + 1'b1;
-        end else if (imem_resp && !iq_stall) begin
-            order_reg <= order_reg + 1;
-            if (d) begin
-                done <= '1;
-            end
-        end else if (d) begin
-            done <= '1;
+        end 
+        else if (bp_flush && !flush && !rem_result && !iq_stall) begin //new
+            order_reg <= order_reg; //order_br + 1; //new
         end
+        else if (bp_flush && !flush && rem_result && !iq_stall) begin //new
+            order_reg <= order_reg - 1; //new
+        end
+
+        // else if (flush) begin//new
+        //     order_reg <= order_br ;//+ 1'b1;
+        // end 
+        else if (flush && rob_valid_rdata && imem_resp && !iq_stall) begin//new
+            order_reg <= order_br + 1;
+        end 
+        else if (flush && imem_resp && !iq_stall) begin
+            order_reg <= order_br;
+
+        end
+        else if (flush) begin//new
+            order_reg <= order_br + 1;
+        end 
+        // else if (flush && bp_flush) begin
+        //     order_reg <= order_br + 1;
+        // end
+        else if (imem_resp && !iq_stall) begin
+            order_reg <= order_reg + 1;
+            
+        end 
+        
+        
+        
     end
 
     always_comb begin
@@ -52,6 +77,9 @@ output logic done
             if_id.valid = '0;
             if_id.fetch_stall = '1;
             if_id.useless = '0;
+            if_id.branch_pred = not_taken;    //new
+            if_id.branch_t_state = strongly_not_taken; //new
+
             d = '0;
 
             imem_addr = pc_next;
@@ -79,7 +107,7 @@ output logic done
             //     if_id.deq = '1;
             // end
 
-            if (imem_resp) begin
+            if (imem_resp && !bp_flush && !flush) begin
                 if_id.rfvi_monitor_vals.monitor_inst = imem_rdata;
                 // if (imem_rdata == 'hf0002013) begin
                 //     d = '1;
@@ -90,7 +118,7 @@ output logic done
                 if_id.fetch_stall = '0;
                 if_id.valid = '1;
 
-                if (!iq_stall) begin
+                if (!iq_stall) begin   //new
                      enq = '1;
                 end
 

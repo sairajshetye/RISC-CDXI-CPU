@@ -237,7 +237,7 @@ import rv32i_types::*;
        // ex_mem.dreq = dreq;
        // ex_mem.dreq_load = dreq_load;
         ex_mem.use_rd = id_ex.use_rd;
-        ex_mem.branch_taken = id_ex.branch_taken;
+        ex_mem.branch_taken = not_taken; //id_ex.branch_taken;  //new
         ex_mem.use_prs1 = id_ex.use_prs1;
         ex_mem.rs1_paddr = id_ex.rs1_paddr;
         ex_mem.rs1_ready = id_ex.rs1_ready;

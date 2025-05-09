@@ -13,7 +13,8 @@ import rv32i_types::*;
     output  id_ex_stage_reg_t     inst_out_d,
     output  logic                   valid_rdata,
     output  logic                   dq_stall,
-    output  logic                   dq_stall_next
+    output  logic                   dq_stall_next,
+    output  id_ex_stage_reg_t       inst_out_d_t    //new
 
 );
 
@@ -113,6 +114,25 @@ import rv32i_types::*;
             //end
         end
     
+    end
+
+    //new below
+    always_comb begin
+        inst_out_d_t <= '0;
+
+        if (enq && deq) begin
+                    if (empty) begin
+                        inst_out_d_t <= inst_in_d;
+                    end else if (full) begin
+                        inst_out_d_t <= internal_array_d[head[PTR_SIZE-1:0]];
+                    end else begin
+                        inst_out_d_t <= internal_array_d[head[PTR_SIZE-1:0]];
+                    end
+                end else if (enq && !full) begin
+                    inst_out_d_t <= '0;
+                end else if (deq && !empty) begin
+                    inst_out_d_t <= internal_array_d[head[PTR_SIZE-1:0]];
+                end
     end
 
     // always_ff @ (posedge clk) begin
