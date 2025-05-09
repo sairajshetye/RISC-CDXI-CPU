@@ -5,10 +5,11 @@ import rv32i_types::*;
         parameter RS1_DATA_SIZE = 32,
         parameter RS2_DATA_SIZE = 32,
         parameter STALL_MODE = 0,
-        parameter RESET_MODE = 0,
+        parameter RESET_MODE = 1,
         parameter ONE = 1,
         parameter ZERO = 0,
-        parameter NUM_STAGES = 35
+        parameter NUM_STAGES_MULT = 10,
+        parameter NUM_STAGES_DIV = 20
 
 )
 (   
@@ -41,6 +42,11 @@ import rv32i_types::*;
 
     logic [2:0] out_select;
     logic start_sig, end_sig;
+
+    logic mult_start, mult_complete, mult_complete_d, mult_complete_pe;
+    logic div_start, div_complete, div_complete_d, div_complete_pe;
+
+    logic mult_en_d, div_en_d;
 
     integer counter;
 
@@ -275,39 +281,97 @@ import rv32i_types::*;
 
     // );
 
-    DW_mult_pipe #(
+    // DW_mult_pipe #(
+    //     .a_width(33), 
+    //     .b_width(33), 
+    //     .num_stages(NUM_STAGES),
+    //     .rst_mode(RESET_MODE),
+    //     .stall_mode(STALL_MODE)
+    // ) mult_mulhsu (
+    //     .clk(clk), 
+    //     .rst_n('0), //active low
+    //     .en(mult_en),    //enable
+    //     .tc(mult_tc),   //two's complement 
+    //     .a(rs1_v_extended),
+    //     .b(rs2_v_extended), 
+    //     .product(product_mulhsu) 
+
+    // );
+
+    always_ff @ (posedge clk) begin
+        if (!rst) begin
+            mult_en_d <= '0;
+            div_en_d <= '0;
+            mult_complete_d <= '0;
+            div_complete_d <= '0;
+        end
+        else begin
+            mult_en_d <= mult_en;
+            div_en_d <= div_en;
+            mult_complete_d <= mult_complete;
+            div_complete_d <= div_complete;
+        end
+    end
+
+    assign mult_start = mult_en & ~mult_en_d;
+    assign div_start = div_en & ~div_en_d;
+    assign mult_complete_pe = mult_complete & ~mult_complete_d;
+    assign div_complete_pe = div_complete & ~div_complete_d;
+
+
+    DW_mult_seq #(
         .a_width(33), 
         .b_width(33), 
-        .num_stages(NUM_STAGES),
-        .rst_mode(RESET_MODE),
-        .stall_mode(STALL_MODE)
+        .tc_mode(ONE),
+        .num_cyc(NUM_STAGES_MULT),
+        .rst_mode(RESET_MODE)
     ) mult_mulhsu (
         .clk(clk), 
-        .rst_n('0), //active low
-        .en(mult_en),    //enable
-        .tc(mult_tc),   //two's complement 
+        .rst_n(rst & !flush), //active low
+        .hold(mult_start),
+        .start(mult_start),    //enable
         .a(rs1_v_extended),
         .b(rs2_v_extended), 
+        .complete(mult_complete),
         .product(product_mulhsu) 
 
     );
 
-    DW_div_pipe #(
+    // DW_div_pipe #(
+    //     .a_width(33), 
+    //     .b_width(33), 
+    //     .tc_mode(ONE),      //two's complement 
+    //     .num_stages(NUM_STAGES),
+    //     .rst_mode(RESET_MODE),
+    //     .stall_mode(STALL_MODE)
+    // ) div (
+    //     .clk(clk),
+    //     .rst_n('0),    //active low
+    //     .en(div_en),     //enable
+    //     .a(rs1_v_extended),
+    //     .b(rs2_v_extended),
+    //     .quotient(quotient),
+    //     .remainder(remainder),
+    //     .divide_by_0(div0)
+    // );
+
+    DW_div_seq #(
         .a_width(33), 
         .b_width(33), 
         .tc_mode(ONE),      //two's complement 
-        .num_stages(NUM_STAGES),
-        .rst_mode(RESET_MODE),
-        .stall_mode(STALL_MODE)
+        .num_cyc(NUM_STAGES_DIV),
+        .rst_mode(RESET_MODE)
     ) div (
         .clk(clk),
-        .rst_n('0),    //active low
-        .en(div_en),     //enable
+        .rst_n(rst & !flush),    //active low
+        .hold(div_start),
+        .start(div_start),
         .a(rs1_v_extended),
         .b(rs2_v_extended),
+        .divide_by_0(div0),
+        .complete(div_complete),
         .quotient(quotient),
-        .remainder(remainder),
-        .divide_by_0(div0)
+        .remainder(remainder)
     );
 
     // DW_div_pipe #(
@@ -467,6 +531,8 @@ import rv32i_types::*;
 
     end 
 
+    assign funct_mult_done = (div_en & div_complete_pe) | (mult_en & mult_complete_pe);
+
 
     always_ff @(posedge clk) begin
         //funct_mult_done = '0;
@@ -474,7 +540,7 @@ import rv32i_types::*;
             counter <= 0;
             //funct_unit_busy <= '0;
             //done <= '0;
-            funct_mult_done <= '0;
+            //funct_mult_done <= '0;
             
             //out_inst <= '0;
             //out_inst.rfvi_monitor_vals <= '0;
@@ -491,23 +557,30 @@ import rv32i_types::*;
             //funct_unit_busy <= '1;
           //  funct_mult_done <= '0;
        // end
-        if ((counter == NUM_STAGES)) begin
+        // if ((counter == (NUM_STAGES+1))) begin
          
-            counter <= 0;
-            //funct_unit_busy <= '0;
-            funct_mult_done <= '1;
+        //     counter <= 0;
+        //     //funct_unit_busy <= '0;
+        //     funct_mult_done <= '1;
 
            
         
-        end 
-        else if (mult_en | div_en) begin
-            counter <= counter + 1;
-            //funct_unit_busy <= '1;
-            funct_mult_done <= '0;
+        // end 
+        // else if (mult_en | div_en) begin
+        //     counter <= counter + 1;
+        //     //funct_unit_busy <= '1;
+        //     funct_mult_done <= '0;
 
             
             
-        end
+        // end
+        // if (div_complete_pe | mult_complete_pe) begin
+        //     funct_mult_done <= '1;
+        // end
+        // else begin
+        //     funct_mult_done <= '0;
+        // end
+
         //if ()
         //else if (rs_out.valid) begin
         //    counter <= counter + 1;
