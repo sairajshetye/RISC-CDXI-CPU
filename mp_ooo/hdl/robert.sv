@@ -22,6 +22,7 @@ import rv32i_types::*;
     input   logic                   ld_branch_res,
     input   branch_t                branch_res_in, 
     input   logic [31:0]            br_pc_next,
+    input   logic                   need_flush, //new
     //input   logic [63:0]            order_out_wb,
     input   rob_entry_t             rob_in,
     input   logic [PTR_SIZE_ROB-1:0]    rob_idx_in,     //read idx
@@ -139,6 +140,7 @@ import rv32i_types::*;
                 //p_addr_ret <= rob[rob_idx_ld].rd_paddr;
                 rob[rob_idx_ld_0].rfvi_monitor_vals <= rfvi_monitor_vals_0;
             end
+            rob[rob_idx_ld_0].br_result <= not_taken;//new
         end
 
         if (ld_status_1) begin
@@ -150,6 +152,7 @@ import rv32i_types::*;
                 //p_addr_ret <= rob[rob_idx_ld].rd_paddr;
                 rob[rob_idx_ld_1].rfvi_monitor_vals <= rfvi_monitor_vals_1;
             end
+            rob[rob_idx_ld_1].br_result <= not_taken;//new
         end
 
         if (ld_status_2) begin
@@ -160,6 +163,8 @@ import rv32i_types::*;
                 //ard_s <= rob[rob_idx_ld].rd_addr;
                 //p_addr_ret <= rob[rob_idx_ld].rd_paddr;
                 rob[rob_idx_ld_2].rfvi_monitor_vals <= rfvi_monitor_vals_2;
+            end else begin
+                rob[rob_idx_ld_2].rfvi_monitor_vals <= '0;
             end
         end
 
@@ -172,11 +177,13 @@ import rv32i_types::*;
                 //p_addr_ret <= rob[rob_idx_ld].rd_paddr;
                 rob[rob_idx_ld_3].rfvi_monitor_vals <= rfvi_monitor_vals_3;
             end
+            rob[rob_idx_ld_3].br_result <= not_taken;//new
         end
 
         if (ld_branch_res) begin
             rob[rob_idx_in].br_result <= branch_res_in;
             rob[rob_idx_in].pc_next <= br_pc_next;
+            rob[rob_idx_in].need_flush <= need_flush;   //new
             //rob[rob_idx_in].order <= order_out_wb;
         end
 
@@ -219,18 +226,27 @@ import rv32i_types::*;
                 ard_s <= rob[head[PTR_SIZE_ROB-1:0]].rd_addr;
                 p_addr_ret <= rob[head[PTR_SIZE_ROB-1:0]].rd_paddr;
                 valid_rdata <= rob[head[PTR_SIZE_ROB-1:0]].valid;
+                //new
+                if ((rob[head[PTR_SIZE_ROB-1:0]].br_pred != rob[head[PTR_SIZE_ROB-1:0]].br_result) || rob[head[PTR_SIZE_ROB-1:0]].need_flush) begin
+                    if (rob[head[PTR_SIZE_ROB-1:0]].is_br) begin//new
+                        flush <= '1;//new
+                        // rob_out.rfvi_monitor_vals <= '0;
+                        // valid_rdata <= '0;
+                        // rob_head_idx <= '0;
+                    end
+                    else begin
+                        flush <= '0;//new
+                    end
+                
+                end else begin//new
+                    flush <= '0; //???
+                end
             end
             else begin
                 aregf_we <= '0;
                 ard_s <= '0;
                 p_addr_ret <= '0;
                 valid_rdata <= '0;
-            end
-            if (rob[head[PTR_SIZE_ROB-1:0]].br_pred != rob[head[PTR_SIZE_ROB-1:0]].br_result) begin
-                flush <= '1;
-                
-            end else begin
-                flush <= '0; //???
             end
             rob_out <= rob[head[PTR_SIZE_ROB-1:0]];
             rob_head_idx <= head[PTR_SIZE_ROB-1:0];
