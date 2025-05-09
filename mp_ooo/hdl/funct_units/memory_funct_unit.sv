@@ -1,7 +1,11 @@
 module load_store_unit
 import rv32i_types::*;
 (
-    input dp_is_stage_reg_t id_ex,
+    // input dp_is_stage_reg_t id_ex,
+    input dp_is_stage_reg_t id_ex_load,
+    input dp_is_stage_reg_t id_ex_store,
+    input logic use_load,
+    input logic use_store,
     //input logic [31:0] rs1_v,
     //input logic [31:0] rs2_v,
     //input logic [31:0] ex_mem_rd_v,
@@ -44,6 +48,22 @@ import rv32i_types::*;
     logic unsigned [31:0] au;
     logic unsigned [31:0] bu;
     logic [31:0] rs1_v, rs2_v;
+
+    dp_is_stage_reg_t id_ex;
+
+    always_comb begin
+        if (use_store) begin 
+            id_ex = id_ex_store;
+        end else if (use_load) begin
+            id_ex = id_ex_load;
+        end else if (id_ex_store.valid) begin
+            id_ex = id_ex_store;
+        end else if (id_ex_load.valid) begin
+            id_ex = id_ex_load;
+        end else begin
+            id_ex = '0;
+        end
+    end
 
     assign as =   signed'(a);
     assign bs =   signed'(b);

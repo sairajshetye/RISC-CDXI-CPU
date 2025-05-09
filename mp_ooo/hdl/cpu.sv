@@ -18,14 +18,14 @@ import rv32i_types::*;
     logic [31:0] pc;
     logic [31:0] pc_next;
 
-    logic iq_enq, dq_enq, rq_enq, fl_enq, rob_enq, wb_int_enq, wb_mult_enq, fl_enq_rob, decode_stall, lds_stall, lds_enq, lds_deq;
+    logic iq_enq, dq_enq, rq_enq, fl_enq, rob_enq, wb_int_enq, wb_mult_enq, fl_enq_rob, decode_stall, load_stall, store_stall, load_deq, store_deq, use_load, use_store;
     logic iq_deq, dq_deq, rq_deq, fl_deq; 
-    logic really_full_int, really_full_mult, really_full_br, really_full_mem;
+    logic really_full_int, really_full_mult, really_full_br, really_full_load, really_full_store;
 
     if_id_stage_reg_t if_id_reg_next, if_id_inst_out;
     id_ex_stage_reg_t id_ex_reg_next, id_ex_inst_out;
     ra_dp_stage_reg_t ra_dp_reg_next, ra_dp_inst_out;
-    dp_is_stage_reg_t dp_is_inst_out, dp_is_out_mult, dp_is_out_int, dp_is_out_br, dp_is_out_mem, dp_lds_inst_out, inst_out_lds;
+    dp_is_stage_reg_t dp_is_inst_out, dp_is_out_mult, dp_is_out_int, dp_is_out_br, dp_is_out_mem, dp_lds_inst_out, inst_out_load, inst_out_store;
     dp_is_stage_reg_t int_to_wb, mult_to_wb, wb_reg_next, wb_int_out, wb_mult_out, wb_mem_out;
     dp_lds_stage_reg_t inst_out_lds_q;
 
@@ -48,7 +48,7 @@ import rv32i_types::*;
 
     logic [255:0] lb_rdata;
 
-    logic iq_valid_rdata, dq_valid_rdata, rq_valid_rdata, fl_valid_rdata, rob_valid_rdata, int_valid_rdata, mult_valid_rdata, valid_rdata_lds;
+    logic iq_valid_rdata, dq_valid_rdata, rq_valid_rdata, fl_valid_rdata, rob_valid_rdata, int_valid_rdata, mult_valid_rdata;
     logic iq_stall, dq_stall, rq_stall, fl_stall, rob_stall, int_wb_stall, mult_wb_stall, br_wb_stall, mem_wb_stall;
     logic iq_stall_next, dq_stall_next, rq_stall_next;
 
@@ -136,7 +136,7 @@ import rv32i_types::*;
 
     logic dispatch_stall_mult, dispatch_stall_int, dispatch_stall_br;
 
-    logic load_station_mult, load_station_int, load_station_br, load_station_mem;
+    logic load_station_mult, load_station_int, load_station_br, load_station_store, load_station_load;
     logic funct_mult_busy, funct_int_busy, funct_br_busy, funct_mem_busy;
     logic funct_mult_done;
 
@@ -279,7 +279,7 @@ import rv32i_types::*;
         .flush(flush),
         .enq(dq_enq),
         // .deq(dq_deq && !(decode_stall | rob_stall)),
-        .deq(!rq_stall && !rob_stall && !decode_stall && !rq_stall_next && !lds_stall && !fl_stall),
+        .deq(!rq_stall && !rob_stall && !decode_stall && !rq_stall_next && !load_stall && !store_stall && !fl_stall),
         .inst_in_d(id_ex_reg_next),
         .inst_out_d(id_ex_inst_out),
         .valid_rdata(dq_valid_rdata),
@@ -327,7 +327,7 @@ import rv32i_types::*;
         .flush(flush),
         .enq(rq_enq),
         // .deq(rq_deq),
-        .deq(!dispatch_stall_mult && !dispatch_stall_int && !really_full_mult && !really_full_int && !really_full_br && !really_full_mem && !lds_stall), // && !really_full_mult && !really_full_int
+        .deq(!dispatch_stall_mult && !dispatch_stall_int && !really_full_mult && !really_full_int && !really_full_br && !really_full_load && !really_full_store && !load_stall && !store_stall), // && !really_full_mult && !really_full_int
         .inst_in_r(ra_dp_reg_next),
         .inst_out_r(ra_dp_inst_out),
         .valid_rdata(rq_valid_rdata),
@@ -349,7 +349,8 @@ import rv32i_types::*;
         .load_station_mult(load_station_mult), // output
         .load_station_int(load_station_int), // output
         .load_station_br(load_station_br),
-        .load_station_mem(load_station_mem),//output
+        .load_station_load(load_station_load),//output
+        .load_station_store(load_station_store),
 
         .rs1_rdata(rs1_rdata), // input from the register file arbiter
         .rs2_rdata(rs2_rdata), // input from the register file arbiter
@@ -455,17 +456,42 @@ import rv32i_types::*;
     lds_q #(
         .DEPTH      (R_STATION_LDS_Q_DEPTH),
         .PTR_SIZE   (GLOBAL_PTR_SIZE)
-    ) ld_store_q(
+    ) load_q(
         .clk(clk),
         .rst(rst),
         .flush(flush),
-        .enq(load_station_mem),
-        .ready_deq(lds_deq),
+        .enq(load_station_load), // fixed
+        .ready_deq(load_deq),
+        .use_this(use_load),
         .inst_in_lds(dp_is_inst_out),
-        .inst_out_lds(inst_out_lds),
-        .valid_rdata(valid_rdata_lds),
-        .lds_stall(lds_stall),
-        .really_full(really_full_mem),
+        .inst_out_lds(inst_out_load), // output
+        .lds_stall(load_stall), // output
+        .really_full(really_full_load), // output
+
+        .data_paddr_0(p_addr_out_wb[0]), // input
+        .data_paddr_1(p_addr_out_wb[1]), // input
+        .data_paddr_2(p_addr_out_wb[2]), // input
+        .data_paddr_3(p_addr_out_wb[3]), // input
+        .data_in_0(wb_data_out[0]), // input
+        .data_in_1(wb_data_out[1]), // input
+        .data_in_2(wb_data_out[2]), // input
+        .data_in_3(wb_data_out[3]) // input
+    );
+
+    lds_q #(
+        .DEPTH      (R_STATION_LDS_Q_DEPTH),
+        .PTR_SIZE   (GLOBAL_PTR_SIZE)
+    ) store_q(
+        .clk(clk),
+        .rst(rst),
+        .flush(flush),
+        .enq(load_station_store), // fixed
+        .ready_deq(store_deq),
+        .use_this(use_store),
+        .inst_in_lds(dp_is_inst_out),
+        .inst_out_lds(inst_out_store),
+        .lds_stall(store_stall),
+        .really_full(really_full_store),
 
         .data_paddr_0(p_addr_out_wb[0]), // input
         .data_paddr_1(p_addr_out_wb[1]), // input
@@ -478,7 +504,11 @@ import rv32i_types::*;
     );
 
     load_store_unit ld_s_unit(
-        .id_ex(inst_out_lds),
+        // .id_ex(inst_out_lds),
+        .id_ex_load(inst_out_load),
+        .id_ex_store(inst_out_store),
+        .use_load(use_load),
+        .use_store(use_store),
         //.funct_unit_busy(),
         .ex_mem(inst_out_lds_q)
 
@@ -486,20 +516,25 @@ import rv32i_types::*;
 
     always_comb 
     begin
-        unique case (inst_out_lds_q.funct3)
-            load_f3_lb : dmem_rdata_extended = {{24{ufp_rdata_data[7 +8 *inst_out_lds_q.dmem_addr_saved[1:0]]}}, ufp_rdata_data[8 *inst_out_lds_q.dmem_addr_saved[1:0] +: 8 ]};
-            load_f3_lbu: dmem_rdata_extended = {{24{1'b0}}                          , ufp_rdata_data[8 *inst_out_lds_q.dmem_addr_saved[1:0] +: 8 ]};
-            load_f3_lh : dmem_rdata_extended = {{16{ufp_rdata_data[15+16*inst_out_lds_q.dmem_addr_saved[1]  ]}}, ufp_rdata_data[16*inst_out_lds_q.dmem_addr_saved[1]   +: 16]};
-            load_f3_lhu: dmem_rdata_extended = {{16{1'b0}}                          , ufp_rdata_data[16*inst_out_lds_q.dmem_addr_saved[1]   +: 16]};
-            load_f3_lw : dmem_rdata_extended = ufp_rdata_data;
-            default    : dmem_rdata_extended = '0;
-        endcase
+        dmem_rdata_extended = '0;
+        if(inst_out_lds_q.valid) begin
+            unique case (inst_out_lds_q.funct3)
+                load_f3_lb : dmem_rdata_extended = {{24{ufp_rdata_data[7 +8 *inst_out_lds_q.dmem_addr_saved[1:0]]}}, ufp_rdata_data[8 *inst_out_lds_q.dmem_addr_saved[1:0] +: 8 ]};
+                load_f3_lbu: dmem_rdata_extended = {{24{1'b0}}                          , ufp_rdata_data[8 *inst_out_lds_q.dmem_addr_saved[1:0] +: 8 ]};
+                load_f3_lh : dmem_rdata_extended = {{16{ufp_rdata_data[15+16*inst_out_lds_q.dmem_addr_saved[1]  ]}}, ufp_rdata_data[16*inst_out_lds_q.dmem_addr_saved[1]   +: 16]};
+                load_f3_lhu: dmem_rdata_extended = {{16{1'b0}}                          , ufp_rdata_data[16*inst_out_lds_q.dmem_addr_saved[1]   +: 16]};
+                load_f3_lw : dmem_rdata_extended = ufp_rdata_data;
+                default    : dmem_rdata_extended = '0;
+            endcase
+        end
     end
 
 
     always_comb begin
-        lds_deq = '0;
-        if (ufp_resp[1] && inst_out_lds_q.valid) begin
+        load_deq = '0;
+        store_deq = '0;
+
+        if (inst_out_lds_q.valid && ufp_resp[1]) begin
             //wb_inst_out[3] = inst_out_lds;
             wb_inst_out[3] = '0;
             prf_we[3] = inst_out_lds_q.regf_we;
@@ -508,7 +543,19 @@ import rv32i_types::*;
             rob_idx_ld[3] = inst_out_lds_q.rob_idx;
             p_addr_out_wb[3] = inst_out_lds_q.rd_paddr;
             rfvi_monitor_vals[3] = inst_out_lds_q.rfvi_monitor_vals;
-            lds_deq = '1;
+
+
+            // lds_deq = '1;
+
+            if (inst_out_load.rob_idx < inst_out_store.rob_idx) begin
+                load_deq = '1;
+                store_deq = '0;
+            end else begin
+                load_deq = '0;
+                store_deq = '1;
+            end
+
+
             rfvi_monitor_vals[3].monitor_rd_wdata = dmem_rdata_extended; 
             rfvi_monitor_vals[3].monitor_mem_rdata = ufp_rdata_data;
             //rfvi_monitor_vals[3].monitor_rs2_rdata = inst_out_lds_q.rs2_data;
@@ -530,7 +577,7 @@ import rv32i_types::*;
             rfvi_monitor_vals[3] = '0;
 
         
-            if (inst_out_lds_q.valid && rob_out.ld_store == '1 && !ufp_resp[1]) begin   //if rob commit is a ld store
+            if (rob_out.ld_store == '1 && !ufp_resp[1]) begin   //if rob commit is a ld store
                 if (inst_out_lds_q.rob_idx == rob_head_idx) begin //if load or store at head of queue is the commit inst from the rob
                     //trigger the memory
                     ufp_addr[1] = inst_out_lds_q.dmem_addr;
@@ -555,59 +602,6 @@ import rv32i_types::*;
         
         end
     end
-
-    // always_ff @(posedge clk) begin
-    //     if (rst) begin
-    //         lds_deq <= '0;
-    //         ufp_addr[1] <= '0;
-    //             ufp_rmask[1] <= '0;
-    //             ufp_wmask[1] <= '0;
-    //             ufp_wdata[1] <= '0;
-
-    //             wb_inst_out[3] <= '0;
-    //         prf_we[3] <= '0;
-    //         ld_status[3] <= '0;
-    //         status_n[3] <= waiting;
-    //         rob_idx_ld[3] <= '0;
-    //         p_addr_out_wb[3] <= '0;
-    //         wb_data_out[3] <= '0;
-    //         rfvi_monitor_vals[3] <= '0;
-    //     end else begin
-
-        
-
-    //     if (rob_out.ld_store == '1) begin   //if rob commit is a ld store
-    //         if (inst_out_lds_q.rob_idx == rob_head_idx) begin //if load or store at head of queue is the commit inst from the rob
-    //             //trigger the memory
-    //             ufp_addr[1] <= inst_out_lds_q.dmem_addr;
-    //             ufp_rmask[1] <= inst_out_lds_q.dmem_rmask;
-    //             ufp_wmask[1] <= inst_out_lds_q.dmem_wmask;
-    //             ufp_wdata[1] <= inst_out_lds_q.dmem_wdata;
-    //         end 
-    //     end
-
-    //     //make this in ff to hold? idk
-    //     if (ufp_resp[1] && inst_out_lds_q.valid) begin
-    //         //wb_inst_out[3] = inst_out_lds;
-    //         wb_inst_out[3] <= '0;
-    //         prf_we[3] <= inst_out_lds_q.regf_we;
-    //         ld_status[3] <= '1;
-    //         status_n[3] <= done;
-    //         rob_idx_ld[3] <= inst_out_lds_q.rob_idx;
-    //         p_addr_out_wb[3] <= inst_out_lds_q.rd_paddr;
-    //         rfvi_monitor_vals[3] <= inst_out_lds_q.rfvi_monitor_vals;
-    //         lds_deq <= '1;
-
-    //         wb_data_out[3] <= ufp_rdata_data;    //????
-    //         rfvi_monitor_vals[3].monitor_rd_wdata <= ufp_rdata_data; 
-    //         rfvi_monitor_vals[3].monitor_mem_rdata <= ufp_rdata_data;
-
-            
-
-    //     end
-
-    // end
-    // end
 
 
     multiply_divide_unit funct_mult(
@@ -725,7 +719,6 @@ import rv32i_types::*;
         .rst(rst),
         .flush_in(flush),
         .enq(rob_enq),
-        //.lds_deq(lds_deq),
         .ld_status_0(ld_status[0]),
         .ld_status_1(ld_status[1]),
         .ld_status_2(ld_status[2]),
