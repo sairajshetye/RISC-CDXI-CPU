@@ -547,12 +547,19 @@ import rv32i_types::*;
 
             // lds_deq = '1;
 
-            if (inst_out_load.rob_idx < inst_out_store.rob_idx) begin
+
+            if (inst_out_load.valid && inst_out_store.valid) begin
                 load_deq = '1;
                 store_deq = '0;
-            end else begin
+            end else if (inst_out_load.valid) begin
+                load_deq = '1;
+                store_deq = '0;
+            end else if (inst_out_store.valid) begin
                 load_deq = '0;
                 store_deq = '1;
+            end else begin
+                load_deq = '0;
+                store_deq = '0;
             end
 
 

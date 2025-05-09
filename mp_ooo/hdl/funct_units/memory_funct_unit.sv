@@ -52,17 +52,33 @@ import rv32i_types::*;
     dp_is_stage_reg_t id_ex;
 
     always_comb begin
-        if (use_store && id_ex_store.valid) begin 
-            id_ex = id_ex_store;
-        end else if (use_load && id_ex_load.valid) begin
-            id_ex = id_ex_load;
-        end else if (id_ex_store.valid) begin
-            id_ex = id_ex_store;
-        end else if (id_ex_load.valid) begin
-            id_ex = id_ex_load;
-        end else begin
-            id_ex = '0;
-        end
+        // if (use_store && id_ex_store.valid) begin 
+        //     id_ex = id_ex_store;
+        // end else if (use_load && id_ex_load.valid) begin
+        //     id_ex = id_ex_load;
+        // end else if (id_ex_load.valid) begin
+        //     id_ex = id_ex_load;
+        // end else if (id_ex_store.valid) begin
+        //     id_ex = id_ex_store;
+        // end else begin
+        //     id_ex = '0;
+        // end
+
+        if (id_ex_load.valid && id_ex_store.valid) begin
+            if (id_ex_load.rob_idx < id_ex_store.rob_idx) begin
+                id_ex = id_ex_load;
+            end else begin
+                id_ex = id_ex_store;
+            end
+            end else if (id_ex_load.valid) begin
+                id_ex = id_ex_load;
+            end else if (id_ex_store.valid) begin
+                id_ex = id_ex_store;
+            end else begin
+                id_ex = '0;
+            end
+
+        // id_ex = id_ex_load;
     end
 
     assign as =   signed'(a);
