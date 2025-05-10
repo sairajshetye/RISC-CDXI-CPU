@@ -23,6 +23,7 @@ import rv32i_types::*;
     logic iq_deq, dq_deq, rq_deq, fl_deq; 
     logic really_full_int, really_full_mult, really_full_br, really_full_lds;
     // logic really_full_load, really_full_store;
+    // logic lds_deq;
 
     if_id_stage_reg_t if_id_reg_next, if_id_inst_out;
     id_ex_stage_reg_t id_ex_reg_next, id_ex_inst_out;
@@ -468,6 +469,7 @@ import rv32i_types::*;
         .flush(flush), // input
         .funct_unit_busy(funct_mem_busy), // input
         .load_station(load_station_lds),
+        // .deq(lds_deq),
         .inst_in(dp_is_inst_out), // input
         .inst_out(inst_out_lds), // output
         .valid_rdata(valid_rdata_mem), // output
@@ -543,23 +545,21 @@ import rv32i_types::*;
 
     always_comb 
     begin
-        dmem_rdata_extended = '0;
-        if(inst_out_lds_q.valid) begin
-            unique case (inst_out_lds_q.funct3)
-                load_f3_lb : dmem_rdata_extended = {{24{ufp_rdata_data[7 +8 *inst_out_lds_q.dmem_addr_saved[1:0]]}}, ufp_rdata_data[8 *inst_out_lds_q.dmem_addr_saved[1:0] +: 8 ]};
-                load_f3_lbu: dmem_rdata_extended = {{24{1'b0}}                          , ufp_rdata_data[8 *inst_out_lds_q.dmem_addr_saved[1:0] +: 8 ]};
-                load_f3_lh : dmem_rdata_extended = {{16{ufp_rdata_data[15+16*inst_out_lds_q.dmem_addr_saved[1]  ]}}, ufp_rdata_data[16*inst_out_lds_q.dmem_addr_saved[1]   +: 16]};
-                load_f3_lhu: dmem_rdata_extended = {{16{1'b0}}                          , ufp_rdata_data[16*inst_out_lds_q.dmem_addr_saved[1]   +: 16]};
-                load_f3_lw : dmem_rdata_extended = ufp_rdata_data;
-                default    : dmem_rdata_extended = '0;
-            endcase
-        end
+        unique case (inst_out_lds_q.funct3)
+            load_f3_lb : dmem_rdata_extended = {{24{ufp_rdata_data[7 +8 *inst_out_lds_q.dmem_addr_saved[1:0]]}}, ufp_rdata_data[8 *inst_out_lds_q.dmem_addr_saved[1:0] +: 8 ]};
+            load_f3_lbu: dmem_rdata_extended = {{24{1'b0}}                          , ufp_rdata_data[8 *inst_out_lds_q.dmem_addr_saved[1:0] +: 8 ]};
+            load_f3_lh : dmem_rdata_extended = {{16{ufp_rdata_data[15+16*inst_out_lds_q.dmem_addr_saved[1]  ]}}, ufp_rdata_data[16*inst_out_lds_q.dmem_addr_saved[1]   +: 16]};
+            load_f3_lhu: dmem_rdata_extended = {{16{1'b0}}                          , ufp_rdata_data[16*inst_out_lds_q.dmem_addr_saved[1]   +: 16]};
+            load_f3_lw : dmem_rdata_extended = ufp_rdata_data;
+            default    : dmem_rdata_extended = '0;
+        endcase
     end
 
 
     always_comb begin
         // load_deq = '0;
         // store_deq = '0;
+        // lds_deq = '0;
         // lds_deq = '0;
         funct_mem_busy = '0;
         if (ufp_resp[1]) begin
