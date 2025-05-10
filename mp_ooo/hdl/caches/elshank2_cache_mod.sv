@@ -1,4 +1,15 @@
-module cache_mod (
+module cache_mod
+import rv32i_types::*;
+#(
+        parameter           SETS        = 16,
+        parameter           SETS_SIZE   = $clog2(SETS),
+        parameter           DATA_SIZE   = 32,
+        parameter           OFFSET_SIZE = 5, 
+        parameter           TAG_SIZE    = DATA_SIZE-SETS_SIZE-OFFSET_SIZE,
+        parameter           NUM_WAYS    = 2,
+        parameter           PLRU        = NUM_WAYS-1,
+        parameter           LRU_D       = $clog2(NUM_WAYS)
+)(
     input   logic           clk,
     input   logic           rst,
     input   logic           flush,
@@ -27,9 +38,9 @@ module cache_mod (
         write_back
     } state, state_next;
 
-    logic   [22:0]  tag;
-    logic   [3:0]   set;
-    logic   [4:0]   offset;
+    logic   [TAG_SIZE-1:0]      tag; // param
+    logic   [SETS_SIZE-1:0]     set; // param
+    logic   [OFFSET_SIZE-1:0]   offset;
 
     logic   [31:0]  ufp_addr_reg;
     logic   [31:0]  ufp_addr_reg2;
@@ -37,65 +48,67 @@ module cache_mod (
     logic   [3:0]   ufp_wmask_reg;
     logic   [31:0]  ufp_wdata_reg;
     
-    logic   [3:0]   web_way_data;
-    logic   [3:0]   web_way_data_cache;
-    logic   [3:0]   web_way_tag;
-    logic   [3:0]   web_way_valid;
-    logic   [3:0]   web_way_dirty;
+    logic   [NUM_WAYS-1:0]   web_way_data;
+    logic   [NUM_WAYS-1:0]   web_way_data_cache;
+    logic   [NUM_WAYS-1:0]   web_way_tag;
+    logic   [NUM_WAYS-1:0]   web_way_valid;
+    logic   [NUM_WAYS-1:0]   web_way_dirty;
 
-    logic   [3:0]   data_addr; // index addr[8:5]
-    logic   [255:0] data_d_in [4];
-    logic   [255:0] data_d_out [4];
-    logic   [31:0]  data_wmask [4];
-    logic   [4:0]   data_offset;
+    logic   [SETS_SIZE-1:0]   data_addr; // index addr[8:5]
+    logic   [255:0] data_d_in [NUM_WAYS];
+    logic   [255:0] data_d_out [NUM_WAYS];
+    logic   [31:0]  data_wmask [NUM_WAYS];
+    //logic   [4:0]   data_offset;
 
-    logic   [22:0]  tag_d_in [4];
-    logic   [22:0]  tag_d_out [4];
+    logic   [TAG_SIZE-1:0]  tag_d_in [NUM_WAYS];
+    logic   [TAG_SIZE-1:0]  tag_d_out [NUM_WAYS];
 
-    logic   [3:0]   valid_d_in;
-    logic   [3:0]   valid_d_out;
+    logic   [NUM_WAYS-1:0]   valid_d_in;
+    logic   [NUM_WAYS-1:0]   valid_d_out;
 
-    logic   [3:0]   dirty_d_in;
-    logic   [3:0]   dirty_d_out;
+    logic   [NUM_WAYS-1:0]   dirty_d_in;
+    logic   [NUM_WAYS-1:0]   dirty_d_out;
 
     logic   [255:0] data_mem_in;
-    logic   [255:0] data_mem_out [4];
+    logic   [255:0] data_mem_out [NUM_WAYS];
 
-    logic           lru_web;
-    logic   [2:0]   lru_in;
+    logic                lru_web;
+    logic   [PLRU-1:0]   lru_in;
     //logic   [2:0]   lru_out;
 
     logic           csb_s;
     logic           debug;
 
     // control unit
-    logic           dirty;
-    logic           valid;
-    logic           hit;
-    logic   [1:0]   way_hit;
+    logic               dirty;
+    logic               valid;
+    logic               hit;
+    logic   [LRU_D-1:0] way_hit;
 
     // LRU
-    logic   [2:0]   lru_raw; 
-    logic   [1:0]   lru_decode;
+    logic   [LRU_D-1:0]     idx; // new
+    logic   [LRU_D-1:0]     idx_d; // new
+    logic   [PLRU-1:0]      lru_raw; 
+    logic   [LRU_D-1:0]     lru_decode;
 
     // Line Buffer
     logic [255:0] lb_data_reg;
     logic [255:0] lb_data;
     logic [31:0] lb_addr_reg;
     logic [31:0] lb_addr;
-    logic [22:0] lb_tag;
-    logic [3:0] lb_set;
+    logic [TAG_SIZE-1:0] lb_tag;
+    logic [SETS_SIZE-1:0] lb_set;
 
-    assign lb_tag = lb_addr_reg[31:9];
-    assign lb_set = lb_addr_reg[8:5];
+    assign lb_tag = lb_addr_reg[31:OFFSET_SIZE+SETS_SIZE];
+    assign lb_set = lb_addr_reg[OFFSET_SIZE+SETS_SIZE-1:OFFSET_SIZE];
 
 
-    assign tag = ufp_addr_reg[31:9];
-    assign set = ufp_addr_reg[8:5];
-    assign offset = ufp_addr_reg[4:0];
+    assign tag = ufp_addr_reg[31:OFFSET_SIZE+SETS_SIZE];
+    assign set = ufp_addr_reg[OFFSET_SIZE+SETS_SIZE-1:OFFSET_SIZE];
+    assign offset = ufp_addr_reg[OFFSET_SIZE-1:0];
 
-    generate for (genvar i = 0; i < 4; i++) begin : arrays
-        mp_cache_data_array data_array (
+    generate for (genvar i = 0; i < NUM_WAYS; i++) begin : arrays
+        mp_cache_data_array_i data_array (
             .clk0       (clk),
             //.rst0       (rst),
             .csb0       (csb_s), // always select?
@@ -113,7 +126,7 @@ module cache_mod (
             //.dout1      (data_mem_out[i])
 
         );
-        mp_cache_tag_array tag_array (
+        mp_cache_tag_array_i tag_array (
             .clk0       (clk),
             //.rst0       (rst),
             .csb0       (csb_s),
@@ -122,7 +135,10 @@ module cache_mod (
             .din0       (tag_d_in[i]),
             .dout0      (tag_d_out[i])
         );
-        sp_ff_array valid_array (
+        sp_ff_array #(
+            .S_INDEX    (SETS_SIZE),
+            .WIDTH      (1)
+        ) valid_array (
             .clk0       (clk),
             .rst0       (rst),
             .csb0       (csb_s),
@@ -131,7 +147,10 @@ module cache_mod (
             .din0       (valid_d_in[i]),
             .dout0      (valid_d_out[i])
         );
-        sp_ff_array dirty_array (
+        sp_ff_array #(
+            .S_INDEX    (SETS_SIZE),
+            .WIDTH      (1)
+        ) dirty_array (
             .clk0       (clk),
             .rst0       (rst),
             .csb0       (csb_s),
@@ -143,7 +162,8 @@ module cache_mod (
     end endgenerate
 
     sp_ff_array #(
-        .WIDTH      (3)
+        .S_INDEX    (SETS_SIZE),
+        .WIDTH      (PLRU)
     ) lru_array (
         .clk0       (clk),
         .rst0       (rst),
@@ -209,7 +229,7 @@ module cache_mod (
         // data_wmask[1] = '0;
         // data_wmask[2] = '0;
         // data_wmask[3] = '0;
-        for (integer unsigned i = 0; i < 4; i++) begin
+        for (integer unsigned i = 0; i < NUM_WAYS; i++) begin
             data_wmask[i] = '0;
             data_d_in[i] = '0;
             web_way_data[i] = '1; // active low!!
@@ -238,7 +258,7 @@ module cache_mod (
                 ufp_resp = '0;
                 if (|ufp_wmask && (ufp_rmask == 4'b0000)) begin // valid CPU request
                     csb_s = '0;
-                    data_addr = ufp_addr[8:5];
+                    data_addr = ufp_addr[OFFSET_SIZE+SETS_SIZE-1:OFFSET_SIZE];
                     state_next = compare;
                 end
                 else if (|ufp_rmask && (ufp_wmask == 4'b0000)) begin // valid CPU request
@@ -246,12 +266,12 @@ module cache_mod (
 
                     // CHECK TO SEE IF LINE BUFFER AND UFP ADDR MATCH (TAG TOO?) IF SO, SEND RESP AND BACK TO IDLE
                     // i use ufp_addr directly for tag and set since tag/set are a clock cycle late in register
-                    if (lb_tag == ufp_addr_reg2[31:9] && lb_set == ufp_addr_reg2[8:5]) begin
+                    if (lb_tag == ufp_addr_reg2[31:OFFSET_SIZE+SETS_SIZE] && lb_set == ufp_addr_reg2[OFFSET_SIZE+SETS_SIZE-1:OFFSET_SIZE]) begin
                         ufp_rdata = lb_data_reg;
                         ufp_resp = '1;
                         state_next = idle;
                     end else begin
-                        data_addr = ufp_addr[8:5];
+                        data_addr = ufp_addr[OFFSET_SIZE+SETS_SIZE-1:OFFSET_SIZE];
                         state_next = compare;
                     end
                 end
@@ -262,10 +282,10 @@ module cache_mod (
                 data_addr = set;
                 //if (valid) begin
                 hit = 1'b0;
-                for (integer unsigned i = 0; i < 4; i++) begin // check all tags against our tag
+                for (integer unsigned i = 0; i < NUM_WAYS; i++) begin // check all tags against our tag
                     if ((tag == tag_d_out[i]) && valid_d_out[i]) begin
                         hit = 1'b1;
-                        way_hit = 2'(i);
+                        way_hit = LRU_D'(i);
                     end
                 end
                 if (hit) begin
@@ -367,24 +387,68 @@ module cache_mod (
 
 
     // LRU Logic
+    always_comb begin
+        idx = LRU_D'(0);
+        lru_in = lru_raw;
+        for (integer i = 0; i < LRU_D; i++) begin
+            lru_in[idx] = ~way_hit[LRU_D'(unsigned'(((LRU_D-1)-i)))];
+            if (way_hit[LRU_D'(unsigned'(((LRU_D-1)-i)))]) begin
+                idx = idx + 1'b1;
+            end
+            else begin
+                idx = idx + LRU_D'(unsigned'(((NUM_WAYS/(2*(i+1))))));
+            end
+        end
+    end
+
+    always_comb begin
+        idx_d = LRU_D'(0);
+        lru_decode = LRU_D'(0);
+        for (integer i = 0; i < LRU_D; i++) begin
+            lru_decode[LRU_D'(unsigned'(((LRU_D-1)-i)))] = lru_raw[idx_d];
+            if (lru_raw[idx_d]) begin
+                idx_d = idx_d + 1'b1;
+            end
+            else begin
+                idx_d = idx_d + LRU_D'(unsigned'(((NUM_WAYS/(2*(i+1))))));
+            end
+        end
+
+    end
+
+
 
     // LRU decode - which to replace
-    always_comb begin
-        unique case (way_hit) // only accurate when want to write to LRU anyway
-            2'b11: lru_in = {lru_raw[2], 1'b0, 1'b0}; // Way A = Way 3
-            2'b10: lru_in = {lru_raw[2], 1'b1, 1'b0}; // Way B = Way 2
-            2'b01: lru_in = {1'b0, lru_raw[1], 1'b1}; // Way C = Way 1
-            2'b00: lru_in = {1'b1, lru_raw[1], 1'b1}; // Way D = Way 0
-            default: lru_in = lru_raw;
-        endcase
+    // always_comb begin
+    //     // unique case (way_hit) // only accurate when want to write to LRU anyway
+    //     //     2'b11: lru_in = {lru_raw[2], 1'b0, 1'b0}; // Way A = Way 3
+    //     //     2'b10: lru_in = {lru_raw[2], 1'b1, 1'b0}; // Way B = Way 2
+    //     //     2'b01: lru_in = {1'b0, lru_raw[1], 1'b1}; // Way C = Way 1
+    //     //     2'b00: lru_in = {1'b1, lru_raw[1], 1'b1}; // Way D = Way 0
+    //     //     default: lru_in = lru_raw;
+    //     // endcase
 
-        unique casez (lru_raw)
-            3'b0?0: lru_decode = 2'd0; // Way D = Way 0
-            3'b1?0: lru_decode = 2'd1; // Way C = Way 1
-            3'b?01: lru_decode = 2'd2; // Way B = Way 2
-            3'b?11: lru_decode = 2'd3; // Way A = Way 3
-            default: lru_decode = 2'd0; // default?
-        endcase
-    end
+    //     unique casez (lru_raw)
+    //         3'b0?0: lru_decode = 2'd0; // Way D = Way 0
+    //         3'b1?0: lru_decode = 2'd1; // Way C = Way 1
+    //         3'b?01: lru_decode = 2'd2; // Way B = Way 2
+    //         3'b?11: lru_decode = 2'd3; // Way A = Way 3
+    //         default: lru_decode = 2'd0; // default?
+    //     endcase
+    // end
+
+    // always_comb begin
+    //     unique case (way_hit) // only accurate when want to write to LRU anyway
+    //         1'b1: lru_in = 1'b0; // Way A = Way 1
+    //         1'b0: lru_in = 1'b1; // Way B = Way 0
+    //         default: lru_in = lru_raw;
+    //     endcase
+
+    //     unique casez (lru_raw)
+    //         1'b0: lru_decode = 1'b0; // Way D = Way 0
+    //         1'b1: lru_decode = 1'b1; // Way C = Way 1
+    //         default: lru_decode = 1'd0; // default?
+    //     endcase
+    // end
 
 endmodule : cache_mod
