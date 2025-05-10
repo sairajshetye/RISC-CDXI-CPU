@@ -484,24 +484,24 @@ package rv32i_types;
     } rv32i_opcode;
 
     typedef struct packed {
-        logic valid;
-        status_t status;
-        logic [6:0] opcode;
-        logic       use_rd;
-        logic [GLOBAL_PTR_SIZE-1:0] rd_paddr;
-        logic [4:0] rd_addr;
-        branch_t br_pred;
-        branch_t br_result;
-        logic [31:0] pc_next;
-        logic [31:0] pc;
-        branch_t        branch_pred;    //new
-        branch_t_state  branch_t_state; //new
+        logic valid; // 1
+        status_t status; // 1
+        logic [6:0] opcode; // 7
+        logic       use_rd; // 1
+        logic [GLOBAL_PTR_SIZE-1:0] rd_paddr; // 6
+        logic [4:0] rd_addr; // 5
+        branch_t br_pred; // 1
+        branch_t br_result; // 1
+        logic [31:0] pc_next; // 32
+        logic [31:0] pc; // 32
+        //branch_t        branch_pred;    //new 1 causes error 
+        branch_t_state  branch_t_state; //new 2
 
-        logic ld_store; //'0 for no, '1 if either load or store
-        logic [GLOBAL_PTR_SIZE:0] fl_head;
+        logic ld_store; // 1 '0 for no, '1 if either load or store
+        logic [GLOBAL_PTR_SIZE:0] fl_head; // 6
         
-        logic       is_br;  //0 for no, 1 for br    //new
-        logic       need_flush;     //new
+        logic       is_br;  // 1, 0 for no, 1 for br    //new
+        logic       need_flush;     //new 1 
         //logic [63:0] order;
 
         rfvi_packet_t       rfvi_monitor_vals;

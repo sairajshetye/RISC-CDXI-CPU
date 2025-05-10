@@ -121,6 +121,7 @@ import rv32i_types::*;
             rob_entry.branch_t_state = id_ex.branch_t_state;    //new
             rob_entry.pc_next = id_ex.pc_next;
         end
+        
         if (prev_pc_reg != (id_ex.pc + 'd4)) begin
             rob_entry.br_pred = taken;
             rob_entry.branch_t_state = weakly_taken;    //new
