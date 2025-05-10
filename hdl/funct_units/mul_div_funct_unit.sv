@@ -8,8 +8,8 @@ import rv32i_types::*;
         parameter RESET_MODE = 1,
         parameter ONE = 1,
         parameter ZERO = 0,
-        parameter NUM_STAGES_MULT = 10,
-        parameter NUM_STAGES_DIV = 20
+        parameter NUM_STAGES_MULT = 3,
+        parameter NUM_STAGES_DIV = 10
 
 )
 (   
@@ -83,8 +83,30 @@ import rv32i_types::*;
         
         end else if (rs_out.valid && !funct_mult_done && (rs_reg != rs_out)) begin
             funct3 <= rs_out.funct3;
-            rs1_v_e <= {rs_out.rs1_data[31], rs_out.rs1_data};  
-            rs2_v_e <= {rs_out.rs2_data[31], rs_out.rs2_data};  
+            //rs1_v_e <= {rs_out.rs1_data[31], rs_out.rs1_data};  
+            //rs2_v_e <= {rs_out.rs2_data[31], rs_out.rs2_data};
+            unique case (rs_out.funct3)
+                md_MULHSU: begin
+                    rs1_v_e <= {rs_out.rs1_data[31], rs_out.rs1_data};  
+                    rs2_v_e <= {1'b0, rs_out.rs2_data};
+                end
+                md_MULHU: begin
+                    rs1_v_e <= {1'b0, rs_out.rs1_data};  
+                    rs2_v_e <= {1'b0, rs_out.rs2_data};
+                end
+                md_DIVU: begin
+                    rs1_v_e <= {1'b0, rs_out.rs1_data};  
+                    rs2_v_e <= {1'b0, rs_out.rs2_data};
+                end
+                md_REMU: begin
+                    rs1_v_e <= {1'b0, rs_out.rs1_data};  
+                    rs2_v_e <= {1'b0, rs_out.rs2_data};
+                end
+                default: begin
+                    rs1_v_e <= {rs_out.rs1_data[31], rs_out.rs1_data};  
+                    rs2_v_e <= {rs_out.rs2_data[31], rs_out.rs2_data};
+                end
+            endcase
             //rs1_vi <= signed'(rs_out.rs1_data);
             //rs2_vi <= signed'(rs_out.rs2_data);
             rs_reg <= rs_out;
@@ -330,8 +352,8 @@ import rv32i_types::*;
         .rst_n(rst & !flush), //active low
         .hold(mult_start),
         .start(mult_start),    //enable
-        .a(rs1_v_extended),
-        .b(rs2_v_extended), 
+        .a(rs1_v_e),
+        .b(rs2_v_e), 
         .complete(mult_complete),
         .product(product_mulhsu) 
 
@@ -366,8 +388,8 @@ import rv32i_types::*;
         .rst_n(rst & !flush),    //active low
         .hold(div_start),
         .start(div_start),
-        .a(rs1_v_extended),
-        .b(rs2_v_extended),
+        .a(rs1_v_e),
+        .b(rs2_v_e),
         .divide_by_0(div0),
         .complete(div_complete),
         .quotient(quotient),
