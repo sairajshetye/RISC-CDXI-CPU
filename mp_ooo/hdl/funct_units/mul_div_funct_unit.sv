@@ -152,138 +152,138 @@ import rv32i_types::*;
             rs2_v_extended = rs2_v_e;
             //rs1_v = unsigned'(rs1_vi);
             //rs2_v = unsigned'(rs2_vi);
-        unique case (funct3)
-            md_MUL : begin      //MUL, signed x signed
-                rs1_v_extended = rs1_v_e;
-                rs2_v_extended = rs2_v_e;
+            unique case (funct3)
+                md_MUL : begin      //MUL, signed x signed
+                    rs1_v_extended = rs1_v_e;
+                    rs2_v_extended = rs2_v_e;
 
-                //rs1_v = signed'(rs1_vi);
-                //rs2_v = signed'(rs2_vi);
-                mult_en = '1;
-                mult_tc = '1;
-                div_en = '0;
-                // div_tc = '0;
-                out_select = 3'b001;
-            end
-            md_MULH : begin      //MUL High, signed x signed
-                rs1_v_extended = rs1_v_e;
-                rs2_v_extended = rs2_v_e;
-                //rs1_v = signed'(rs1_vi);
-                //rs2_v = signed'(rs2_vi);
-                mult_en = '1;
-                mult_tc = '1;
-                div_en = '0;
-                // div_tc = '0;
-                out_select = 3'b010;
-            end
-            md_MULHSU : begin      //MUL High (S)(U), signed x unsigned
-                //rs1_v = signed'(rs1_vi);
-                //rs2_v = unsigned'(rs2_vi);
-                mult_en = '1;
-                mult_tc = '1;   //?
-                div_en = '0;
-                // div_tc = '0;
-                out_select = 3'b010;
-                rs1_v_extended = rs1_v_e;
-                rs2_v_extended = {1'b0, rs2_v_e[31:0]};
-            end
-            md_MULHU : begin      //MUL High (U), unsigned x unisgned
-                rs1_v_extended = {1'b0, rs1_v_e[31:0]};
-                rs2_v_extended = {1'b0, rs2_v_e[31:0]};
-                //rs1_v = unsigned'(rs1_vi);
-                //rs2_v = unsigned'(rs2_vi);
-                mult_en = '1;
-                mult_tc = '0;
-                div_en = '0;
-                // div_tc = '0;
-                out_select = 3'b010;
-            end
-            md_DIV : begin      //DIV
-                rs1_v_extended = rs1_v_e;
-                rs2_v_extended = rs2_v_e;
-                //rs1_v = signed'(rs1_vi);
-                //rs2_v = signed'(rs2_vi);
-                //(signed'(rs2_v_e[31:0]) == signed'(-32'b1)) && (signed'(rs1_v_e[31:0]) == signed'(-'d2147483648))
-                //(rs2_v_e[31:0] == -32'b1) && (rs1_v_e[31:0] == -'d2147483648)
-                if ((rs2_v_e[31:0] == -32'b1) && (rs1_v_e[31:0] == -'d2147483648)) begin //signed overflow
-                    mult_en = '0;
+                    //rs1_v = signed'(rs1_vi);
+                    //rs2_v = signed'(rs2_vi);
+                    mult_en = '1;
+                    mult_tc = '1;
+                    div_en = '0;
+                    // div_tc = '0;
+                    out_select = 3'b001;
+                end
+                md_MULH : begin      //MUL High, signed x signed
+                    rs1_v_extended = rs1_v_e;
+                    rs2_v_extended = rs2_v_e;
+                    //rs1_v = signed'(rs1_vi);
+                    //rs2_v = signed'(rs2_vi);
+                    mult_en = '1;
+                    mult_tc = '1;
+                    div_en = '0;
+                    // div_tc = '0;
+                    out_select = 3'b010;
+                end
+                md_MULHSU : begin      //MUL High (S)(U), signed x unsigned
+                    //rs1_v = signed'(rs1_vi);
+                    //rs2_v = unsigned'(rs2_vi);
+                    mult_en = '1;
+                    mult_tc = '1;   //?
+                    div_en = '0;
+                    // div_tc = '0;
+                    out_select = 3'b010;
+                    rs1_v_extended = rs1_v_e;
+                    rs2_v_extended = {1'b0, rs2_v_e[31:0]};
+                end
+                md_MULHU : begin      //MUL High (U), unsigned x unisgned
+                    rs1_v_extended = {1'b0, rs1_v_e[31:0]};
+                    rs2_v_extended = {1'b0, rs2_v_e[31:0]};
+                    //rs1_v = unsigned'(rs1_vi);
+                    //rs2_v = unsigned'(rs2_vi);
+                    mult_en = '1;
                     mult_tc = '0;
-                    // div_en = '0;
-                    // div_tc = '1;
-                    div_en = '1;
+                    div_en = '0;
+                    // div_tc = '0;
+                    out_select = 3'b010;
+                end
+                md_DIV : begin      //DIV
+                    rs1_v_extended = rs1_v_e;
+                    rs2_v_extended = rs2_v_e;
+                    //rs1_v = signed'(rs1_vi);
+                    //rs2_v = signed'(rs2_vi);
+                    //(signed'(rs2_v_e[31:0]) == signed'(-32'b1)) && (signed'(rs1_v_e[31:0]) == signed'(-'d2147483648))
+                    //(rs2_v_e[31:0] == -32'b1) && (rs1_v_e[31:0] == -'d2147483648)
+                    if ((rs2_v_e[31:0] == -32'b1) && (rs1_v_e[31:0] == -'d2147483648)) begin //signed overflow
+                        mult_en = '0;
+                        mult_tc = '0;
+                        // div_en = '0;
+                        // div_tc = '1;
+                        div_en = '1;
 
-                    out_select = 3'b100;
-                    overflow = '1;
+                        out_select = 3'b100;
+                        overflow = '1;
+                        
                     
-                
-                end else begin
-                    mult_en = '0;
-                    mult_tc = '0;
-                    // div_en = '0;
-                    // div_tc = '1;
-                    div_en = '1;
+                    end else begin
+                        mult_en = '0;
+                        mult_tc = '0;
+                        // div_en = '0;
+                        // div_tc = '1;
+                        div_en = '1;
 
-                    out_select = 3'b100;
+                        out_select = 3'b100;
+                    end
                 end
-            end
-            md_DIVU : begin      //DIV (U)
-                rs1_v_extended = {1'b0, rs1_v_e[31:0]};
-                rs2_v_extended = {1'b0, rs2_v_e[31:0]};
-                //rs1_v = unsigned'(rs1_vi);
-                //rs2_v = unsigned'(rs2_vi);
-                mult_en = '0;
-                mult_tc = '0;
-                div_en = '1;
-                // div_tc = '0;
-                out_select = 3'b101;
-            end
-            md_REM : begin      //Remainder
-                rs1_v_extended = rs1_v_e;
-                rs2_v_extended = rs2_v_e;
-                //rs1_v = signed'(rs1_vi);
-                //rs2_v = signed'(rs2_vi);
-                if ((rs2_v_e[31:0] == -32'b1) && (rs1_v_e[31:0] == -'d2147483648)) begin //signed overflow
+                md_DIVU : begin      //DIV (U)
+                    rs1_v_extended = {1'b0, rs1_v_e[31:0]};
+                    rs2_v_extended = {1'b0, rs2_v_e[31:0]};
+                    //rs1_v = unsigned'(rs1_vi);
+                    //rs2_v = unsigned'(rs2_vi);
                     mult_en = '0;
                     mult_tc = '0;
-                    // div_en = '0;
-                    // div_tc = '1;
                     div_en = '1;
-
-                    out_select = 3'b110;
-                    overflow = '1;
-                end else begin
-                    mult_en = '0;
-                    mult_tc = '0;
-                    // div_en = '0;
-                    // div_tc = '1;
-                    div_en = '1;
-
-                    out_select = 3'b110;
+                    // div_tc = '0;
+                    out_select = 3'b101;
                 end
-            end
-            md_REMU : begin      //Remainder (U)
-                rs1_v_extended = {1'b0, rs1_v_e[31:0]};
-                rs2_v_extended = {1'b0, rs2_v_e[31:0]};
-                //rs1_v = unsigned'(rs1_vi);
-                //rs2_v = unsigned'(rs2_vi);
-                mult_en = '0;
-                mult_tc = '0;
-                div_en = '1;
-                // div_tc = '0;
-                out_select = 3'b111;
-            end
-            default : begin
-                //rs1_v = '0;
-                //rs2_v = '0;
-                mult_en = '0;
-                mult_tc = '0;
-                div_en = '0;
-                // div_tc = '0;
-                rs1_v_extended = '0;
-                rs1_v_extended = '0;
-                out_select = '0;
-            end
-        endcase
+                md_REM : begin      //Remainder
+                    rs1_v_extended = rs1_v_e;
+                    rs2_v_extended = rs2_v_e;
+                    //rs1_v = signed'(rs1_vi);
+                    //rs2_v = signed'(rs2_vi);
+                    if ((rs2_v_e[31:0] == -32'b1) && (rs1_v_e[31:0] == -'d2147483648)) begin //signed overflow
+                        mult_en = '0;
+                        mult_tc = '0;
+                        // div_en = '0;
+                        // div_tc = '1;
+                        div_en = '1;
+
+                        out_select = 3'b110;
+                        overflow = '1;
+                    end else begin
+                        mult_en = '0;
+                        mult_tc = '0;
+                        // div_en = '0;
+                        // div_tc = '1;
+                        div_en = '1;
+
+                        out_select = 3'b110;
+                    end
+                end
+                md_REMU : begin      //Remainder (U)
+                    rs1_v_extended = {1'b0, rs1_v_e[31:0]};
+                    rs2_v_extended = {1'b0, rs2_v_e[31:0]};
+                    //rs1_v = unsigned'(rs1_vi);
+                    //rs2_v = unsigned'(rs2_vi);
+                    mult_en = '0;
+                    mult_tc = '0;
+                    div_en = '1;
+                    // div_tc = '0;
+                    out_select = 3'b111;
+                end
+                default : begin
+                    //rs1_v = '0;
+                    //rs2_v = '0;
+                    mult_en = '0;
+                    mult_tc = '0;
+                    div_en = '0;
+                    // div_tc = '0;
+                    rs1_v_extended = '0;
+                    rs1_v_extended = '0;
+                    out_select = '0;
+                end
+            endcase
         end
 
     end

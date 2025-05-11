@@ -15,7 +15,7 @@ import rv32i_types::*;
     input   dp_is_stage_reg_t       inst_in_lds,
     output  dp_is_stage_reg_t       inst_out_lds,
     //output  dp_is_stage_reg_t       inst_out_lds_trans,
-    output  logic                   valid_rdata,
+    // output  logic                   valid_rdata,
     output  logic                   lds_stall,
     output  logic                   really_full,
 
@@ -87,7 +87,7 @@ import rv32i_types::*;
         empty = (head == tail);
 
         lds_stall = full;
-        valid_rdata = ~empty;
+        // valid_rdata = ~empty;
         really_full = (head[PTR_SIZE_LDS_Q-1:0] == tail_next[PTR_SIZE_LDS_Q-1:0]);
         // really_full = '1;
         // for (integer i = 0; i < DEPTH-2; i++) begin
@@ -171,7 +171,6 @@ import rv32i_types::*;
             end
         end
     end
-
 
     always_ff @(posedge clk) begin
         if (rst) begin

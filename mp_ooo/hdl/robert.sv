@@ -114,7 +114,7 @@ import rv32i_types::*;
                 end
                 else begin
                     rob[tail[PTR_SIZE_ROB-1:0]] <= rob_in;
-                    rob[head[PTR_SIZE_ROB-1:0]] <= '0;
+                    rob[head[PTR_SIZE_ROB-1:0]].valid <= '0;
                 end
                 // rob[head[PTR_SIZE_ROB-1:0]].valid <= '0;
                 tail <= (tail + 4'b0001);
@@ -123,7 +123,7 @@ import rv32i_types::*;
                 rob[tail[PTR_SIZE_ROB-1:0]] <= rob_in; 
                 tail <= (tail + 4'b0001);
             end else if (deq && !empty) begin
-                rob[head[PTR_SIZE_ROB-1:0]] <= '0;
+                rob[head[PTR_SIZE_ROB-1:0]].valid <= '0;
                 head <= (head + 4'b0001);
             end
         end

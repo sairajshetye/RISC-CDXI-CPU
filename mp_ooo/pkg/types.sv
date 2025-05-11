@@ -5,6 +5,9 @@ package rv32i_types;
 
     localparam integer FREE_LIST_PRF_DEPTH = 64; 
     localparam integer GLOBAL_PTR_SIZE = $clog2(FREE_LIST_PRF_DEPTH);
+    localparam integer INST_Q_DEPTH = 4;
+    localparam integer DECODE_Q_DEPTH = 4;
+    localparam integer RENAME_Q_DEPTH = 4;
     localparam integer Q_DEPTH = 4;
     localparam integer R_STATION_INT_DEPTH = 4;
     localparam integer R_STATION_MULT_DEPTH = 2;
@@ -567,6 +570,8 @@ package rv32i_types;
         funct7_mult = 7'b0000001
     } reg_funct7_vals;
 
-
+    // function logic rob_idx_less_than(input dp_is_stage_reg_t a, b);
+    //     return (a.rob_overflow != b.rob_overflow) ? (a.rob_overflow < b.rob_overflow) : (a.rob_idx < b.rob_idx);
+    // endfunction
 
 endpackage : rv32i_types
