@@ -12,6 +12,21 @@ _start:
     lhu x5, 4(x2) # load inst into x3 using addr in x2 
     lb x5, 0(x2) # load inst into x3 using addr in x2 
     lbu x6, 4(x2) # load inst into x3 using addr in x2 
+    lw x3, 4(x2) # load inst into x3 using addr in x2 
+    lh x4, 0(x2) # load inst into x3 using addr in x2 
+    lhu x5, 4(x2) # load inst into x3 using addr in x2 
+    lb x5, 0(x2) # load inst into x3 using addr in x2 
+    lbu x6, 4(x2) # load inst into x3 using addr in x2 
+    lw x3, 4(x2) # load inst into x3 using addr in x2 
+    lh x4, 0(x2) # load inst into x3 using addr in x2 
+    lhu x5, 4(x2) # load inst into x3 using addr in x2 
+    lb x5, 0(x2) # load inst into x3 using addr in x2 
+    lbu x6, 4(x2) # load inst into x3 using addr in x2 
+    lw x3, 4(x2) # load inst into x3 using addr in x2 
+    lh x4, 0(x2) # load inst into x3 using addr in x2 
+    lhu x5, 4(x2) # load inst into x3 using addr in x2 
+    lb x5, 0(x2) # load inst into x3 using addr in x2 
+    lbu x6, 4(x2) # load inst into x3 using addr in x2 
 
     sh x2, 4(x31)
     sb x0, 8(x31)

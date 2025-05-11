@@ -954,7 +954,7 @@ import rv32i_types::*;
         .dfp_resp_cache(dfp_resp_com) // out
     );
 
-    cache_mod icache(
+    cache_pipe icache(
         .clk(clk), // input
         .rst(rst), // input
         .flush(flush),
@@ -982,7 +982,7 @@ import rv32i_types::*;
     //     ufp_wdata[1] = '0;
     // end
 
-    cache dcache(
+    cache_pipe_d dcache(
         .clk(clk), // input
         .rst(rst), // input
 
