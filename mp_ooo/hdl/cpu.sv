@@ -1047,10 +1047,10 @@ import rv32i_types::*;
         .dfp_resp_cache(dfp_resp_com) // out
     );
 
-    cache_mod icache(
+    cache_pipe icache(
         .clk(clk), // input
         .rst(rst), // input
-        .flush(flush || set_pc_br),
+        .flush(flush), //  || set_pc_br
         .ufp_addr(ufp_addr[0]), // input
         .ufp_rmask(ufp_rmask[0]), // input
         .ufp_wmask(ufp_wmask[0]), // input
