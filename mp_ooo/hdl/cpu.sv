@@ -321,7 +321,7 @@ import rv32i_types::*;
         .clk(clk),
         .rst(rst || flush),
         .enq(is_br && !flush),
-        .deq((!rq_stall && !rob_stall && !decode_stall && !rq_stall_next && !lds_stall && !fl_stall) && (id_ex_inst_out_t.valid && id_ex_inst_out_t.is_br)),
+        .deq((!rq_stall && !rob_stall && !decode_stall && !rq_stall_next && !load_stall && !store_stall && !fl_stall) && (id_ex_inst_out_t.valid && id_ex_inst_out_t.is_br)),
         .bq_rem('0),
         .br_pred_i(branch_pred),
         .branch_t_states_i(branch_t_states),
