@@ -26,6 +26,7 @@ import rv32i_types::*;
     id_ex_stage_reg_t id_ex_reg_next, id_ex_inst_out;
     ra_dp_stage_reg_t ra_dp_reg_next, ra_dp_inst_out;
     dp_is_stage_reg_t dp_is_inst_out, dp_is_out_mult, dp_is_out_int, dp_is_out_br, dp_is_out_mem, dp_lds_inst_out, inst_out_load, inst_out_store;
+    dp_is_stage_reg_t head_store_q;
     dp_is_stage_reg_t int_to_wb, mult_to_wb, wb_reg_next, wb_int_out, wb_mult_out, wb_mem_out;
     dp_lds_stage_reg_t inst_out_lds_q;
 
@@ -466,6 +467,7 @@ import rv32i_types::*;
         .inst_out_lds(inst_out_load), // output
         .lds_stall(load_stall), // output
         .really_full(really_full_load), // output
+        .head_store_q(head_store_q),
 
         .data_paddr_0(p_addr_out_wb[0]), // input
         .data_paddr_1(p_addr_out_wb[1]), // input
@@ -490,6 +492,7 @@ import rv32i_types::*;
         .inst_out_lds(inst_out_store),
         .lds_stall(store_stall),
         .really_full(really_full_store),
+        .head_store_q(head_store_q),
 
         .data_paddr_0(p_addr_out_wb[0]), // input
         .data_paddr_1(p_addr_out_wb[1]), // input
@@ -585,7 +588,7 @@ import rv32i_types::*;
 
         
             if (rob_out.ld_store == '1 && !ufp_resp[1]) begin   //if rob commit is a ld store
-                if (inst_out_lds_q.rob_idx == rob_head_idx) begin //if load or store at head of queue is the commit inst from the rob
+                if ((inst_out_lds_q.is_store && inst_out_lds_q.rob_idx == rob_head_idx) || inst_out_lds_q.is_load) begin //if load or store at head of queue is the commit inst from the rob
                     //trigger the memory
                     ufp_addr[1] = inst_out_lds_q.dmem_addr;
                     ufp_rmask[1] = inst_out_lds_q.dmem_rmask;

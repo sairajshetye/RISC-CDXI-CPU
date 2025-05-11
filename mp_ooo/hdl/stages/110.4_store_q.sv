@@ -14,6 +14,7 @@ import rv32i_types::*;
     input   logic                   ready_deq,
     input   dp_is_stage_reg_t       inst_in_lds,
     output  dp_is_stage_reg_t       inst_out_lds,
+    output  dp_is_stage_reg_t       head_store_q,
     //output  dp_is_stage_reg_t       inst_out_lds_trans,
     // output  logic                   valid_rdata,
     output  logic                   lds_stall,
@@ -50,6 +51,10 @@ import rv32i_types::*;
     logic   [DEPTH-1:0]     rs1_rep, rs2_rep;   //0 for rs1, 2 for rs2 
     //logic   [DEPTH-1:0]     rs2_rep;
     dp_is_stage_reg_t inst_tmp;
+
+    always_comb begin
+        head_store_q = internal_array_lds[head[PTR_SIZE_LDS_Q-1:0]];
+    end
 
     //logic [WIDTH-1:0] inst_in_reg;
     always_comb begin

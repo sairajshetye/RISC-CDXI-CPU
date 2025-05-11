@@ -14,6 +14,7 @@ import rv32i_types::*;
     input   logic                   ready_deq,
     input   dp_is_stage_reg_t       inst_in_lds,
     output  dp_is_stage_reg_t       inst_out_lds,
+    input   dp_is_stage_reg_t       head_store_q,
     //output  dp_is_stage_reg_t       inst_out_lds_trans,
     // output  logic                   valid_rdata,
     output  logic                   lds_stall,
@@ -51,6 +52,10 @@ import rv32i_types::*;
     //logic   [DEPTH-1:0]     rs2_rep;
     dp_is_stage_reg_t inst_tmp;
 
+    logic [PTR_SIZE_LDS_Q-1:0] select_idx;
+
+    logic found_less_than;
+
     //logic [WIDTH-1:0] inst_in_reg;
     always_comb begin
         if (tail == '1) begin
@@ -71,6 +76,25 @@ import rv32i_types::*;
 
         in_out = (enq && deq);
         head_next = head + 1'b1;
+
+        found_less_than = '0;
+        select_idx = '0;
+
+        for (integer i = 0; i < DEPTH; i++) begin
+            if (internal_array_lds[i].valid && internal_array_lds[i].rs1_ready) begin
+                if (i < head_store_q.order) begin
+                    found_less_than = '1;
+                    select_idx = i;
+                end
+            end
+        end
+
+        for (integer i = 0; i < DEPTH; i++) begin
+            if (!found_less_than && internal_array_lds[i].valid && internal_array_lds[i].rs1_ready) begin
+                select_idx = i;
+            end
+        end
+
     end
 
     always_comb begin
@@ -131,16 +155,23 @@ import rv32i_types::*;
             end 
             
             if (!empty) begin
-                if (!deq) begin
-                    if (internal_array_lds[head[PTR_SIZE_LDS_Q-1:0]].rs1_ready) begin
-                        inst_out_lds <= internal_array_lds[head[PTR_SIZE_LDS_Q-1:0]];
-                    end
+                // if (!deq) begin
+                //     if (internal_array_lds[head[PTR_SIZE_LDS_Q-1:0]].rs1_ready) begin
+                //         inst_out_lds <= internal_array_lds[head[PTR_SIZE_LDS_Q-1:0]];
+                //     end
+                // end
+                // else begin
+                //     if (internal_array_lds[head_next[PTR_SIZE_LDS_Q-1:0]].rs1_ready) begin
+                //         inst_out_lds <= internal_array_lds[head_next[PTR_SIZE_LDS_Q-1:0]];
+                //     end
+                // end
+
+                if (internal_array_lds[select_idx].rs1_ready) begin
+                    inst_out_lds <= internal_array_lds[select_idx];
+                    // internal_array_lds[head[PTR_SIZE_LDS_Q-1:0]] <= internal_array_lds[select_idx];
+                    // internal_array_lds[select_idx] <= internal_array_lds[head[PTR_SIZE_LDS_Q-1:0]];
                 end
-                else begin
-                    if (internal_array_lds[head_next[PTR_SIZE_LDS_Q-1:0]].rs1_ready) begin
-                        inst_out_lds <= internal_array_lds[head_next[PTR_SIZE_LDS_Q-1:0]];
-                    end
-                end
+
             end else begin
                 inst_out_lds <= '0;
             end
@@ -157,6 +188,7 @@ import rv32i_types::*;
                     end
                     tail <= (tail + 1'b1);
                     head <= (head + 1'b1);
+
                 end else if (enq && !full) begin
                     //inst_out_lds <= internal_array_lds[head[PTR_SIZE_LDS_Q-1:0]]; //'0;
                     internal_array_lds[tail[PTR_SIZE_LDS_Q-1:0]] <= inst_in_lds; 
@@ -164,6 +196,7 @@ import rv32i_types::*;
                 end else if (deq && !empty) begin
                     //inst_out_lds <= internal_array_lds[head_next[PTR_SIZE_LDS_Q-1:0]];
                     internal_array_lds[head[PTR_SIZE_LDS_Q-1:0]] <= '0;
+                    
                     head <= (head + 1'b1);
                 end
                 
