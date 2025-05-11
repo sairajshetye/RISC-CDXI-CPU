@@ -503,6 +503,7 @@ import rv32i_types::*;
 
     load_store_unit ld_s_unit(
         // .id_ex(inst_out_lds),
+        // .clk(clk),
         .id_ex_load(inst_out_load),
         .id_ex_store(inst_out_store),
         //.funct_unit_busy(),
