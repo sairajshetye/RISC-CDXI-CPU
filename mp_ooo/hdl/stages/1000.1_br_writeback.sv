@@ -9,6 +9,7 @@ import rv32i_types::*;
 
 )(
     input dp_is_stage_reg_t inst_in_wb,
+    input logic need_flush_fu,      //new
     //is_wb_stage_reg_t
 
     //output deq signal for pre_wb queue
@@ -19,7 +20,7 @@ import rv32i_types::*;
     //output wb to robert
     output   logic                   ld_status,
     output   status_t                status_out,
-    output   logic [ROB_PTR_SIZE-1:0]             rob_idx_ld, 
+    output   logic [3:0]             rob_idx_ld, 
     output   logic                   ld_branch_res,
     output   branch_t                branch_res_out, 
 
@@ -30,7 +31,8 @@ import rv32i_types::*;
     output   logic   [WIDTH-1:0]        data_out,    //to all
 
     output rfvi_packet_t       rfvi_monitor_vals, 
-    output logic [31:0]        br_pc_next
+    output logic [31:0]        br_pc_next,
+    output logic                need_flush  //new
     //output logic [63:0]        order_out_wb
 
     //output  logic                       deq         //for pre-wb queue
@@ -56,6 +58,7 @@ import rv32i_types::*;
             ld_branch_res = '1;
             branch_res_out = inst_in_wb.branch_taken;
             br_pc_next = inst_in_wb.pc_next;
+            need_flush = need_flush_fu;     //new
             //order_out_wb = inst_in_wb.order;
 
             //confirm wb is done? then send deq signal to pre-wb queue
@@ -80,6 +83,7 @@ import rv32i_types::*;
             ld_branch_res = '0;
             branch_res_out = not_taken;
             br_pc_next = '0;
+            need_flush = '0;        //new
             //order_out_wb = '0;
 
             //prf_regf_we = '0;

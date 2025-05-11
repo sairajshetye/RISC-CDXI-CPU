@@ -31,6 +31,13 @@ package rv32i_types;
         done = 1'b1
     } status_t;
 
+    typedef enum logic [1:0] {
+        strongly_not_taken = 2'b00,
+        weakly_not_taken = 2'b01,
+        weakly_taken = 2'b10,
+        strongly_taken = 2'b11
+    } branch_t_state;   //new
+
     typedef enum logic {
         not_taken = 1'b0,
         taken = 1'b1
@@ -127,6 +134,8 @@ package rv32i_types;
         logic               valid;
         logic               fetch_stall;
         // logic               deq;
+        branch_t        branch_pred;    //new
+        branch_t_state  branch_t_state;     //new
         logic               useless; // zero padding
         rfvi_packet_t       rfvi_monitor_vals;
 
@@ -169,6 +178,8 @@ package rv32i_types;
         logic           is_load;
         logic           use_rd;
         // what else? - 391-32 bits
+        branch_t        branch_pred;    //new
+        branch_t_state  branch_t_state; //new
         // logic           deq;
         //logic           useless;
         rfvi_packet_t       rfvi_monitor_vals;
@@ -208,6 +219,8 @@ package rv32i_types;
         logic           is_load;
         logic           use_rd;
         // what else? - 391 bits
+        branch_t        branch_pred;    //new
+        branch_t_state  branch_t_state; //new
         // logic             rs1_data
         logic           use_prs1;
         logic    [GLOBAL_PTR_SIZE-1:0]  rs1_paddr;
@@ -474,17 +487,24 @@ package rv32i_types;
     } rv32i_opcode;
 
     typedef struct packed {
-        logic valid;
-        status_t status;
-        logic [6:0] opcode;
-        logic       use_rd;
-        logic [GLOBAL_PTR_SIZE-1:0] rd_paddr;
-        logic [4:0] rd_addr;
-        branch_t br_pred;
-        branch_t br_result;
-        logic [31:0] pc_next;
-        logic ld_store; //'0 for no, '1 if either load or store
-        logic [GLOBAL_PTR_SIZE:0] fl_head;
+        logic valid; // 1
+        status_t status; // 1
+        logic [6:0] opcode; // 7
+        logic       use_rd; // 1
+        logic [GLOBAL_PTR_SIZE-1:0] rd_paddr; // 6
+        logic [4:0] rd_addr; // 5
+        branch_t br_pred; // 1
+        branch_t br_result; // 1
+        logic [31:0] pc_next; // 32
+        logic [31:0] pc; // 32
+        //branch_t        branch_pred;    //new 1 causes error 
+        branch_t_state  branch_t_state; //new 2
+
+        logic ld_store; // 1 '0 for no, '1 if either load or store
+        logic [GLOBAL_PTR_SIZE:0] fl_head; // 6
+        
+        logic       is_br;  // 1, 0 for no, 1 for br    //new
+        logic       need_flush;     //new 1 
         //logic [63:0] order;
 
         rfvi_packet_t       rfvi_monitor_vals;

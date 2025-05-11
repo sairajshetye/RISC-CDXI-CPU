@@ -158,6 +158,21 @@ import rv32i_types::*;
 
     logic   [GLOBAL_PTR_SIZE:0]    head_out;
 
+
+    //new
+    branch_t branch_pred, branch_pred_o;   //new
+    branch_t_state branch_t_states, branch_t_states_o; //new
+    logic [31:0] pc_br_pred, pc_br_pred_o;    //new
+    logic       set_pc_br, set_pc_br_o;  //new
+    logic need_flush_fu, need_flush; //new
+    logic bp_flush; //new
+    logic bp_valid_rdata, bp_stall, bp_stall_next;  //new
+    logic rem_result;   //new
+    logic is_br; //new
+    id_ex_stage_reg_t id_ex_inst_out_t; //new
+
+
+
     assign ufp_wdata[0] = '0;
     assign ufp_wmask[0] = '0;
 
@@ -186,8 +201,16 @@ import rv32i_types::*;
     always_comb begin
         if (rst) begin
             pc_next = 32'hAAAAA000;
-        end else if (flush) begin
-            pc_next = rob_out.pc_next;
+        end else if (flush) begin       //branch mispredict change pc
+        //new
+            if (rob_out.br_result == taken) begin   //mispredict not_taken when taken
+                pc_next = rob_out.pc_next;
+            end else begin  //midspredict taken when not taken
+                pc_next = rob_out.pc + 'd4;
+            end
+        end
+        else if (set_pc_br && !iq_stall) begin            //branch predict change pc, new
+            pc_next = pc_br_pred;
         end else if (!iq_stall && !if_id_reg_next.fetch_stall) begin // && !if_id_reg_next.fetch_stall
             pc_next = pc + 4;
         end else begin
@@ -215,6 +238,33 @@ import rv32i_types::*;
             done_stall <= dones;
         end
     end
+    //new
+    br_pred branch_predict (
+        .clk(clk),
+        .rst(rst),
+        .flush(flush),
+        .imem_resp(ufp_resp[0]),
+        .stall(iq_stall_next || iq_stall),
+        .inst(cache_rdata_32),
+        .pc_in(pc),
+        // .pc_next(pc_next),
+        .u_ghr_c(aregf_we),     //update ghr (commit) trigger
+        .ghr_c_v(rob_out.br_result),     //update ghr (commit) value
+        .pc_commit(rob_out.pc_next),   //rob out pc
+
+        .pht_c_v(rob_out.br_result),     //rob out br taken vs not
+        .is_br_c(rob_out.is_br),     //rob out is br?
+        .branch_state_in(rob_out.branch_t_state),    //br fsm state
+        .pc_out(pc_br_pred),      //output
+        .br_pred(branch_pred),     //output
+        .branch_t_states(branch_t_states),
+        .set_pc_br(set_pc_br),
+        .bp_flush(bp_flush),
+        .is_br(is_br)
+
+
+    );
+
 
     pcreg pcreg(
         .clk(clk),
@@ -229,6 +279,11 @@ import rv32i_types::*;
         .iq_stall(iq_stall),
         .flush(flush),
         .order_br(order_reg),
+        .bp_flush(set_pc_br),        //new
+        .rob_valid_rdata(rob_valid_rdata),  //new
+        // .branch_pred(branch_pred),      //new
+        .rem_result(rem_result),    //new
+        //.branch_t_state(branch_t_state),//new
 
         // .dq_stall(dq_stall),
         .enq(iq_enq),
@@ -243,19 +298,44 @@ import rv32i_types::*;
         .done(dones)
     );
 
+
     inst_q #(
         .DEPTH      (INST_Q_DEPTH)
     ) inst_q(
         .clk(clk),
-        .rst(rst),
-        .flush(flush),
+        .rst(rst || flush),
         .enq(iq_enq),
         .deq(!dq_stall && !dq_stall_next),
+        .bq_rem('0), //new
         .inst_in(if_id_reg_next),
         .inst_out(if_id_inst_out),
         .valid_rdata(iq_valid_rdata),
         .iq_stall(iq_stall),
-        .iq_stall_next(iq_stall_next)
+        .iq_stall_next(iq_stall_next),
+        .rem_result(rem_result) //new
+    );
+
+    bp_q #( //new
+        .DEPTH      (8)
+    ) branch_pred_q1 (
+        .clk(clk),
+        .rst(rst || flush),
+        .enq(is_br && !flush),
+        .deq((!rq_stall && !rob_stall && !decode_stall && !rq_stall_next && !lds_stall && !fl_stall) && (id_ex_inst_out_t.valid && id_ex_inst_out_t.is_br)),
+        .bq_rem('0),
+        .br_pred_i(branch_pred),
+        .branch_t_states_i(branch_t_states),
+        .set_pc_br_i(set_pc_br),
+        .pc_br_pred_i(pc_br_pred),
+        .br_pred_o(branch_pred_o),
+        .branch_t_states_o(branch_t_states_o),
+        .set_pc_br_o(set_pc_br_o),
+        .pc_br_pred_o(pc_br_pred_o),
+        //.inst_in(if_id_reg_next),
+        //.inst_out(if_id_inst_out),
+        .valid_rdata(bp_valid_rdata),
+        .dq_stall(bp_stall),
+        .dq_stall_next(bp_stall_next)
     );
 
     id_stage id_stage_1 (
@@ -284,19 +364,28 @@ import rv32i_types::*;
         .inst_out_d(id_ex_inst_out),
         .valid_rdata(dq_valid_rdata),
         .dq_stall(dq_stall),
-        .dq_stall_next(dq_stall_next)
+        .dq_stall_next(dq_stall_next),
+        .inst_out_d_t(id_ex_inst_out_t) //new
     );
 
     rename_alloc #(
         .PTR_SIZE     (GLOBAL_PTR_SIZE),
         .ROB_PTR_SIZE (ROB_PTR_SIZE)
     ) rename_alloc_1(
+        .clk(clk), //new
+        .rst(rst), //new
         .id_ex(id_ex_inst_out), // comes from decode queue
         // inputs from RAT, FL, stalls?
         .p_addr(p_addr_out), // FL
         .rob_idx(rob_tail_idx),
         .rob_overflow(rob_overflow),
         .fl_head(head_out),
+
+        //br predict
+        .br_pred(branch_pred_o), //new
+        .branch_t_states(branch_t_states_o), //new
+        .set_pc_br(set_pc_br_o), //new
+        .pc_br_pred(pc_br_pred_o), //new
         
         // from RAT
         .rs1_renamed(rs1_renamed), 
@@ -638,7 +727,8 @@ import rv32i_types::*;
         //.rs1_v(),
         //.rs2_v(),
         .funct_unit_busy(funct_br_busy),
-        .ex_mem(wb_inst_out[2])
+        .ex_mem(wb_inst_out[2]),
+        .need_flush_fu(need_flush_fu)   //new
 
     );
 
@@ -690,6 +780,7 @@ import rv32i_types::*;
         .ROB_PTR_SIZE (ROB_PTR_SIZE)
     ) wb_br(
         .inst_in_wb(wb_inst_out[2]), // d
+        .need_flush_fu(need_flush_fu),   //new
         .prf_regf_we(prf_we[2]), // d
         .ld_status(ld_status[2]), // d
         .status_out(status_n[2]), // d
@@ -699,7 +790,8 @@ import rv32i_types::*;
         .p_addr_out(p_addr_out_wb[2]),
         .data_out(wb_data_out[2]),
         .rfvi_monitor_vals(rfvi_monitor_vals[2]),
-        .br_pc_next(br_pc_next)
+        .br_pc_next(br_pc_next),
+        .need_flush(need_flush)     //new
         //.order_out_wb(order_out_wb)
         //.deq(wb_deq)
     );
@@ -746,6 +838,7 @@ import rv32i_types::*;
         .rfvi_monitor_vals_3(rfvi_monitor_vals[3]),
         .branch_res_in(branch_res_out), 
         .br_pc_next(br_pc_next),
+        .need_flush(need_flush),    //new
         //.order_out_wb(order_out_wb),
         .rob_in(rob_entry),
         .rob_idx_in(rob_idx_ld[2]),
@@ -954,10 +1047,10 @@ import rv32i_types::*;
         .dfp_resp_cache(dfp_resp_com) // out
     );
 
-    cache_mod icache(
+    cache_pipe icache(
         .clk(clk), // input
         .rst(rst), // input
-        .flush(flush),
+        .flush(flush), //  || set_pc_br
         .ufp_addr(ufp_addr[0]), // input
         .ufp_rmask(ufp_rmask[0]), // input
         .ufp_wmask(ufp_wmask[0]), // input

@@ -28,10 +28,17 @@
     logic test;
     logic [127:0] test_dupe; 
     logic [9:0] counter;
+    real flush_counter, br_counter;
+    real correct;
+    real accuracy;
+    integer pred_count, btb_count, write, taken_correct, not_taken_correct, taken, not_taken;
     //logic [6:0]   dupe_add;
 
     always @(posedge clk) begin
         if (mon_itf.halt) begin
+            $display("%d branches, %d flushes/mispredicts, %d predicted correctly, %f%% accuracy", br_counter, flush_counter, correct, accuracy);
+            $display("%d taken, %d taken correct, %d not taken, %d not taken correct", taken, taken_correct, not_taken, not_taken_correct);
+            $display("%d non_static predictions, %d btb, %d writes", pred_count, btb_count, write);
             $finish;
         end
         if (timeout == 0) begin
@@ -41,6 +48,54 @@
         if (mem_itf.error != 0 || mon_itf.error != 0) begin
             $fatal;
         end
+
+
+        if (rst) begin
+            flush_counter <= '0;
+            br_counter <= '0;
+            correct <= '0;
+            accuracy <= '0;
+            pred_count <= '0;
+            btb_count <= '0;
+            write <= '0;
+            taken_correct <= '0;
+            not_taken_correct <= '0;
+            taken <= '0;
+            not_taken <= '0;
+            // take <= taken;
+        end else begin
+            if (dut.rob_out.is_br) begin
+                br_counter <= br_counter + 1;
+            end
+            if (dut.flush) begin
+                flush_counter <= flush_counter + 1;
+            end
+            if (dut.branch_predict.pht_read_v) begin
+                pred_count <= pred_count + 1; 
+            end
+            if (dut.branch_predict.btb_read_v) begin
+                btb_count <= btb_count + 1; 
+            end
+            if (dut.branch_predict.write) begin
+                write <= write + 1; 
+            end
+            if (dut.rob_out.br_result == 1'b1 && dut.rob_out.is_br) begin
+                taken <= taken + 1;
+            end
+            if (dut.rob_out.br_result == 1'b0 && dut.rob_out.is_br) begin
+                not_taken <= not_taken + 1;
+            end
+            if (dut.rob_out.br_result == 1'b1 && dut.rob_out.is_br && !dut.flush) begin
+                taken_correct <= taken_correct + 1;
+            end
+            if (dut.rob_out.br_result == 1'b0 && dut.rob_out.is_br && !dut.flush) begin
+                not_taken_correct <= not_taken_correct + 1;
+            end
+
+            correct <= br_counter - flush_counter;
+            accuracy <= (100/br_counter) * (br_counter - flush_counter);
+        end
+
         // if (dut.free_list.p_addr_in == 7'd75) begin
         //     test <= '1;
         //     $display("YOOO time=%0t fl_enq=0x%0h fl_in=0x%0h head=0x%0h tail=0x%0h", $time, dut.free_list.enq, dut.free_list.p_addr_in, dut.free_list.head[6:0], dut.free_list.tail[6:0]);
