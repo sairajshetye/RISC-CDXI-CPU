@@ -23,12 +23,13 @@ import rv32i_types::*;
     logic iq_deq, dq_deq, rq_deq, fl_deq; 
     logic really_full_int, really_full_mult, really_full_br, really_full_lds;
     // logic really_full_load, really_full_store;
-    // logic lds_deq;
+    logic lds_deq;
 
     if_id_stage_reg_t if_id_reg_next, if_id_inst_out;
     id_ex_stage_reg_t id_ex_reg_next, id_ex_inst_out;
     ra_dp_stage_reg_t ra_dp_reg_next, ra_dp_inst_out;
     dp_is_stage_reg_t dp_is_inst_out, dp_is_out_mult, dp_is_out_int, dp_is_out_br, dp_is_out_mem, dp_lds_inst_out, inst_out_lds;
+    dp_is_stage_reg_t inst_out_lds_hold;
     // dp_is_stage_reg_t inst_out_load, inst_out_store;
     dp_is_stage_reg_t int_to_wb, mult_to_wb, wb_reg_next, wb_int_out, wb_mult_out, wb_mem_out;
     dp_lds_stage_reg_t inst_out_lds_q;
@@ -469,9 +470,10 @@ import rv32i_types::*;
         .flush(flush), // input
         .funct_unit_busy(funct_mem_busy), // input
         .load_station(load_station_lds),
-        // .deq(lds_deq),
+        .lds_deq(lds_deq),
         .inst_in(dp_is_inst_out), // input
         .inst_out(inst_out_lds), // output
+        .inst_out_hold(inst_out_lds_hold),
         .valid_rdata(valid_rdata_mem), // output
         .dispatch_stall(lds_stall), // output
         .really_full(really_full_lds),
@@ -535,7 +537,7 @@ import rv32i_types::*;
     // );
 
     load_store_unit ld_s_unit(
-        .id_ex(inst_out_lds),
+        .id_ex(inst_out_lds_hold),
         // .id_ex_load(inst_out_load),
         // .id_ex_store(inst_out_store),
         //.funct_unit_busy(),
@@ -560,9 +562,9 @@ import rv32i_types::*;
         // load_deq = '0;
         // store_deq = '0;
         // lds_deq = '0;
-        // lds_deq = '0;
+        lds_deq = '0;
         funct_mem_busy = '0;
-        if (ufp_resp[1]) begin
+        if (inst_out_lds_q.valid && ufp_resp[1]) begin
             //wb_inst_out[3] = inst_out_lds;
             wb_inst_out[3] = '0;
             prf_we[3] = inst_out_lds_q.regf_we;
@@ -573,7 +575,7 @@ import rv32i_types::*;
             rfvi_monitor_vals[3] = inst_out_lds_q.rfvi_monitor_vals;
 
 
-            // lds_deq = '1;
+            lds_deq = '1;
             funct_mem_busy = '1;
 
 
@@ -616,8 +618,8 @@ import rv32i_types::*;
             rfvi_monitor_vals[3] = '0;
 
         
-            if (rob_out.ld_store == '1 && !ufp_resp[1]) begin   //if rob commit is a ld store
-                if (inst_out_lds_q.rob_idx == rob_head_idx) begin //if load or store at head of queue is the commit inst from the rob
+            if (inst_out_lds_q.valid && rob_out.ld_store == '1 && !ufp_resp[1]) begin   //if rob commit is a ld store
+                if ((inst_out_lds_q.is_store && inst_out_lds_q.rob_idx == rob_head_idx) || inst_out_lds_q.is_load) begin //if load or store at head of queue is the commit inst from the rob
                     //trigger the memory
                     ufp_addr[1] = inst_out_lds_q.dmem_addr;
                     ufp_rmask[1] = inst_out_lds_q.dmem_rmask;

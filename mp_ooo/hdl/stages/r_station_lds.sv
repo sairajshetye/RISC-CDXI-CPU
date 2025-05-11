@@ -12,8 +12,10 @@ import rv32i_types::*;
     input   logic                   flush,
     input   logic                   funct_unit_busy,
     input   logic                   load_station,
+    input   logic                   lds_deq,
     input   dp_is_stage_reg_t       inst_in,
     output  dp_is_stage_reg_t       inst_out,
+    output  dp_is_stage_reg_t       inst_out_hold,
     output  logic                   valid_rdata,
     output  logic                   dispatch_stall,
     output  logic                   really_full,
@@ -38,7 +40,12 @@ import rv32i_types::*;
 
     logic quit_search;
 
+    // dp_is_stage_reg_t       inst_out_hold,
+
+    // logic ripple;
+
     logic [PTR_SIZE_RSTATION-1:0] output_idx;
+    // logic [PTR_SIZE_RSTATION-1:0] old_output_idx;
     logic [PTR_SIZE_RSTATION-1:0] open_idx;
 
     logic   [WIDTH-1:0]     data_t_rs1 [DEPTH];
@@ -47,8 +54,21 @@ import rv32i_types::*;
     logic   [DEPTH-1:0]     rs1_rep, rs2_rep;   //0 for rs1, 2 for rs2
     logic                   remove;
     dp_is_stage_reg_t       inst_tmp;
+    logic start;
 
     logic [PTR_SIZE_RSTATION-1:0] load_end_idx;
+
+    always_ff @(posedge clk) begin
+        if (rst) begin
+            inst_out_hold <= '0;
+            start = '1;
+        end else if (inst_out.valid && start) begin
+            inst_out_hold <= inst_out;
+            start = '0;
+        end else if (lds_deq) begin
+            inst_out_hold.valid <= '0;
+        end
+    end
 
     always_comb begin
         full = '1;
@@ -80,7 +100,7 @@ import rv32i_types::*;
         quit_search = '0;
         // Find all the loads we can choose from
         load_end_idx = PTR_SIZE_RSTATION'(DEPTH-1);
-        for (integer i = 0; i <= DEPTH-1; i++) begin
+        for (integer i = DEPTH-1; i >= 0; i--) begin
             if (station[i].is_load && !quit_search) begin
                 load_end_idx = PTR_SIZE_RSTATION'(unsigned'(i));
             end else begin
@@ -125,10 +145,12 @@ import rv32i_types::*;
         for (integer i = 0; i < DEPTH; i++) begin
             if (!quit) begin
                 if (station[i].valid) begin
-                    if (remove) begin 
+                    if (remove && lds_deq) begin 
                         open_idx = PTR_SIZE_RSTATION'(unsigned'(i));
                         quit = '1;
-                    end else begin
+                    end 
+
+                    else begin
                         open_idx = PTR_SIZE_RSTATION'(unsigned'(i-1));
                         quit = '1;
                     end
@@ -269,22 +291,37 @@ import rv32i_types::*;
              // MAKE RES STATION INTO A SHIFT REGISTER
 
             // shift register functionality
-            if (remove && !load_station) begin
+            if (remove && !load_station && lds_deq) begin
                 station[open_idx].valid <= '0;
             end
+
+            // if (lds_deq && (open_idx + 1) < 8) begin
+            //     station[open_idx+1].valid <= '0;
+            // end
             for (integer i = 1; i < DEPTH; i++) begin
-                if (remove) begin 
+                if (remove && lds_deq) begin 
                     if (PTR_SIZE_RSTATION'(unsigned'(i)) <= output_idx) begin
                         station[i] <= station[i-1];
                     end
                 end
             end
 
+            // ripple = '0;
+
+            // for (integer i = DEPTH-1; i >= 1; i--) begin
+            //     if (lds_deq) begin 
+            //         if ((station[i-1].valid && !station[i].valid) || ripple) begin
+            //             station[i] <= station[i-1];
+            //             ripple = '1;
+            //         end
+            //     end
+            // end
+
             // PUT IN THE FORWARDED DATA
             for (integer i = 0; i < DEPTH; i++) begin
                 if (idx_rep[i]) begin
                     if (rs2_rep[i]) begin   //rs2 replace
-                        if (PTR_SIZE_RSTATION'(unsigned'(i)) <= output_idx && remove) begin
+                        if (PTR_SIZE_RSTATION'(unsigned'(i)) <= output_idx && remove && lds_deq) begin
                             if ((i+1) < (DEPTH)) begin
                                 station[i+1].rs2_data <= data_t_rs2[i];
                                 station[i+1].rs2_ready <= '1;
@@ -295,7 +332,7 @@ import rv32i_types::*;
                         end
                     end 
                     if (rs1_rep[i]) begin      //rs1 replace
-                        if (PTR_SIZE_RSTATION'(unsigned'(i)) <= output_idx && remove) begin
+                        if (PTR_SIZE_RSTATION'(unsigned'(i)) <= output_idx && remove && lds_deq) begin
                             if ((i+1) < (DEPTH)) begin
                                 station[i+1].rs1_data <= data_t_rs1[i];
                                 station[i+1].rs1_ready <= '1;
@@ -309,7 +346,7 @@ import rv32i_types::*;
             end
 
             // if not full and we are loading, just put into open_idx
-            if (inst_tmp.valid && !full && load_station && ((inst_tmp.use_rs1 && !inst_tmp.rs1_ready)||(inst_tmp.use_rs2 && !inst_tmp.rs2_ready))) begin
+            if (inst_tmp.valid && !full && load_station) begin
                 station[open_idx] <= inst_tmp;
                 station[open_idx].valid <= '1;
             end 
@@ -320,6 +357,9 @@ import rv32i_types::*;
             
             if (!empty && !funct_unit_busy && remove) begin
                 inst_out <= station[output_idx];
+                // if(lds_deq) begin
+                //     station[output_idx].valid = '0;
+                // end
                 // station[output_idx] <= '0;
             end else if (!funct_unit_busy && load_station) begin 
                 if (inst_tmp.valid) begin
