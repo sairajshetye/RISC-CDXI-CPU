@@ -35,6 +35,7 @@ import rv32i_types::*;
     input   rfvi_packet_t           rfvi_monitor_vals_2,
     input   rfvi_packet_t           rfvi_monitor_vals_3,
     output  rob_entry_t             rob_out,
+    output  logic                   rob_out_lds,
     output  logic                   valid_rdata,
     output  logic                   alloc_stall,
     output  logic                   decode_stall,
@@ -83,6 +84,10 @@ import rv32i_types::*;
         // end else begin
             deq = (rob[head[PTR_SIZE_ROB-1:0]].status == done && rob[head[PTR_SIZE_ROB-1:0]].valid && !empty);
         // end
+
+        rob_head_idx = head[PTR_SIZE_ROB-1:0];
+
+        rob_out_lds = rob[head[PTR_SIZE_ROB-1:0] + 1'b1].valid && rob[head[PTR_SIZE_ROB-1:0] + 1'b1].ld_store;
     end
 
     // always_ff @(posedge clk) begin // NOT BEING USED, CAN DELETE LATER?
@@ -206,7 +211,7 @@ import rv32i_types::*;
             p_addr_ret <= '0;
             flush <= '0;
             valid_rdata <= '0;
-            rob_head_idx <= '0;
+            // rob_head_idx <= '0;
         end
         else if (empty) begin
             rob_out <= '0;
@@ -215,7 +220,7 @@ import rv32i_types::*;
             p_addr_ret <= '0;
             flush <= '0;
             valid_rdata <= '0;
-            rob_head_idx <= '0;
+            // rob_head_idx <= '0;
         end else begin
             if (rob[head[PTR_SIZE_ROB-1:0]].status == done) begin
                 // if (ld_status_3) begin
@@ -249,7 +254,7 @@ import rv32i_types::*;
                 valid_rdata <= '0;
             end
             rob_out <= rob[head[PTR_SIZE_ROB-1:0]];
-            rob_head_idx <= head[PTR_SIZE_ROB-1:0];
+            // rob_head_idx <= head[PTR_SIZE_ROB-1:0];
             
         end
     end

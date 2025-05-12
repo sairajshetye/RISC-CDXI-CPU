@@ -41,6 +41,7 @@ import rv32i_types::*;
     rfvi_packet_t       rfvi_monitor_vals   [4];
 
     rob_entry_t rob_entry, rob_out;
+    logic rob_out_lds;
 
     logic [255:0] cache_rdata;
 
@@ -672,7 +673,7 @@ import rv32i_types::*;
             wb_data_out[3] = '0;
             rfvi_monitor_vals[3] = '0;
 
-        
+
             if (rob_out.ld_store == '1 && !ufp_resp[1]) begin   //if rob commit is a ld store
                 if (inst_out_lds_q.rob_idx == rob_head_idx) begin //if load or store at head of queue is the commit inst from the rob
                     //trigger the memory
@@ -680,7 +681,17 @@ import rv32i_types::*;
                     ufp_rmask[1] = inst_out_lds_q.dmem_rmask;
                     ufp_wmask[1] = inst_out_lds_q.dmem_wmask;
                     ufp_wdata[1] = inst_out_lds_q.dmem_wdata;
-                end else begin
+                end 
+                
+                // else if ((inst_out_lds_q.rob_idx == (rob_head_idx + 1'b1)) && (rob_out_lds)) begin
+                //     //trigger the memory
+                //     ufp_addr[1] = inst_out_lds_q.dmem_addr;
+                //     ufp_rmask[1] = inst_out_lds_q.dmem_rmask;
+                //     ufp_wmask[1] = inst_out_lds_q.dmem_wmask;
+                //     ufp_wdata[1] = inst_out_lds_q.dmem_wdata;
+                // end 
+                
+                else begin
                     ufp_addr[1] = '0;
                     ufp_rmask[1] = '0;
                     ufp_wmask[1] = '0;
@@ -843,6 +854,7 @@ import rv32i_types::*;
         .rob_in(rob_entry),
         .rob_idx_in(rob_idx_ld[2]),
         .rob_out(rob_out),
+        .rob_out_lds(rob_out_lds),
         .valid_rdata(rob_valid_rdata),  //use to ld comnmit order
         .alloc_stall(rob_stall),
         .decode_stall(decode_stall),
