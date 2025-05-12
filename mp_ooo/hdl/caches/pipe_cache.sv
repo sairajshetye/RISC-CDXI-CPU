@@ -6,7 +6,7 @@ import rv32i_types::*;
         parameter           DATA_SIZE   = 32,
         parameter           OFFSET_SIZE = 5, 
         parameter           TAG_SIZE    = DATA_SIZE-SETS_SIZE-OFFSET_SIZE,
-        parameter           NUM_WAYS    = 4,
+        parameter           NUM_WAYS    = 2,
         parameter           PLRU        = NUM_WAYS-1,
         parameter           LRU_D       = $clog2(NUM_WAYS)
 )(
@@ -621,21 +621,35 @@ import rv32i_types::*;
 
 
     // LRU decode - which to replace
+    // always_comb begin
+    //     unique case (way_hit) // only accurate when want to write to LRU anyway
+    //         2'b11: lru_in = {lru_raw[2], 1'b0, 1'b0}; // Way A = Way 3
+    //         2'b10: lru_in = {lru_raw[2], 1'b1, 1'b0}; // Way B = Way 2
+    //         2'b01: lru_in = {1'b0, lru_raw[1], 1'b1}; // Way C = Way 1
+    //         2'b00: lru_in = {1'b1, lru_raw[1], 1'b1}; // Way D = Way 0
+    //         default: lru_in = lru_raw;
+    //     endcase
+
+    //     unique casez (lru_raw)
+    //         3'b0?0: lru_decode = 2'd0; // Way D = Way 0
+    //         3'b1?0: lru_decode = 2'd1; // Way C = Way 1
+    //         3'b?01: lru_decode = 2'd2; // Way B = Way 2
+    //         3'b?11: lru_decode = 2'd3; // Way A = Way 3
+    //         default: lru_decode = 2'd0; // default?
+    //     endcase
+    // end
+
     always_comb begin
         unique case (way_hit) // only accurate when want to write to LRU anyway
-            2'b11: lru_in = {lru_raw[2], 1'b0, 1'b0}; // Way A = Way 3
-            2'b10: lru_in = {lru_raw[2], 1'b1, 1'b0}; // Way B = Way 2
-            2'b01: lru_in = {1'b0, lru_raw[1], 1'b1}; // Way C = Way 1
-            2'b00: lru_in = {1'b1, lru_raw[1], 1'b1}; // Way D = Way 0
+            1'b1: lru_in = 1'b0; // Way A = Way 1
+            1'b0: lru_in = 1'b1; // Way B = Way 0
             default: lru_in = lru_raw;
         endcase
 
         unique casez (lru_raw)
-            3'b0?0: lru_decode = 2'd0; // Way D = Way 0
-            3'b1?0: lru_decode = 2'd1; // Way C = Way 1
-            3'b?01: lru_decode = 2'd2; // Way B = Way 2
-            3'b?11: lru_decode = 2'd3; // Way A = Way 3
-            default: lru_decode = 2'd0; // default?
+            1'b0: lru_decode = 1'b0; // Way D = Way 0
+            1'b1: lru_decode = 1'b1; // Way C = Way 1
+            default: lru_decode = 1'd0; // default?
         endcase
     end
 
